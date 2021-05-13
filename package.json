@@ -1,7 +1,7 @@
 {
   "name": "gigaroll2",
   "version": "1.0.0",
-  "description": "",
+  "description": "A real-estate data aggregation tool",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/pcarey1213/gigaroll2/issues"
   },
-  "homepage": "https://github.com/pcarey1213/gigaroll2#readme"
+  "homepage": "https://github.com/pcarey1213/gigaroll2#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
