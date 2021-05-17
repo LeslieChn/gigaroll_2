@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Gigaroll</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/style.css" />
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="row m-2">
+      <div class="col-9 border border-warning">
+        <h6 id="groupbystring"></h6>
+        <div class="row">
+          <h6 id="measurestring"></h6>
+        </div>
+      </div>
+    </div>
+    <div class="accordion" id="accordionExample">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+            aria-expanded="true" aria-controls="collapseOne">
+            Query
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+          data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="card">
+              <div class="card-header">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                  <li class="nav-item">
+                    <button class="nav-link active" id="query1-tab" data-bs-toggle="tab" data-bs-target="#query1"
+                      type="button" role="tab" aria-controls="query1" aria-selected="true">Query</a>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link" id="query2-tab" data-bs-toggle="tab" data-bs-target="#query2" type="button"
+                      role="tab" aria-controls="query2" aria-selected="false">Range</button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link" id="query3-tab" data-bs-toggle="tab" data-bs-target="#query3" type="button"
+                      role="tab" aria-controls="query3" aria-selected="false">Filter2</button>
+                  </li>
+                </ul>
+              </div>
+              <div class="tab-content" id="myTabContent">
+                <div class="card-body tab-pane fade show active" id="query1" role="tabpanel"
+                  aria-labelledby="query1-tab">
+                  <div class="row">
+                    <div class="col-3">
+                      <button type="button" class="btn btn-success" id="addgbyrow">Add Groupby</button>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Groupby</th>
+                            <th scope="col"></th>
+                          </tr>
+                        </thead>
+                        <tbody id="gbytable">
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="col-6">
+                      <button type="button" class="btn btn-success" id="addrow">Add Measure</button>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Measure</th>
+                            <th scope="col">Function</th>
+                            <th scope="col"></th>
+                          </tr>
+                        </thead>
+                        <tbody id="measuretable">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body tab-pane fade" id="query2" role="tabpanel" aria-labelledby="query2-tab">
+                  <div class="dropdown">
+                    <div class="row">
+                      <div class="col">
+                        <div class="form-floating">
+                          <select class="form-select" id="rangedimdd" aria-label="Floating label select example">
+                          </select>
+                          <label for="floatingSelect">Dimension</label>
+                        </div>
+                  </div>
+                  <div class="col">
+                    <div class="form-floating">
+                      <select class="form-select" id="rangemeasuredd" aria-label="Floating label select example">
+                      </select>
+                      <label for="floatingSelect">Measure</label>
+                    </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="form-floating">
+                      <input type="text" class="float-input form-control" id="rangeStart" placeholder="Range Start"  data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                      <label for="floatingPassword">Range Start</label>
+                    </div>
+                    <div class="form-floating">
+                      <input type="text" class="float-input form-control" id="rangeSize" placeholder="Range Size"  data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                      <label for="floatingPassword">Bucket Size</label>
+                    </div>
+                  <div class="form-floating">
+                    <input type="text" class="positive-integer-input form-control" id="numBuckets" placeholder="Buckets"  data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                    <label for="floatingPassword">Buckets</label>
+                  </div>
+                </div>
+                </div>
+                </div>
+                <div class="card-body tab-pane fade" id="query3" role="tabpanel" aria-labelledby="query3-tab">
+                  <p>Dummy 2</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+  </div>
+  <div class="row justify-content-md-center m-2">
+    <div class="col-4">
+      <button type="submit" class="btn btn-outline-success" id="submitButton">Submit</button>
+    </div>
+  </div>
+  <table class="table border border-secondary m-2">
+    <thead>
+      <tr id="tableHead">
+      </tr>
+    </thead>
+    <tbody id="resultsTable">
+    </tbody>
+  </table>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" src="assets/javascript/app.js"></script>
+
+</body>
+
+</html>
