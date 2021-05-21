@@ -277,6 +277,49 @@ function getDataColumn (col_idx){
   return getLocalDataColumn(col_idx)
   //to do: may need to go to server to extract data
 }
+var grid=null
+function updateGrid(server_js, gby_headers, val_headers) {
+  $("#wrapper").html("");
+  var headers= gby_headers.concat(val_headers);
+  var data=[]
+  for (let row of server_js){
+    let r = row[0].concat(row[1])
+    data.push(r)
+  }
+  var config = {
+    columns: headers, 
+    data: data,
+    sort: true,
+    search: true,
+    style: {
+      table: {
+        border: '3px solid #ccc',
+      },
+      th: {
+        'background-color': '#276e8c',
+        color: 'white',
+        'border-bottom': '3px solid #ccc',
+        'text-align': 'center'
+      },
+    }, 
+    pagination: {
+    enabled: true,
+    limit: 50,
+    summary: false
+    },
+    className: {
+      table: 'table table-striped table-responsive table-hover',
+    }
+  }
+  if (grid==null){
+    grid=new gridjs.Grid(config).render(document.getElementById("wrapper"))
+  }
+  else
+  { grid.updateConfig(config)
+    grid.forceRender()
+  }
+   
+}
 /******************************************************************************** */
 //Chart Logic
 function updateChart (col_idx, update_data){
@@ -290,6 +333,7 @@ function updateChart (col_idx, update_data){
 }
 function createChart() {
   console.log("creating chart");
+  return
   var col_idx = parseInt($("#chartlyaxisdd").val());
   var values = getDataColumn(col_idx)
   var typeofchart = $("#charttypedd").val()
@@ -344,7 +388,7 @@ async function onclick_submit() {
       return
     }
     server_js=server_result["data"]
-    var tblhead = $("#tableHead");
+    /*var tblhead = $("#tableHead");
     tblhead.html("");
 
     tblhead.append("<th scope='col'>Row</th>");
@@ -415,6 +459,8 @@ async function onclick_submit() {
       }
     }
     tbl.append(str_row);
+    */
+    updateGrid(server_js, selected_gbys, selected_vals);
     console.timeEnd("process response");
     disableChart(false);
     initChart(selected_vals);
