@@ -37,6 +37,7 @@ var used_indices = new Set();
 var used_gby_indices = new Set();
 var server_meta;
 var server_js;
+var server_range=null;
 // var gbyarray=[];
 // var valarray=[];
 var myChart=null;
@@ -277,20 +278,155 @@ function getDataColumn (col_idx){
   return getLocalDataColumn(col_idx)
   //to do: may need to go to server to extract data
 }
+function cellAttribute1(cell, row, col) {
+
+  if (cell) {
+    let width = row.cells[0].data[1];
+    let tcolor = ''
+    if (width == 1)
+      tcolor = ';color:silver'
+    return {
+      'style': `border-top:${width}px solid` + tcolor
+
+    }
+  }
+}
+
+function cellAttribute2(cell, row, col) {
+
+  if (cell) {
+    return {
+      'style': `border-top:${row.cells[0].data[1]}px solid` 
+
+    }
+  }
+}
+/****************************************************/
 var grid=null
 function updateGrid(server_js, gby_headers, val_headers) {
   $("#wrapper").html("");
-  var headers= gby_headers.concat(val_headers);
+
+const x = 
+{ 'name': 'Row',  
+sort: {
+  compare: (a, b) => {
+    if (a[0] > b[0]) {
+      return 1;
+    } else if (b[0] > a[0]) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+},
+formatter : (cell,row) => {return cell[0]},
+
+'attributes' : (cell,row,col) => {
+  // add these attributes to the td elements only
+  if (cell) {
+  return {
+  'data-cell-content':cell,
+  'data-row' : row,
+  'data-col' : col,
+  'style'    : `border-top:${cell[1]}px solid`,
+
+  'ondblclick': () => {
+    let dim_filters=''
+    let val_filters=''
+    //build filters out of groupbys from the row the user doubleclicks
+    for (let i = 0; i < selected_gbys.length; ++i) {
+      
+      if (i == 0 && server_meta.is_range) {
+        meas = selected_gbys[0].split(';')[0].slice(6) //parse the line, range(dim:measure;etc)
+                                                      //result is of the form dim:measure
+        let rg = row.cells[i + 1].data
+        let rg_interval = server_range[rg]
+        
+        if (rg_interval[0] == 'Below')
+          val_filters = `${meas}<${rg_interval[1]}`;
+        else if (rg_interval[1] == 'Above')
+          val_filters = `${meas}>=${rg_interval[0]}`;
+        else
+          val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
+      }
+      else
+        dim_filters += selected_gbys[i] + ':' + row.cells[i + 1].data + ';';
+    }
+
+    sessionStorage.setItem("base_dim", base_dim)
+    sessionStorage.setItem("dim_filters", dim_filters)
+    sessionStorage.setItem("val_filters", val_filters)
+    window.open('./details.html', '_blank');
+  },
+
+  'onmouseenter': () => {
+    //console.log(cell);
+    //console.log(row);
+    //console.log(col);
+  },
+  'onmouseleave': () => {
+    //console.log("leaving");
+  }
+  };
+  }
+}
+}
+  
+  var headers= [x];
+  let c = 0;
+  for (let h of gby_headers.concat(val_headers)) {
+    ++c;
+    headers.push(
+      {
+        name: h,
+        attributes: (c==1? cellAttribute1 : cellAttribute2),
+      }
+    )
+  }
   var data=[]
+  var prev_gby = ''
+  var row_num = 1
+
   for (let row of server_js){
-    let r = row[0].concat(row[1])
+    let r = [[row_num++,0]].concat(row[0]).concat(row[1])
+  
+
+    if (prev_gby == r[1])
+    {
+       //continuation of a block
+        border_width = 1
+    }
+    else
+    {
+      //started new block
+      prev_gby = r[1]
+      border_width = 2
+    }
+
+    r[0][1] = border_width
     data.push(r)
   }
+
   var config = {
     columns: headers, 
     data: data,
-    sort: true,
+    sort: {
+      multiColumn: false
+    },
     search: true,
+    autoWidth : true,
+    // width:"50%",
+    fixedHeader: true,
+    resizable: true,
+    language: {
+      'search': {
+        'placeholder': '🔍 Search...'
+      },
+      'pagination': {
+        'previous': '⬅️',
+        'next': '➡️'
+      }
+    },
     style: {
       table: {
         border: '3px solid #ccc',
@@ -304,15 +440,22 @@ function updateGrid(server_js, gby_headers, val_headers) {
     }, 
     pagination: {
     enabled: true,
-    limit: 50,
-    summary: false
+    limit: 20,
+    summary: true
     },
     className: {
-      table: 'table table-striped table-responsive table-hover',
+      table: 'table table-striped table-responsive',
     }
   }
   if (grid==null){
     grid=new gridjs.Grid(config).render(document.getElementById("wrapper"))
+    //grid.on('cellClick', function (e,cell,col,row) 
+    //{
+    //  console.log('cell:',e);
+    //  console.log('col:', col);
+    //  console.log('row:', row);
+    //}
+    //)
   }
   else
   { grid.updateConfig(config)
@@ -333,7 +476,6 @@ function updateChart (col_idx, update_data){
 }
 function createChart() {
   console.log("creating chart");
-  return
   var col_idx = parseInt($("#chartlyaxisdd").val());
   var values = getDataColumn(col_idx)
   var typeofchart = $("#charttypedd").val()
@@ -350,7 +492,9 @@ function createChart() {
   const config = {
     type: typeofchart,
     data,
-    options: {}
+    options: {
+      aspectRatio: 1.2
+    }
   };
   myChart = new Chart($('#myChart'),config);
 };
@@ -360,12 +504,13 @@ const table_row_colors = [
   ["#F0FFFF", "#F9FFFF"],
   ["#FFFFF0", "#FFFFF9"],
 ];
+var selected_gbys
 
 async function onclick_submit() {
   disableChart(true);
   // await new Promise(r => setTimeout(r, 5000));
   console.time("onclick_submit");
-  var selected_gbys = getSelectedGbys();
+  selected_gbys = getSelectedGbys();
   console.log(selected_gbys);
   var selected_vals = getSelectedMeasures(); 
    
@@ -388,6 +533,9 @@ async function onclick_submit() {
       return
     }
     server_js=server_result["data"]
+    if (server_meta.is_range)
+      server_range = server_result.range;
+
     /*var tblhead = $("#tableHead");
     tblhead.html("");
 

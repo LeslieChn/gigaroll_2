@@ -12,3 +12,12 @@ body {
   font-weight: bold;
 }
 
+.table-striped > tbody > tr:hover td {
+  background-color: gold;
+}
+
+/*
+.table-striped > tbody > tr > td:hover {
+border:	5px solid
+}
+*/
