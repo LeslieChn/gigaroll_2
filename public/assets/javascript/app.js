@@ -1,3 +1,4 @@
+
 async function serverRequest(params) {
   p = new URLSearchParams(params).toString();
 
@@ -468,6 +469,9 @@ formatter : (cell,row) => {return cell[0]},
 function updateChart (col_idx, update_data){
   var typeofchart = $("#charttypedd").val()
   myChart.config.type=typeofchart
+  if (typeofchart=="radar") {
+    myChart.config.options.scales.x.ticks.display=false 
+    }
   if (update_data==true){
     let data_col=getDataColumn(col_idx)
     myChart.data.datasets[0].data=data_col
@@ -475,6 +479,7 @@ function updateChart (col_idx, update_data){
   myChart.update()
 }
 function createChart() {
+  // createStackedBarChart()
   console.log("creating chart");
   var col_idx = parseInt($("#chartlyaxisdd").val());
   var values = getDataColumn(col_idx)
@@ -493,11 +498,132 @@ function createChart() {
     type: typeofchart,
     data,
     options: {
-      aspectRatio: 1.2
+      aspectRatio: 1.2,
     }
-  };
+    };
   myChart = new Chart($('#myChart'),config);
 };
+
+function calculatePoint(i, intervalSize, colorRangeInfo) {
+  var { colorStart, colorEnd, useEndAsStart } = colorRangeInfo;
+  return (useEndAsStart
+    ? (colorEnd - (i * intervalSize))
+    : (colorStart + (i * intervalSize)));
+}
+
+/* Must use an interpolated color scale, which has a range of [0, 1] */
+function interpolateColors(dataLength, colorScale, colorRangeInfo) {
+  var { colorStart, colorEnd } = colorRangeInfo;
+  var colorRange = colorEnd - colorStart;
+  var intervalSize = colorRange / dataLength;
+  var i, colorPoint;
+  var colorArray = [];
+
+  for (i = 0; i < dataLength; i++) {
+    colorPoint = calculatePoint(i, intervalSize, colorRangeInfo);
+    colorArray.push(colorScale(colorPoint));
+  }
+
+  return colorArray;
+}
+
+function createStackedBarChart() {
+
+  const DATA_COUNT = 3;
+  const colorRangeInfo1 = {
+    colorStart: 0.2,
+    colorEnd: 1,
+    useEndAsStart: true,
+  }
+  const colorRangeInfo2 = {
+    colorStart: .1,
+    colorEnd: 1,
+    useEndAsStart: true,
+  }
+  const colorRangeInfo3 = {
+    colorStart: 0,
+    colorEnd: 0.65,
+    useEndAsStart: true,
+  }
+  const colorScale1 = d3.interpolateInferno;
+  const colorScale2 = d3.interpolateRdYlBu;
+  const colorScale3 = d3.interpolateCool;
+
+  var COLORS1 = interpolateColors(DATA_COUNT, colorScale1, colorRangeInfo1);
+  var COLORS2 = interpolateColors(DATA_COUNT, colorScale2, colorRangeInfo2);
+  var COLORS3 = interpolateColors(DATA_COUNT, colorScale3, colorRangeInfo3);
+
+  const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
+
+  const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "Dataset 1",
+        yAxisID: 'A',
+        data: [1,0,0,0,0,0,2],
+        backgroundColor: COLORS2[0],
+        stack: "Stack 0",
+      },
+      {
+        label: "Dataset 2",
+        yAxisID: 'B',
+        data: [100,200,300,400,500,600,700],
+        backgroundColor: COLORS2[1],
+        stack: "Stack 1",
+      },
+      {
+        label: "Dataset 3",
+        yAxisID: 'A',
+        data: [1,2,5,6,7],
+        backgroundColor: COLORS2[2],
+        stack: "Stack 0",
+      },
+    ],
+  };
+  // </block:setup>
+ /* Grab chart element by id */
+
+ /* Create color array */
+
+  // <block:config:0>
+  const config = {
+    type: "bar",
+    data: data,
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Chart.js Bar Chart - Stacked",
+        },
+      },
+      responsive: true,
+      interaction: {
+        intersect: false,
+      },
+      scales: {
+        yAxes: [{
+          id: 'A',
+          type: 'linear',
+          position: 'left',
+        }, {
+          id: 'B',
+          type: 'linear',
+          position: 'right',
+        }],
+        x: {
+          stacked: true,
+        },
+        y: {
+          stacked: true,
+        },
+      },
+    },
+  };
+  // </block:config>
+  myChart = new Chart($('#myChart'),config);
+}
 
 //two palettes, each with two colors (for odd and even rows)
 const table_row_colors = [
