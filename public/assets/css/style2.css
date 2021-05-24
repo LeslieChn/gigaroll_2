@@ -1,0 +1,28 @@
+body {
+  background-color: #f5f5f5;
+}
+/*
+.table-striped > tbody > tr:nth-child(2n+1) > td{
+  background-color: #FFFFF0;
+  font-weight: bold;
+}
+
+.table-striped > tbody > tr:nth-child(2n) > td{
+  background-color: FFFFF9;
+  font-weight: bold;
+}
+*/
+.table-striped > tbody > tr:nth-child(2n+1) > td{
+  background-color: whitesmoke;
+  font-weight: bold;
+}
+
+.table-striped > tbody > tr:nth-child(2n) > td{
+  background-color: wheat;
+  font-weight: bold;
+}
+
+.table-striped > tbody > tr:hover td {
+  background-color: skyblue;
+}
+

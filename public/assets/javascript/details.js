@@ -17,15 +17,26 @@ var grid=null
 function updateGrid(server_js) {
   $("#wrapper").html("");
   
-  var headers= [];
+  var headers= []; //server_js.headers;
   
-  var data=[]
-  var prev_gby = ''
+  for (let h of server_js.headers)
+  {
+    headers.push(
+        {
+          name: h,
+          formatter : (cell,row) => {return cell.toLocaleString("en")},
+        }
+
+    );
+  }
+
+  var data= server_js.data;
+
   var row_num = 1
 
-  for (let row of server_js){
-    data.push(row)
-  }
+  //for (let row of server_js){
+  //  data.push(row)
+  //}
 
   var config = {
     columns: headers, 
@@ -36,7 +47,7 @@ function updateGrid(server_js) {
     search: true,
     autoWidth : true,
     // width:"50%",
-    fixedHeader: true,
+    fixedHeader: false,
     resizable: true,
     language: {
       'search': {
@@ -52,16 +63,16 @@ function updateGrid(server_js) {
         border: '3px solid #ccc',
       },
       th: {
-        'background-color': '#276e8c',
-        color: 'white',
+        'background-color': 'SandyBrown',
+        color: 'black',
         'border-bottom': '3px solid #ccc',
         'text-align': 'center'
       },
     }, 
     pagination: {
-    enabled: true,
-    limit: 20,
-    summary: true
+      enabled: true,
+      limit: 20,
+      summary: true
     },
     className: {
       table: 'table table-striped table-responsive',

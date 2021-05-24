@@ -42,9 +42,12 @@ var server_range=null;
 // var gbyarray=[];
 // var valarray=[];
 var myChart=null;
+var selected_vals=null;
+var selected_gbys=null;
 
 async function InitPage() {
   console.log("ready!");
+  $("#submitButton").prop("disabled", true)
   var dim_info = null;
   dim_info = await serverRequest({ qid: "GET_DIMS" });
 
@@ -88,6 +91,7 @@ async function InitPage() {
   $("#addgbyrow").trigger("click");
 
   console.log(dim_info);
+  $("#submitButton").prop("disabled", false)
 } //initPage
 
 //selected_* arrays should be of the form array of strings
@@ -234,14 +238,15 @@ function initChart(selected_vals) {
   var chartDropdowns = [$("#chartlyaxisdd"), $("#chartryaxisdd")]
   for (let dd of chartDropdowns) {
     dd.html("")
+    // dd.append(`<option value=-1>none</option>`)
     var i=0
     for (let val of selected_vals) {
       dd.append(`<option value=${i++}>${val}</option>`);
     }
   }
-  var typeDropdown = $("#charttypedd")
+  var typeDropdown = $(".chart-type")
   typeDropdown.html("")
-  var chartTypes = ["line", "bar", "radar", "pie"]
+  var chartTypes = ["bar","line"]
   for(let ctype of chartTypes){
     typeDropdown.append(`<option value=${ctype}>${ctype}</option>`)
   }
@@ -281,7 +286,7 @@ function getDataColumn (col_idx){
 }
 function cellAttribute1(cell, row, col) {
 
-  if (cell) {
+  if (cell != null) {
     let width = row.cells[0].data[1];
     let tcolor = ''
     if (width == 1)
@@ -295,7 +300,7 @@ function cellAttribute1(cell, row, col) {
 
 function cellAttribute2(cell, row, col) {
 
-  if (cell) {
+  if (cell != null) {
     return {
       'style': `border-top:${row.cells[0].data[1]}px solid` 
 
@@ -381,6 +386,7 @@ formatter : (cell,row) => {return cell[0]},
       {
         name: h,
         attributes: (c==1? cellAttribute1 : cellAttribute2),
+        formatter : (cell,row) => {return cell.toLocaleString("en")},
       }
     )
   }
@@ -467,11 +473,10 @@ formatter : (cell,row) => {return cell[0]},
 /******************************************************************************** */
 //Chart Logic
 function updateChart (col_idx, update_data){
-  var typeofchart = $("#charttypedd").val()
-  myChart.config.type=typeofchart
-  if (typeofchart=="radar") {
-    myChart.config.options.scales.x.ticks.display=false 
-    }
+  var leftcharttype = $("#left-type-dd").val()
+  var rightcharttype = $("#right-type-dd").val()
+  myChart.config.data.datasets[0].type=leftcharttype
+  myChart.config.data.datasets[1].type=rightcharttype
   if (update_data==true){
     let data_col=getDataColumn(col_idx)
     myChart.data.datasets[0].data=data_col
@@ -480,28 +485,52 @@ function updateChart (col_idx, update_data){
 }
 function createChart() {
   // createStackedBarChart()
+ 
   console.log("creating chart");
   var col_idx = parseInt($("#chartlyaxisdd").val());
   var values = getDataColumn(col_idx)
-  var typeofchart = $("#charttypedd").val()
+  var values2 = values.map(x=>x*2)
+  var leftcharttype = $("#left-type-dd").val()
+  var rightcharttype = $("#right-type-dd").val()
   const labels = getLabels();
-  const data = {
-    labels: labels,
-    datasets: [{
-      label: '',
-      backgroundColor: '#ff9100',
-      borderColor: '#ff9100',
+
+    var canvas = $('#myChart')
+    const data = {
+      labels: labels,
+      datasets: [{
+      label: 'A',
+      yAxisID: 'A',
+      type: leftcharttype,
       data: values,
+      backgroundColor: 'rgb(255,0,0,0.2)',
+      borderColor: 'rgb(255,0,0,0.8)',
+    }, {
+      label: 'B',
+      yAxisID: 'B',
+      type: rightcharttype,
+      data: [],
+      backgroundColor: 'rgb(0,255,0,0.2)',
+      borderColor: 'rgb(0,255,0,0.8)',
     }]
-  };
-  const config = {
-    type: typeofchart,
-    data,
-    options: {
-      aspectRatio: 1.2,
     }
-    };
-  myChart = new Chart($('#myChart'),config);
+    const config ={
+      type: leftcharttype,
+      data: data,
+      options: {
+        aspectRatio: 1.2,
+        scales: {
+            'A': {
+                type: 'linear',
+                position: 'left'
+            },
+            'B': {
+                type: 'linear',
+                position: 'right' 
+            },
+          }
+      }
+    }
+    myChart = new Chart(canvas, config);
 };
 
 function calculatePoint(i, intervalSize, colorRangeInfo) {
@@ -630,7 +659,7 @@ const table_row_colors = [
   ["#F0FFFF", "#F9FFFF"],
   ["#FFFFF0", "#FFFFF9"],
 ];
-var selected_gbys
+
 
 async function onclick_submit() {
   disableChart(true);
@@ -638,7 +667,7 @@ async function onclick_submit() {
   console.time("onclick_submit");
   selected_gbys = getSelectedGbys();
   console.log(selected_gbys);
-  var selected_vals = getSelectedMeasures(); 
+  selected_vals = getSelectedMeasures(); 
    
   console.log(selected_vals);
 
@@ -811,8 +840,17 @@ $("#chartlyaxisdd").on("change", function () {
   updateChart(col_idx, true)
 });
 
+$("#chartryaxisdd").on("change", function () {
+  var col_idx = parseInt($("#chartryaxisdd").val());
+  updateChart(col_idx, true)
+});
 
-$("#charttypedd").on("change", function () {
+
+$("#left-type-dd").on("change", function () {
+  updateChart(0, false)
+});
+
+$("#right-type-dd").on("change", function () {
   updateChart(0, false)
 });
 
