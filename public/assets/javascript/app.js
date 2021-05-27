@@ -1,4 +1,3 @@
-
 async function serverRequest(params) {
   p = new URLSearchParams(params).toString();
 
@@ -11,6 +10,85 @@ async function serverRequest(params) {
 
   return json;
 }
+
+class Chart_Data_State
+{
+    constructor(chart)
+    {
+        this.chart = chart
+        this.label_of_axis = {}
+        this.type_of_axis = {}
+        this.data_changed = function (d,a){}
+    }
+
+    onchange(f)
+    {
+        this.data_changed = f;
+    }
+
+    init(axis,label,type)
+    {
+        this.label_of_axis[axis] = label
+        this.type_of_axis[axis] = type
+    }
+
+    update_type(axis,type)
+    {
+        if (this.type_of_axis[axis] != type)
+        {
+            for (let d of this.chart.data.datasets)
+            {
+                if (d.yAxisID == axis)
+                    d.type = type;
+            }
+            this.type_of_axis[axis] = type
+            this.chart.update();
+        }
+    }
+
+    update_label(axis, new_label, arg)
+    {
+        let old_label = this.label_of_axis[axis]
+        let ds = this.chart.data.datasets
+
+        if (old_label != new_label)
+        {
+            if (new_label == 'none')
+            {
+                this.chart.data.datasets = ds.filter( e => e.yAxisID !=axis )
+                this.chart.update();
+            }
+            else if (old_label == 'none')
+            {
+                let d = 
+                {
+                    label: new_label,
+                    yAxisID: axis,
+                    type: this.type_of_axis[axis]
+                }
+                this.data_changed(d,arg)
+                this.chart.data.datasets.push(d)
+                this.chart.update();
+
+            }
+            else
+            {
+                for (let d of this.chart.data.datasets)
+                {
+                    if (d.yAxisID== axis)
+                    {
+                        d.label = new_label;
+                        this.data_changed(d,arg)
+                    }
+                }
+                this.chart.update();
+            }
+            this.label_of_axis[axis] = new_label
+        }
+    }
+
+}
+
 
 function Comma_Sep(a) {
   var s = "";
@@ -42,9 +120,10 @@ var server_range=null;
 // var gbyarray=[];
 // var valarray=[];
 var myChart=null;
+var cds = null; //Chart_Data_State
 var selected_vals=null;
 var selected_gbys=null;
-
+/********************************************************/
 async function InitPage() {
   console.log("ready!");
   $("#submitButton").prop("disabled", true)
@@ -91,6 +170,16 @@ async function InitPage() {
   $("#addgbyrow").trigger("click");
 
   console.log(dim_info);
+  $('#ddgroupby1').val("prop_type");
+  $('#grid').w2grid({
+    name : 'grid',  
+    show: {
+      toolbar: true,
+      footer: true
+    },
+    multiSearch: true,
+  })
+  $('#grid').hide()
   $("#submitButton").prop("disabled", false)
 } //initPage
 
@@ -236,12 +325,17 @@ function disableChart (state){
 
 function initChart(selected_vals) {
   var chartDropdowns = [$("#chartlyaxisdd"), $("#chartryaxisdd")]
-  for (let dd of chartDropdowns) {
+  
+  for (let i=0; i<chartDropdowns.length; i++) {
+    dd=chartDropdowns[i]
     dd.html("")
-    // dd.append(`<option value=-1>none</option>`)
-    var i=0
-    for (let val of selected_vals) {
-      dd.append(`<option value=${i++}>${val}</option>`);
+    if (i==1){
+      dd.append(`<option value=-1>none</option>`)
+    }
+    for (let j = 0; j<selected_vals.length; ++j) 
+    {
+      let val = selected_vals[j]
+      dd.append(`<option value=${j}>${val}</option>`);
     }
   }
   var typeDropdown = $(".chart-type")
@@ -308,222 +402,155 @@ function cellAttribute2(cell, row, col) {
   }
 }
 /****************************************************/
-var grid=null
+function data_false (){
+  return false
+}
+
+function data_true (){
+  return true
+}
+
 function updateGrid(server_js, gby_headers, val_headers) {
-  $("#wrapper").html("");
-
-const x = 
-{ 'name': 'Row',  
-sort: {
-  compare: (a, b) => {
-    if (a[0] > b[0]) {
-      return 1;
-    } else if (b[0] > a[0]) {
-      return -1;
-    } else {
-      return 0;
-    }
+  /*searches: [
+    { field: 'recid', text: 'ID ', type: 'int' },
+    { field: 'lname', text: 'Last Name', type: 'text' },
+    { field: 'fname', text: 'First Name', type: 'text' },
+    { field: 'email', text: 'Email', type: 'text' },
+    { field: 'sdate', text: 'Start Date', type: 'date' }
+],*/
+  $('#grid').show()
+  $().w2destroy('grid');
+  // w2ui.grid.clear(true)
+  // w2ui.grid.columns=[]
+  let searches=[]
+  let columns=[]
+  for (let col of gby_headers){
+    columns.push({field:col, text:col, attr:col, sortable:true})
+    searches.push({field:col, text:col, type:"text"})
   }
-},
-formatter : (cell,row) => {return cell[0]},
-
-'attributes' : (cell,row,col) => {
-  // add these attributes to the td elements only
-  if (cell) {
-  return {
-  'data-cell-content':cell,
-  'data-row' : row,
-  'data-col' : col,
-  'style'    : `border-top:${cell[1]}px solid`,
-
-  'ondblclick': () => {
-    let dim_filters=''
-    let val_filters=''
-    //build filters out of groupbys from the row the user doubleclicks
-    for (let i = 0; i < selected_gbys.length; ++i) {
-      
-      if (i == 0 && server_meta.is_range) {
-        meas = selected_gbys[0].split(';')[0].slice(6) //parse the line, range(dim:measure;etc)
-                                                      //result is of the form dim:measure
-        let rg = row.cells[i + 1].data
-        let rg_interval = server_range[rg]
-        
-        if (rg_interval[0] == 'Below')
-          val_filters = `${meas}<${rg_interval[1]}`;
-        else if (rg_interval[1] == 'Above')
-          val_filters = `${meas}>=${rg_interval[0]}`;
-        else
-          val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
-      }
-      else
-        dim_filters += selected_gbys[i] + ':' + row.cells[i + 1].data + ';';
-    }
-
-    sessionStorage.setItem("base_dim", base_dim)
-    sessionStorage.setItem("dim_filters", dim_filters)
-    sessionStorage.setItem("val_filters", val_filters)
-    window.open('./details.html', '_blank');
-  },
-
-  'onmouseenter': () => {
-    //console.log(cell);
-    //console.log(row);
-    //console.log(col);
-  },
-  'onmouseleave': () => {
-    //console.log("leaving");
+  for (let col of val_headers){
+    columns.push({field:col, text:col, sortable:true})
+    searches.push({field:col, text:col, type:"float"})
   }
-  };
-  }
-}
-}
-  
-  var headers= [x];
-  let c = 0;
-  for (let h of gby_headers.concat(val_headers)) {
-    ++c;
-    headers.push(
-      {
-        name: h,
-        attributes: (c==1? cellAttribute1 : cellAttribute2),
-        formatter : (cell,row) => {return cell.toLocaleString("en")},
-      }
-    )
-  }
-  var data=[]
-  var prev_gby = ''
-  var row_num = 1
-
+  // w2ui.grid.searches=searches
+  let count=1
+  let records=[]
   for (let row of server_js){
-    let r = [[row_num++,0]].concat(row[0]).concat(row[1])
-  
-
-    if (prev_gby == r[1])
-    {
-       //continuation of a block
-        border_width = 1
+    let rec={recid:count++}
+    let n_gbys=gby_headers.length
+    for (let i=0; i<n_gbys; i++){
+      rec [gby_headers[i]]=row[0][i]
     }
-    else
-    {
-      //started new block
-      prev_gby = r[1]
-      border_width = 2
+    for (let i=0; i<val_headers.length; i++){
+      rec[val_headers[i]]=row[1][i]
     }
-
-    r[0][1] = border_width
-    data.push(r)
+    records.push(rec)
   }
-
-  var config = {
-    columns: headers, 
-    data: data,
-    sort: {
-      multiColumn: false
+  $('#grid').w2grid({
+    name : 'grid',  
+    show: {
+      toolbar: true,
+      footer: true
     },
-    search: true,
-    autoWidth : true,
-    // width:"50%",
-    fixedHeader: true,
-    resizable: true,
-    language: {
-      'search': {
-        'placeholder': '🔍 Search...'
-      },
-      'pagination': {
-        'previous': '⬅️',
-        'next': '➡️'
+    toolbar: {
+      items: [
+          { type: 'break' },
+          { type: 'button', id: 'mybutton', text: 'My other button', img: 'w2ui-icon-colors' },
+          { type: 'button', id: 'mybutton2', text: 'thing', img: 'w2ui-icon-columns' }
+      ],
+      onClick: function (target, data) {
+          console.log(target);
       }
     },
-    style: {
-      table: {
-        border: '3px solid #ccc',
-      },
-      th: {
-        'background-color': '#276e8c',
-        color: 'white',
-        'border-bottom': '3px solid #ccc',
-        'text-align': 'center'
-      },
-    }, 
-    pagination: {
-    enabled: true,
-    limit: 20,
-    summary: true
-    },
-    className: {
-      table: 'table table-striped table-responsive',
-    }
-  }
-  if (grid==null){
-    grid=new gridjs.Grid(config).render(document.getElementById("wrapper"))
-    //grid.on('cellClick', function (e,cell,col,row) 
-    //{
-    //  console.log('cell:',e);
-    //  console.log('col:', col);
-    //  console.log('row:', row);
-    //}
-    //)
-  }
-  else
-  { grid.updateConfig(config)
-    grid.forceRender()
-  }
-   
+    multiSearch: true,
+    columns: columns,
+    searches: searches,
+    records: records
+  })
+//   // w2ui['grid'].addColumn('email', [
+//   //   { field: 'lname', text: 'Last Name', size: '30%' },
+//   //   { field: 'fname', text: 'First Name', size: '30%' }
+// ]);
+    // $('#grid').w2grid({
+    //     name: 'grid',
+    //     header: 'List of Names',
+    //     columns: [
+    //         { field: 'fname', text: 'First Name'  },
+    //         { field: 'lname', text: 'Last Name' },
+    //         { field: 'email', text: 'Email'},
+    //         { field: 'sdate', text: 'Start Date'}
+    //     ],
+    //     records: [
+    //         { recid: 1, fname: "Peter", lname: "Jeremia", email: 'peter@mail.com', sdate: '2/1/2010' },
+    //         { recid: 2, fname: "Bruce", lname: "Wilkerson", email: 'bruce@mail.com', sdate: '6/1/2010' },
+    //         { recid: 3, fname: "John", lname: "McAlister", email: 'john@mail.com', sdate: '1/16/2010' },
+    //         { recid: 4, fname: "Ravi", lname: "Zacharies", email: 'ravi@mail.com', sdate: '3/13/2007' },
+    //         { recid: 5, fname: "William", lname: "Dembski", email: 'will@mail.com', sdate: '9/30/2011' },
+    //         { recid: 6, fname: "David", lname: "Peterson", email: 'david@mail.com', sdate: '4/5/2010' }
+    //     ]
+    // });
 }
+
 /******************************************************************************** */
 //Chart Logic
-function updateChart (col_idx, update_data){
+function updateChart (col_idx, update_data, side){
   var leftcharttype = $("#left-type-dd").val()
   var rightcharttype = $("#right-type-dd").val()
-  myChart.config.data.datasets[0].type=leftcharttype
-  myChart.config.data.datasets[1].type=rightcharttype
-  if (update_data==true){
-    let data_col=getDataColumn(col_idx)
-    myChart.data.datasets[0].data=data_col
-  }
+  const datasets=myChart.config.data.datasets
+  datasets[0].type=leftcharttype
+  // myChart.config.data.datasets[1].type=rightcharttype
+  // if (update_data==true){
+  //   if(col_idx==-1 && datasets.length==2){
+  //     datasets.pop()
+  //   }
+  //   else if (side==1 && col_idx>0)
+  //   let data_col=getDataColumn(col_idx)
+  //   myChart.data.datasets[0].data=data_col
+  // }
   myChart.update()
 }
+var chart_bg_color = {'left': 'rgba(255, 67, 46, 0.8)',
+                 'right':  'rgba(54, 162, 235, 0.8)'}
+
+var chart_bo_color = {'left': 'rgba(255, 67, 46, 1)',
+'right':  'rgba(54, 162, 235, 1)'}
+
+
+function loadChartData(dataset, col_idx)
+{
+  let values = getDataColumn(col_idx)
+  dataset.data = values
+  dataset.backgroundColor = chart_bg_color[dataset.yAxisID]
+  dataset.borderColor = chart_bo_color[dataset.yAxisID]
+}
+
 function createChart() {
   // createStackedBarChart()
  
   console.log("creating chart");
-  var col_idx = parseInt($("#chartlyaxisdd").val());
-  var values = getDataColumn(col_idx)
-  var values2 = values.map(x=>x*2)
-  var leftcharttype = $("#left-type-dd").val()
-  var rightcharttype = $("#right-type-dd").val()
-  const labels = getLabels();
+  //var col_idx = parseInt($("#chartlyaxisdd").val());
+  //var values = getDataColumn(col_idx)
+ // var values2 = values.map(x=>x*2)
+  //var leftcharttype = $("#left-type-dd").val()
+  //var rightcharttype = $("#right-type-dd").val()
+  //const labels = getLabels();
 
     var canvas = $('#myChart')
     const data = {
-      labels: labels,
-      datasets: [{
-      label: 'A',
-      yAxisID: 'A',
-      type: leftcharttype,
-      data: values,
-      backgroundColor: 'rgb(255,0,0,0.2)',
-      borderColor: 'rgb(255,0,0,0.8)',
-    }, {
-      label: 'B',
-      yAxisID: 'B',
-      type: rightcharttype,
-      data: [],
-      backgroundColor: 'rgb(0,255,0,0.2)',
-      borderColor: 'rgb(0,255,0,0.8)',
-    }]
+      labels: getLabels(),
+      datasets: []
     }
     const config ={
-      type: leftcharttype,
+      type:  'bar',
       data: data,
       options: {
         aspectRatio: 1.2,
         scales: {
-            'A': {
+            'left': {
                 type: 'linear',
                 position: 'left'
             },
-            'B': {
+            'right': {
                 type: 'linear',
                 position: 'right' 
             },
@@ -531,6 +558,11 @@ function createChart() {
       }
     }
     myChart = new Chart(canvas, config);
+
+    cds = new Chart_Data_State(myChart)    
+    cds.init('left', 'none', 'bar')
+    cds.init('right', 'none', 'bar')
+    cds.onchange(loadChartData)
 };
 
 function calculatePoint(i, intervalSize, colorRangeInfo) {
@@ -690,79 +722,7 @@ async function onclick_submit() {
     server_js=server_result["data"]
     if (server_meta.is_range)
       server_range = server_result.range;
-
-    /*var tblhead = $("#tableHead");
-    tblhead.html("");
-
-    tblhead.append("<th scope='col'>Row</th>");
-
-    for (i = 0; i < selected_gbys.length; i++) {
-      tblhead.append("<th scope='col'>" + selected_gbys[i] + "</th>");
-    }
-
-    for (i = 0; i < selected_vals.length; i++) {
-      tblhead.append("<th scope='col'>" + selected_vals[i] + "</th>");
-    }
-
-    var tbl = $("#resultsTable");
-    tbl.html("");
-    var str_row = "";
-    var prev_gby = "";
-    var row_palette = 0;
-    var row_color = 0;
-    gbyarray=[];
-    valarray=[];
-    
-    for (i = 0; i < server_js.length; i++) {
-      const row = server_js[i];
-      //populate the table
-      const gbys = row[0];
-      const vals = row[1];
-      var border_width = "1px";
-      //choose the row color
-      if (gbys[0] != prev_gby && gbys.length > 1) {
-        //if we started a new block (based on the first gby)
-        //switch the palette
-        //but only do this if we have more than one gby
-
-        row_palette = 1 - row_palette;
-        row_color = 0;
-        border_width = "3px";
-      } else row_color = 1 - row_color; //alternate the row color
-
-      var bcolor = table_row_colors[row_palette][row_color];
-      str_row += `<tr style="border-top: ${border_width} solid">`;
-      var cell_style = `style="background-color:${bcolor};border-right:1px solid"`;
-
-      str_row += `<td ${cell_style}>${i + 1}</td>`;
-      for (g = 0; g < gbys.length; g++) {
-        var gby = gbys[g];
-        gbyarray.push(gby)
-        var opacity = 1;
-        if (g == 0 && gby == prev_gby) {
-          //gby=" "
-          opacity = 0.25;
-        }
-
-        if (opacity != 1)
-          str_row += `<td style="background-color:${bcolor};border-right:1px solid"><b style="color:#CCCCCC">${gby}</b></td>`;
-        else str_row += `<td ${cell_style}"><b>${gby}</b></td>`;
-      }
-
-      prev_gby = gbys[0];
-      for (v = 0; v < vals.length; v++) {
-        var val = vals[v]
-        valarray.push(val)
-        str_row += `<td ${cell_style}"><b>${formatNumber(vals[v])}</b></td>`;
-      }
-      str_row += "</tr>";
-      if (i % 100 == 99) {
-        tbl.append(str_row);
-        str_row = "";
-      }
-    }
-    tbl.append(str_row);
-    */
+  
     updateGrid(server_js, selected_gbys, selected_vals);
     console.timeEnd("process response");
     disableChart(false);
@@ -771,6 +731,7 @@ async function onclick_submit() {
       myChart.destroy();
     }
     createChart();
+    $('#chartlyaxisdd').trigger("change");
   });
   console.timeEnd("onclick_submit");
 }
@@ -830,28 +791,30 @@ $("#rangedimdd").on("change", function () {
   ddrangemeasure.html("");
   for (measure of all_dim_measures[dim]) {
     ddrangemeasure.append(
-      "<option value=" + measure + ">" + measure + "</option>"
+      "<option value=" + measure + ">" + measure + "</updaoption>"
     );
   }
 });
 
 $("#chartlyaxisdd").on("change", function () {
-  var col_idx = parseInt($("#chartlyaxisdd").val());
-  updateChart(col_idx, true)
+  let col_idx = parseInt($("#chartlyaxisdd").val());
+  let label = $("#chartlyaxisdd option:selected").text();
+  cds.update_label('left', label , col_idx)
 });
 
 $("#chartryaxisdd").on("change", function () {
-  var col_idx = parseInt($("#chartryaxisdd").val());
-  updateChart(col_idx, true)
+  let col_idx = parseInt($("#chartryaxisdd").val());
+  let label = $("#chartryaxisdd option:selected").text(); 
+  cds.update_label('right', label , col_idx)
 });
 
 
 $("#left-type-dd").on("change", function () {
-  updateChart(0, false)
+  cds.update_type('left', $("#left-type-dd").val())
 });
 
 $("#right-type-dd").on("change", function () {
-  updateChart(0, false)
+  cds.update_type('right', $("#right-type-dd").val())
 });
 
 const allowedChars_posInteger = new Set("0123456789");
@@ -862,7 +825,9 @@ $(".positive-integer-input").on("keypress", function (e) {
 
   if (val == 0 && key == "0") {
     return false;
-  } else return allowedChars_posInteger.has(e.originalEvent.key);
+  } 
+  else 
+  return allowedChars_posInteger.has(e.originalEvent.key);
 });
 const allowedChars_Float = new Set("0123456789+-.Ee");
 $(".float-input").on("keypress", function (e) {
