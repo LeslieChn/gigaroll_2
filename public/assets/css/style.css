@@ -12,10 +12,59 @@ body {
   font-weight: bold;
 }
 
-.table-striped > tbody > tr:hover td {
+.w2ui-toolbar table.w2ui-button:hover{
   background-color: gold;
 }
 
+.w2ui-grid-data {
+  font-weight:bold
+}
+
+#grid_grid_toolbar {
+  background-color: rgb(129, 185, 185);
+}
+
+.gby-breadcrumb {
+  margin-right: 50px;
+}
+
+.val-breadcrumb {
+  margin-left: 50px
+}
+
+.gby-item {
+  background-color: rgb(5, 155, 155);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 16px;
+}
+
+.gby-item:hover {
+  background-color: rgb(3, 93, 93);
+}
+
+.val-item {
+  background-color: rgb(255, 81, 0);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 16px;
+}
+
+.val-item:hover {
+  background-color: rgb(153, 48.6, 0);
+}
 /*
 .table-striped > tbody > tr > td:hover {
 border:	5px solid

@@ -106,6 +106,24 @@ function formatNumber(num) {
   return num.toLocaleString("en");
 }
 
+function findMinMax(arr) 
+{
+  let min = arr[0], max = arr[0];
+
+  for (let i = 1, len=arr.length; i < len; i++) 
+  {
+    let v = arr[i];
+
+    if (v < min)
+      min = v;
+    else if (v > max)
+      max = v
+ 
+  }
+
+  return [min, max];
+}
+
 var base_dim = "";
 var all_group_bys = []; //= ["city", "postal_code", "county", "state_code","prop_type", "prop_status"];
 var all_dim_measures = {};
@@ -168,7 +186,6 @@ async function InitPage() {
 
   $("#addrow").trigger("click");
   $("#addgbyrow").trigger("click");
-
   console.log(dim_info);
   $('#ddgroupby1').val("prop_type");
   $('#grid').w2grid({
@@ -196,12 +213,12 @@ function onclick_addGbyRow() {
 
   str_row = "<tr id=" + "gbytablerow" + last_index + ">";
   str_row +=
-    "<td><select class='form-select'aria-label='Default select example' id=" +
+    "<td><select class='form-select groupby-select'aria-label='Default select example' id=" +
     ddgroupby +
     "></select></td>";
   if (used_gby_indices.size > 1)
     str_row +=
-      "<td><button class='btn btn-warning delete-gbyrow-class'type='button' value=" +
+      "<td><button class='btn btn-sm btn-warning delete-gbyrow-class'type='button' value=" +
       last_index +
       ">Delete</button></td>";
   str_row += "</tr>";
@@ -244,7 +261,7 @@ function onclick_addMeasureRow() {
     "></select></td>";
   if (used_indices.size > 1)
     str_row +=
-      "<td><button class='btn btn-warning delete-row-class'type='button' value=" +
+      "<td><button class='btn btn-sm btn-warning delete-row-class'type='button' value=" +
       last_index +
       ">Delete</button></td>";
   str_row += "</tr>";
@@ -294,7 +311,7 @@ function getRangeDef() {
 }
 
 function getSelectedGbys() {
-  var g_array = [];
+  var g_array=[]
   for (let idx of used_gby_indices) {
     var ddgroupby = "#ddgroupby" + idx;
     var selected_gby = $(ddgroupby).val();
@@ -402,22 +419,69 @@ function cellAttribute2(cell, row, col) {
   }
 }
 /****************************************************/
-function data_false (){
-  return false
+function openDetailsPage()
+{
+  let sel = w2ui.grid.getSelection();
+  console.log(sel)
+  let dim_filters = ""
+  let val_filters = ""
+
+  for (let i=0; i<selected_gbys.length; ++i)
+  {
+    let g = selected_gbys[i];
+
+    if (i == 0 && server_meta.is_range) 
+    {
+      meas = selected_gbys[0].split(';')[0].slice(6) //parse the line, range(dim:measure;etc)
+      //result is of the form dim:measure
+
+      //assume selected ranges are continuous
+      //TODO: remove this assumption in the future
+
+      //merge the range intervals by only looking
+      //at the first and last intervals
+
+      let [min_idx, max_idx] = findMinMax(sel);
+
+      let rg1 = w2ui.grid.get(min_idx)[g]
+      let rg_interval1 = server_range[rg1]
+
+      let rg2 = w2ui.grid.get(max_idx)[g]
+      let rg_interval2 = server_range[rg2]
+
+      let rg_interval = [ rg_interval1[0], rg_interval2[1]]
+
+      if (rg_interval[0] == 'Below')
+        val_filters = `${meas}<${rg_interval[1]}`;
+      else if (rg_interval[1] == 'Above')
+        val_filters = `${meas}>=${rg_interval[0]}`;
+      else
+        val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
+    }
+    else
+    {
+      let gby_set = new Set()
+      for (let s of sel)
+        gby_set.add(w2ui.grid.get(s)[g])
+        
+      gby_str = ""
+      for (let e of gby_set)
+        gby_str += e + ','
+
+      dim_filters += g + ':' + gby_str + ";"
+    }
+  }  
+  sessionStorage.setItem("base_dim", base_dim)
+  sessionStorage.setItem("dim_filters", dim_filters)
+  sessionStorage.setItem("val_filters", val_filters)
+  window.open('./details.html', '_blank');
+
+  console.log(dim_filters)
 }
 
-function data_true (){
-  return true
-}
 
 function updateGrid(server_js, gby_headers, val_headers) {
-  /*searches: [
-    { field: 'recid', text: 'ID ', type: 'int' },
-    { field: 'lname', text: 'Last Name', type: 'text' },
-    { field: 'fname', text: 'First Name', type: 'text' },
-    { field: 'email', text: 'Email', type: 'text' },
-    { field: 'sdate', text: 'Start Date', type: 'date' }
-],*/
+
   $('#grid').show()
   $().w2destroy('grid');
   // w2ui.grid.clear(true)
@@ -426,11 +490,11 @@ function updateGrid(server_js, gby_headers, val_headers) {
   let columns=[]
   for (let col of gby_headers){
     columns.push({field:col, text:col, attr:col, sortable:true})
-    searches.push({field:col, text:col, type:"text"})
+    searches.push({field:col, text:col, label:col, type:"text"})
   }
   for (let col of val_headers){
     columns.push({field:col, text:col, sortable:true})
-    searches.push({field:col, text:col, type:"float"})
+    searches.push({field:col, text:col, label:col, type:"float"})
   }
   // w2ui.grid.searches=searches
   let count=1
@@ -450,22 +514,44 @@ function updateGrid(server_js, gby_headers, val_headers) {
     name : 'grid',  
     show: {
       toolbar: true,
-      footer: true
+      footer: true,
+      lineNumbers: true,
     },
     toolbar: {
       items: [
           { type: 'break' },
-          { type: 'button', id: 'mybutton', text: 'My other button', img: 'w2ui-icon-colors' },
-          { type: 'button', id: 'mybutton2', text: 'thing', img: 'w2ui-icon-columns' }
+          { type: 'button', id: 'launch-details', text: 'Details', img: 'icon-page', disabled: true },
       ],
       onClick: function (target, data) {
-          console.log(target);
+          if (target == 'launch-details')
+            openDetailsPage();
       }
     },
     multiSearch: true,
     columns: columns,
     searches: searches,
-    records: records
+    records: records,
+
+    onSelect: function(event) {
+        this.toolbar.enable('launch-details');
+    },
+
+    onUnselect: function(event) {
+        event.onComplete = function()
+        {
+          if (this.getSelection().length == 0)
+            this.toolbar.disable('launch-details');
+        }
+     },
+ 
+    onClick: function(event) {
+      event.onComplete = function()
+        {
+          if (this.getSelection().length == 0)
+            this.toolbar.disable('launch-details');
+        }
+     },
+
   })
 //   // w2ui['grid'].addColumn('email', [
 //   //   { field: 'lname', text: 'Last Name', size: '30%' },
@@ -700,7 +786,16 @@ async function onclick_submit() {
   selected_gbys = getSelectedGbys();
   console.log(selected_gbys);
   selected_vals = getSelectedMeasures(); 
-   
+  
+  $(".gby-breadcrumb").html("")
+  for (i=0;i<selected_gbys.length;i++){
+  $(".gby-breadcrumb").append(`<button class="gby-item">${selected_gbys[i]}</button>`)
+  }
+
+  $(".val-breadcrumb").html("")
+  for (j=0;j<selected_vals.length;j++){
+  $(".val-breadcrumb").append(`<button class="val-item">${selected_vals[j]}</button>`)
+  }
   console.log(selected_vals);
 
   var params = {
@@ -740,16 +835,6 @@ $(document).ready(InitPage);
 $(document).on("click", "#submitButton", onclick_submit);
 $(document).on("click", "#addrow", onclick_addMeasureRow);
 $(document).on("click", "#addgbyrow", onclick_addGbyRow);
-
-$(document).on("hidden.bs.collapse", "#allgroupbys2", function (e) {
-  var gby_str = "Chosen Groupbys : ";
-  for (let idx of used_gby_indices) {
-    var ddgroupby = "#ddgroupby" + idx;
-    var selected_gby = $(ddgroupby).val();
-    gby_str += selected_gby + " ";
-  }
-  $("#groupbystring").html(gby_str);
-});
 
 $(document).on("hidden.bs.collapse", "#allmeasures2", function (e) {
   var msr_str = "Chosen Measures : ";

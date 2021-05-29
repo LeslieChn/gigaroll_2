@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
   <title>Gigaroll</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -22,12 +21,7 @@
 <body>
   <div class="container-fluid">
     <div class="row m-2">
-      <div class="col-9 border border-warning">
-        <h6 id="groupbystring"></h6>
-        <div class="row">
-          <h6 id="measurestring"></h6>
-        </div>
-      </div>
+     
     </div>
     <div class="accordion" id="accordionExample">
       <div class="accordion-item">
@@ -62,7 +56,7 @@
                   aria-labelledby="query1-tab">
                   <div class="row">
                     <div class="col-3">
-                      <button type="button" class="btn btn-success" id="addgbyrow">Add Groupby</button>
+                      <button type="button" class="btn btn-sm btn-success" id="addgbyrow">Add Groupby</button>
                       <table class="table">
                         <thead>
                           <tr>
@@ -75,7 +69,7 @@
                       </table>
                     </div>
                     <div class="col-6">
-                      <button type="button" class="btn btn-success" id="addrow">Add Measure</button>
+                      <button type="button" class="btn btn-sm btn-success" id="addrow">Add Measure</button>
                       <table class="table">
                         <thead>
                           <tr>
@@ -110,17 +104,17 @@
                     </div>
                     <div class="row">
                       <div class="form-floating">
-                        <input type="text" class="float-input form-control" id="rangeStart" placeholder="Range Start"
+                        <input type="text" class="float-input form-control form-control-sm" id="rangeStart" placeholder="Range Start"
                           data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Range Start</label>
                       </div>
                       <div class="form-floating">
-                        <input type="text" class="float-input form-control" id="rangeSize" placeholder="Range Size"
+                        <input type="text" class="float-input form-control form-control-sm" id="rangeSize" placeholder="Range Size"
                           data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Bucket Size</label>
                       </div>
                       <div class="form-floating">
-                        <input type="text" class="positive-integer-input form-control" id="numBuckets"
+                        <input type="text" class="positive-integer-input form-control form-control-sm" id="numBuckets"
                           placeholder="Buckets" data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Buckets</label>
                       </div>
@@ -141,14 +135,28 @@
 
   <div class="row justify-content-md-center m-2">
     <div class="col-4">
-      <button type="submit" class="btn btn-outline-success" id="submitButton">Submit</button>
+      <button type="submit" class="btn btn-sm btn-outline-success" id="submitButton">Submit</button>
     </div>
   </div>
+
+<nav class="d-flex justify-content-center" aria-label="breadcrumb">
+  <div class="gby-breadcrumb">
+    <!-- <li class="breadcrumb-item"><a href="#">Home</a></li>
+    <li class="breadcrumb-item"><a href="#">Library</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Data</li> -->
+  </div>
+  <div class="val-breadcrumb">
+    <!-- <li class="breadcrumb-item"><a href="#">Home</a></li>
+    <li class="breadcrumb-item"><a href="#">Library</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Data</li> -->
+  </div>
+</nav>
+
 
   <div class="container-fluid" id="results">
     <div class="row" id="resultsRow1">
       <div class="col-6" id="tableWindow">
-        <div id="grid" style="width: 100%; height: 250px;"></div>
+        <div id="grid" style="width: 100%; height: 650px;"></div>
       </div>
       <div class="col-6" id="chartWindow">
         <div class="row justify-content-center">
