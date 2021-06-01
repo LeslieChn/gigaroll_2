@@ -16,7 +16,7 @@ class Chart_Data_State
     constructor(chart)
     {
         this.chart = chart
-        this.label_of_axis = {}
+        this.label_of_axis = []
         this.type_of_axis = {}
         this.data_changed = function (d,a){}
     }
@@ -28,7 +28,7 @@ class Chart_Data_State
 
     init(axis,label,type)
     {
-        this.label_of_axis[axis] = label
+        this.label_of_axis[axis] = new Set(label)
         this.type_of_axis[axis] = type
     }
 
@@ -48,43 +48,31 @@ class Chart_Data_State
 
     update_label(axis, new_label, arg)
     {
-        let old_label = this.label_of_axis[axis]
+        let label_exists = this.label_of_axis[axis].has(new_label)
         let ds = this.chart.data.datasets
 
-        if (old_label != new_label)
+        if (label_exists)
         {
-            if (new_label == 'none')
-            {
-                this.chart.data.datasets = ds.filter( e => e.yAxisID !=axis )
-                this.chart.update();
-            }
-            else if (old_label == 'none')
-            {
-                let d = 
-                {
-                    label: new_label,
-                    yAxisID: axis,
-                    type: this.type_of_axis[axis]
-                }
-                this.data_changed(d,arg)
-                this.chart.data.datasets.push(d)
-                this.chart.update();
 
-            }
-            else
-            {
-                for (let d of this.chart.data.datasets)
-                {
-                    if (d.yAxisID== axis)
-                    {
-                        d.label = new_label;
-                        this.data_changed(d,arg)
-                    }
-                }
-                this.chart.update();
-            }
-            this.label_of_axis[axis] = new_label
+            this.chart.data.datasets = ds.filter( e => e.yAxisID !=axis || e.label!=new_label )
+            this.label_of_axis[axis].delete(new_label)
+            this.chart.update();
         }
+        else 
+        {
+            let d = 
+            {
+                label: new_label,
+                yAxisID: axis,
+                type: this.type_of_axis[axis]
+            }
+            this.label_of_axis[axis].add(new_label)
+            this.data_changed(d,arg)
+            this.chart.data.datasets.push(d)
+            this.chart.update();
+
+        }
+
     }
 
 }
@@ -142,6 +130,94 @@ var cds = null; //Chart_Data_State
 var selected_vals=null;
 var selected_gbys=null;
 /********************************************************/
+$(function () {    
+  var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
+  $('#layout').w2layout({
+      name: 'layout',
+      panels: [
+          { type: 'left', size: "65%", resizable: true, style: pstyle, hidden:false, content: '<div id="grid" style="width: 100%; height: 600px;"></div>' },
+          { type: 'main', size: "35%", style: pstyle + 'margin: 5px', hidden:false, content: '<canvas style="background-color:ghostwhite; width: 100%; height:100%" id="myChart"></canvas>', 
+              toolbar: {
+                  style: pstyle+'margin: 5px; background-color:rgb(235,235,235)',
+                  items: [
+                    { type: 'menu-check', id: 'l-axis-measures', text: 'Left Y-Axis',
+                      items: []
+                    },
+                    { type: 'menu-radio', id: 'l-axis-type',
+                    text: function (item) {
+                        var text = item.selected;
+                        var el   = this.get('l-axis-type:' + item.selected);
+                        return el.text;
+                    },
+                    selected: 'bar',
+                    items: [
+                        {id: 'bar', text: 'Bar Chart'},
+                        {id: 'line', text: 'Line Chart'},
+                    ]
+                    },
+                    {type:'spacer'},
+                    { type: 'menu-check', id: 'r-axis-measures', text: 'Right Y-Axis',
+                      items: []
+                    },
+                    { type: 'menu-radio', id: 'r-axis-type',
+                    text: function (item) {
+                        var text = item.selected;
+                        var el   = this.get('r-axis-type:' + item.selected);
+                        return el.text;
+                    },
+                    selected: 'bar',
+                    items: [
+                        {id: 'bar', text: 'Bar Chart'},
+                        {id: 'line', text: 'Line Chart'},
+                    ]
+                    }
+                  ],
+                  onClick: function (event) {
+                    console.log(event)
+                    if (event.target.indexOf('l-axis-measures:') >= 0) 
+                    {
+                      let label = event.subItem.text
+                      let col_idx = event.subItem.id
+                      disableMenuItem('r-axis-measures', label, event.subItem.checked)
+                      cds.update_label('left', label, col_idx)
+                    }
+                      
+                    else if (event.target.indexOf('r-axis-measures:') >= 0) 
+                    {
+                      let label = event.subItem.text
+                      let col_idx = event.subItem.id
+                      disableMenuItem('l-axis-measures', label, event.subItem.checked)
+                      cds.update_label('right', label, col_idx)
+                    }
+                    else if (event.target=='l-axis-type:bar'){
+                      cds.update_type('left', 'bar')
+                    }
+                    else if (event.target=='l-axis-type:line'){
+                      cds.update_type('left', 'line')
+                    }
+                    else if (event.target=='r-axis-type:bar'){
+                      cds.update_type('right', 'bar')
+                    }
+                    else if (event.target=='r-axis-type:line'){
+                      cds.update_type('right', 'line')
+                    }
+                  }
+              },
+          }
+      ]
+  });
+});
+
+function disableMenuItem (axis, label, state) {
+  let axis_menu=w2ui.layout.get('main').toolbar.get(axis)
+  for (let item of axis_menu.items){
+    if (item.text==label){
+      item.disabled=state
+      return
+    }
+  }
+}
+
 async function InitPage() {
   console.log("ready!");
   $("#submitButton").prop("disabled", true)
@@ -341,26 +417,29 @@ function disableChart (state){
 }
 
 function initChart(selected_vals) {
+  var left_check_items=[]
+  var right_check_items=[]
   var chartDropdowns = [$("#chartlyaxisdd"), $("#chartryaxisdd")]
   
-  for (let i=0; i<chartDropdowns.length; i++) {
-    dd=chartDropdowns[i]
-    dd.html("")
-    if (i==1){
-      dd.append(`<option value=-1>none</option>`)
-    }
+  // for (let i=0; i<chartDropdowns.length; i++) {
+  //   dd=chartDropdowns[i]
+  //   dd.html("")
+  //   if (i==1){
+  //     dd.append(`<option value=-1>none</option>`)
+  //   }
+  let toolbar = w2ui.layout.get("main").toolbar
+
     for (let j = 0; j<selected_vals.length; ++j) 
     {
       let val = selected_vals[j]
-      dd.append(`<option value=${j}>${val}</option>`);
+      left_check_items.push({id: j, text: val, checked:false, keepOpen: true})
+      right_check_items.push({id: j, text: val, checked:false, keepOpen: true})
     }
-  }
-  var typeDropdown = $(".chart-type")
-  typeDropdown.html("")
-  var chartTypes = ["bar","line"]
-  for(let ctype of chartTypes){
-    typeDropdown.append(`<option value=${ctype}>${ctype}</option>`)
-  }
+    toolbar.get("l-axis-measures").items=left_check_items
+    toolbar.get("r-axis-measures").items=right_check_items
+    toolbar.get('l-axis-measures').selected = []
+    toolbar.get('r-axis-measures').selected = []
+  // }
 }
   
 async function getServerDataColumn (tag, col_idx){
@@ -553,35 +632,11 @@ function updateGrid(server_js, gby_headers, val_headers) {
      },
 
   })
-//   // w2ui['grid'].addColumn('email', [
-//   //   { field: 'lname', text: 'Last Name', size: '30%' },
-//   //   { field: 'fname', text: 'First Name', size: '30%' }
-// ]);
-    // $('#grid').w2grid({
-    //     name: 'grid',
-    //     header: 'List of Names',
-    //     columns: [
-    //         { field: 'fname', text: 'First Name'  },
-    //         { field: 'lname', text: 'Last Name' },
-    //         { field: 'email', text: 'Email'},
-    //         { field: 'sdate', text: 'Start Date'}
-    //     ],
-    //     records: [
-    //         { recid: 1, fname: "Peter", lname: "Jeremia", email: 'peter@mail.com', sdate: '2/1/2010' },
-    //         { recid: 2, fname: "Bruce", lname: "Wilkerson", email: 'bruce@mail.com', sdate: '6/1/2010' },
-    //         { recid: 3, fname: "John", lname: "McAlister", email: 'john@mail.com', sdate: '1/16/2010' },
-    //         { recid: 4, fname: "Ravi", lname: "Zacharies", email: 'ravi@mail.com', sdate: '3/13/2007' },
-    //         { recid: 5, fname: "William", lname: "Dembski", email: 'will@mail.com', sdate: '9/30/2011' },
-    //         { recid: 6, fname: "David", lname: "Peterson", email: 'david@mail.com', sdate: '4/5/2010' }
-    //     ]
-    // });
 }
 
 /******************************************************************************** */
 //Chart Logic
 function updateChart (col_idx, update_data, side){
-  var leftcharttype = $("#left-type-dd").val()
-  var rightcharttype = $("#right-type-dd").val()
   const datasets=myChart.config.data.datasets
   datasets[0].type=leftcharttype
   // myChart.config.data.datasets[1].type=rightcharttype
@@ -849,14 +904,6 @@ $(document).on("hidden.bs.collapse", "#allmeasures2", function (e) {
   $("#measurestring").html(msr_str);
 });
 
-$(document).on("show.bs.collapse", "#allgroupbys2", function (e) {
-  $("#groupbystring").html("");
-});
-
-$(document).on("show.bs.collapse", "#allmeasures2", function (e) {
-  $("#measurestring").html("");
-});
-
 $(document).on("click", ".delete-gbyrow-class", function (e) {
   var index = parseInt(this.value);
   $("#gbytablerow" + index).remove();
@@ -879,27 +926,6 @@ $("#rangedimdd").on("change", function () {
       "<option value=" + measure + ">" + measure + "</updaoption>"
     );
   }
-});
-
-$("#chartlyaxisdd").on("change", function () {
-  let col_idx = parseInt($("#chartlyaxisdd").val());
-  let label = $("#chartlyaxisdd option:selected").text();
-  cds.update_label('left', label , col_idx)
-});
-
-$("#chartryaxisdd").on("change", function () {
-  let col_idx = parseInt($("#chartryaxisdd").val());
-  let label = $("#chartryaxisdd option:selected").text(); 
-  cds.update_label('right', label , col_idx)
-});
-
-
-$("#left-type-dd").on("change", function () {
-  cds.update_type('left', $("#left-type-dd").val())
-});
-
-$("#right-type-dd").on("change", function () {
-  cds.update_type('right', $("#right-type-dd").val())
 });
 
 const allowedChars_posInteger = new Set("0123456789");

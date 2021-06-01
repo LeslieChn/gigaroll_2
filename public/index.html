@@ -20,9 +20,6 @@
 
 <body>
   <div class="container-fluid">
-    <div class="row m-2">
-     
-    </div>
     <div class="accordion" id="accordionExample">
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingOne">
@@ -88,32 +85,32 @@
                   <div class="dropdown">
                     <div class="row">
                       <div class="col">
-                        <div class="form-floating">
-                          <select class="form-select" id="rangedimdd" aria-label="Floating label select example">
+                        <div class="form-floating form-floating-sm">
+                          <select class="form-select form-select-sm" id="rangedimdd" aria-label="Floating label select example">
                           </select>
                           <label for="floatingSelect">Dimension</label>
                         </div>
                       </div>
                       <div class="col">
-                        <div class="form-floating">
-                          <select class="form-select" id="rangemeasuredd" aria-label="Floating label select example">
+                        <div class="form-floating form-floating-sm">
+                          <select class="form-select form-select-sm" id="rangemeasuredd" aria-label="Floating label select example">
                           </select>
                           <label for="floatingSelect">Measure</label>
                         </div>
                       </div>
                     </div>
                     <div class="row">
-                      <div class="form-floating">
+                      <div class="form-floating form-floating-sm">
                         <input type="text" class="float-input form-control form-control-sm" id="rangeStart" placeholder="Range Start"
                           data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Range Start</label>
                       </div>
-                      <div class="form-floating">
+                      <div class="form-floating form-floating-sm">
                         <input type="text" class="float-input form-control form-control-sm" id="rangeSize" placeholder="Range Size"
                           data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Bucket Size</label>
                       </div>
-                      <div class="form-floating">
+                      <div class="form-floating form-floating-sm">
                         <input type="text" class="positive-integer-input form-control form-control-sm" id="numBuckets"
                           placeholder="Buckets" data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
                         <label for="floatingPassword">Buckets</label>
@@ -139,7 +136,7 @@
     </div>
   </div>
 
-<nav class="d-flex justify-content-center" aria-label="breadcrumb">
+<nav class="d-flex justify-content-start" aria-label="breadcrumb">
   <div class="gby-breadcrumb">
     <!-- <li class="breadcrumb-item"><a href="#">Home</a></li>
     <li class="breadcrumb-item"><a href="#">Library</a></li>
@@ -154,43 +151,7 @@
 
 
   <div class="container-fluid" id="results">
-    <div class="row" id="resultsRow1">
-      <div class="col-6" id="tableWindow">
-        <div id="grid" style="width: 100%; height: 650px;"></div>
-      </div>
-      <div class="col-6" id="chartWindow">
-        <div class="row justify-content-center">
-          <div class="col">
-            <div class="form-floating w-50">
-              <select class="form-select" id="chartlyaxisdd" aria-label="Floating label select example">
-              </select>
-              <label for="floatingSelect">Left Y-Axis</label>
-            </div>
-            <div class="form-floating w-50">
-              <select class="form-select chart-type" id="left-type-dd" aria-label="Floating label select example">
-              </select>
-              <label for="floatingSelect">Chart Type1</label>
-            </div>
-          </div>
-          <div class="col">
-            <div class="form-floating w-50">
-              <select class="form-select" id="chartryaxisdd" aria-label="Floating label select example">
-              </select>
-              <label for="floatingSelect">Right Y-Axis</label>
-            </div>
-            <div class="form-floating w-50">
-              <select class="form-select chart-type" id="right-type-dd" aria-label="Floating label select example">
-              </select>
-              <label for="floatingSelect">Chart Type2</label>
-            </div>
-        </div>
-      </div>
-        <div>
-          <canvas id="myChart"></canvas>
-        </div>
-      </div>
-
-    </div>
+    <div id="layout" style="width: 100%; height: 650px;"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
