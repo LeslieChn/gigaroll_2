@@ -20,6 +20,28 @@ class Chart_Data_State
         this.type_of_axis = {}
         this.data_changed = function (d,a){}
     }
+    init_colors(left_colors, right_colors)
+    {
+      this.colors = {left:left_colors, right:right_colors}
+      this.color_assignment = {left:{}, right:{}}
+      this.last_color_idx = {left:0, right:0};
+    }
+
+    get_color(label, axis)
+    {
+      let color = this.color_assignment[axis][label]
+      if (color)
+      {
+        return color;
+      }
+      else
+      {
+        let idx = this.last_color_idx[axis]++
+        let color = this.colors[axis][idx]
+        this.color_assignment[axis][label] = color
+        return color
+      }
+    }
 
     onchange(f)
     {
@@ -60,15 +82,22 @@ class Chart_Data_State
         }
         else 
         {
+          let color = this.get_color(new_label, axis)
             let d = 
             {
                 label: new_label,
                 yAxisID: axis,
-                type: this.type_of_axis[axis]
+                type: this.type_of_axis[axis],
+                backgroundColor: color,
+                borderColor:color
             }
             this.label_of_axis[axis].add(new_label)
             this.data_changed(d,arg)
-            this.chart.data.datasets.push(d)
+            if (axis=='right') 
+              this.chart.data.datasets.push(d)
+            else 
+              this.chart.data.datasets.unshift(d)
+
             this.chart.update();
 
         }
@@ -173,7 +202,6 @@ $(function () {
                     }
                   ],
                   onClick: function (event) {
-                    console.log(event)
                     if (event.target.indexOf('l-axis-measures:') >= 0) 
                     {
                       let label = event.subItem.text
@@ -233,7 +261,6 @@ async function InitPage() {
       break;
     }
   }
-  console.log(base_dim);
   if (base_dim == "") {
     alert("couldn't find base dim");
   }
@@ -262,7 +289,6 @@ async function InitPage() {
 
   $("#addrow").trigger("click");
   $("#addgbyrow").trigger("click");
-  console.log(dim_info);
   $('#ddgroupby1').val("prop_type");
   $('#grid').w2grid({
     name : 'grid',  
@@ -600,10 +626,13 @@ function updateGrid(server_js, gby_headers, val_headers) {
       items: [
           { type: 'break' },
           { type: 'button', id: 'launch-details', text: 'Details', img: 'icon-page', disabled: true },
+          { type: 'button', id: 'drilldown', text: 'Drilldown', icon: 'fas fa-sort-amount-down', disabled: true },
       ],
       onClick: function (target, data) {
           if (target == 'launch-details')
             openDetailsPage();
+          if (target == 'drilldown')
+            popup();
       }
     },
     multiSearch: true,
@@ -612,26 +641,150 @@ function updateGrid(server_js, gby_headers, val_headers) {
     records: records,
 
     onSelect: function(event) {
-        this.toolbar.enable('launch-details');
+      event.onComplete = function(){
+        if (this.getSelection().length > 0){
+          this.toolbar.enable('launch-details');
+          this.toolbar.enable('drilldown')
+        }
+      }
     },
 
     onUnselect: function(event) {
         event.onComplete = function()
         {
-          if (this.getSelection().length == 0)
+          if (this.getSelection().length == 0){
             this.toolbar.disable('launch-details');
+            this.toolbar.disable('drilldown')
+          }
         }
      },
  
     onClick: function(event) {
       event.onComplete = function()
         {
-          if (this.getSelection().length == 0)
+          if (this.getSelection().length == 0){
             this.toolbar.disable('launch-details');
+            this.toolbar.disable('drilldown')
+          }
         }
      },
 
   })
+}
+/****************************************************/
+function popup() {
+
+  w2popup.open({
+      title: 'Drilldown',
+      body: '<div class="w2ui-centered" style="line-height: 1.8">Choose a new Groupby<br><label>Available Groupbys:</label><input type="list" class="w2ui-input" id="drilldown-groupby" style="width: 300px"></div>',
+      buttons: '<button class="w2ui-btn" onclick="drillDownOk()">Ok</button>'+
+      '<button class="w2ui-btn" onclick="w2popup.close()">Cancel</button>',
+      onOpen(event) {
+        event.done(() => {
+            $('#w2ui-popup input').focus()
+        })
+      },
+      onKeydown(event) {
+        console.log('keydown', event)
+      },
+      onMove(event) {
+        console.log('popup moved', event)
+    }
+    });
+    let g=new Set(selected_gbys)
+    let g2=all_group_bys.filter(e=>!g.has(e))
+    $('input[type=list]').w2field('list', { items: g2})
+}
+
+function drillDownOk() {
+  let groupby=$('#drilldown-groupby').val()
+  w2popup.close()
+
+  let sel = w2ui.grid.getSelection();
+  console.log(sel)
+  let dim_filters = ""
+  let val_filters = ""
+
+  for (let i=0; i<selected_gbys.length; ++i)
+  {
+    let g = selected_gbys[i];
+
+    if (i == 0 && server_meta.is_range) 
+    {
+      meas = selected_gbys[0].split(';')[0].slice(6) //parse the line, range(dim:measure;etc)
+      //result is of the form dim:measure
+
+      //assume selected ranges are continuous
+      //TODO: remove this assumption in the future
+
+      //merge the range intervals by only looking
+      //at the first and last intervals
+
+      let [min_idx, max_idx] = findMinMax(sel);
+
+      let rg1 = w2ui.grid.get(min_idx)[g]
+      let rg_interval1 = server_range[rg1]
+
+      let rg2 = w2ui.grid.get(max_idx)[g]
+      let rg_interval2 = server_range[rg2]
+
+      let rg_interval = [ rg_interval1[0], rg_interval2[1]]
+
+      if (rg_interval[0] == 'Below')
+        val_filters = `${meas}<${rg_interval[1]}`;
+      else if (rg_interval[1] == 'Above')
+        val_filters = `${meas}>=${rg_interval[0]}`;
+      else
+        val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
+    }
+    else
+    {
+      let gby_set = new Set()
+      for (let s of sel)
+        gby_set.add(w2ui.grid.get(s)[g])
+        
+      gby_str = ""
+      for (let e of gby_set)
+        gby_str += e + ','
+
+      dim_filters += g + ':' + gby_str + ";"
+    }
+  }  
+  console.log(dim_filters)
+
+  var params = {
+    qid: "MD_AGG",
+    dim: base_dim,
+    gby: groupby,
+    val: Comma_Sep(selected_vals),
+    dim_filters: dim_filters
+  };
+
+  selected_gbys=[groupby]
+
+  //var response = await serverRequest(params);
+  serverRequest(params).then((server_result) => {
+    console.time("process response");
+    server_meta=server_result["meta"]
+    if (server_meta.status != "OK"){
+      alert("The data server returned "+ server_meta.status)
+      return
+    }
+    server_js=server_result["data"]
+    if (server_meta.is_range)
+      server_range = server_result.range;
+  
+    updateGrid(server_js, selected_gbys, selected_vals);
+    console.timeEnd("process response");
+    disableChart(false);
+    initChart(selected_vals);
+    if (myChart != null){ 
+      myChart.destroy();
+    }
+    createChart();
+    $('#chartlyaxisdd').trigger("change");
+  });
+  console.timeEnd("onclick_submit");
 }
 
 /******************************************************************************** */
@@ -661,8 +814,8 @@ function loadChartData(dataset, col_idx)
 {
   let values = getDataColumn(col_idx)
   dataset.data = values
-  dataset.backgroundColor = chart_bg_color[dataset.yAxisID]
-  dataset.borderColor = chart_bo_color[dataset.yAxisID]
+  // dataset.backgroundColor = chart_bg_color[dataset.yAxisID]
+  // dataset.borderColor = chart_bo_color[dataset.yAxisID]
 }
 
 function createChart() {
@@ -700,7 +853,14 @@ function createChart() {
     }
     myChart = new Chart(canvas, config);
 
-    cds = new Chart_Data_State(myChart)    
+    cds = new Chart_Data_State(myChart)
+    var l_colors= []
+    var r_colors= []
+    for (let i=0; i<selected_vals.length;++i){
+      l_colors.push(d3.interpolateBlues(0.25+(i+1)/selected_vals.length/2))
+      r_colors.push(d3.interpolateReds(0.25+(i+1)/selected_vals.length/2))
+    }
+    cds.init_colors(l_colors, r_colors)    
     cds.init('left', 'none', 'bar')
     cds.init('right', 'none', 'bar')
     cds.onchange(loadChartData)
@@ -839,7 +999,6 @@ async function onclick_submit() {
   // await new Promise(r => setTimeout(r, 5000));
   console.time("onclick_submit");
   selected_gbys = getSelectedGbys();
-  console.log(selected_gbys);
   selected_vals = getSelectedMeasures(); 
   
   $(".gby-breadcrumb").html("")
@@ -851,7 +1010,6 @@ async function onclick_submit() {
   for (j=0;j<selected_vals.length;j++){
   $(".val-breadcrumb").append(`<button class="val-item">${selected_vals[j]}</button>`)
   }
-  console.log(selected_vals);
 
   var params = {
     qid: "MD_AGG",
@@ -864,7 +1022,6 @@ async function onclick_submit() {
   serverRequest(params).then((server_result) => {
     console.time("process response");
     server_meta=server_result["meta"]
-    console.log(server_meta);
     if (server_meta.status != "OK"){
       alert("The data server returned "+ server_meta.status)
       return
@@ -918,7 +1075,6 @@ $(document).on("click", ".delete-row-class", function (e) {
 
 $("#rangedimdd").on("change", function () {
   var dim = $("#rangedimdd").val();
-  console.log(dim);
   var ddrangemeasure = $("#rangemeasuredd");
   ddrangemeasure.html("");
   for (measure of all_dim_measures[dim]) {

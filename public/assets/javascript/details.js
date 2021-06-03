@@ -84,15 +84,15 @@ $(function () {
             {
               type: "button",
               id: "item6",
-              text: "Display Rectangle",
-              // onClick: displayRect,
+              text: "Draw on Map",
+                 onClick: drawOnMap,
             },
             { type: "html", html: "<pre> </pre>" },
             {
               type: "button",
               id: "item7",
               text: "Find Points",
-              // onClick: findPoints,
+                  onClick: findPoints,
             },
             { type: "spacer"},
             {
@@ -147,6 +147,94 @@ function restoreMap()
   w2ui.layout.show("main", true)
   w2ui.layout.get("bottom").size = '50%'
   w2ui.layout.show("bottom", true)
+}
+var drawingManager = null
+var rectangle = null
+var circle = null
+
+function drawOnMap()
+{
+  if (rectangle)
+  {
+    rectangle.setMap(null)
+    rectangle = null
+  }
+
+  if (circle)
+  {
+    circle.setMap(null)
+    circle = null
+  }
+
+
+  if (drawingManager == null)
+    drawingManager = new google.maps.drawing.DrawingManager({
+    drawingMode: google.maps.drawing.OverlayType.RECTANGLE,
+    drawingControl: true,
+    drawingControlOptions: {
+      position: google.maps.ControlPosition.BOTTOM_CENTER,
+      drawingModes: ['rectangle', 'circle']
+    },
+    rectangleOptions: {
+      editable: true,
+      draggable: true
+    },
+    
+    circleOptions: {
+      editable: true,
+      draggable: true
+    },
+    
+    });
+    drawingManager.setMap(map);
+    
+    google.maps.event.addListener(drawingManager, 'rectanglecomplete', 
+    function(rect) {
+    //event.overlay.set('editable', false);
+    drawingManager.setMap(null);
+    rectangle = rect;
+    console.log(rect);
+    });
+    google.maps.event.addListener(drawingManager, 'circlecomplete', 
+    function(circ) {
+    drawingManager.setMap(null);
+    circle = circ;
+    console.log(circle);
+    });
+
+}
+
+function findPoints()
+{
+if (rectangle != null)
+{
+  let bounds = rectangle.getBounds();
+  
+  let n_points = 0;
+  for (c of coords)
+  {
+    let contains = bounds.contains(c)
+    if (contains)
+      ++n_points;
+  }
+  alert("Found " + n_points + " points")
+}
+else if (circle != null)
+{
+
+  let n_points = 0;
+  let center = circle.getCenter()
+  let radius = circle.getRadius()
+  let dist = google.maps.geometry.spherical.computeDistanceBetween
+  for (c of coords)
+  {
+    let contains = dist(center, new google.maps.LatLng(c)) <= radius;
+    if (contains)
+      ++n_points;
+  }
+  alert("Found " + n_points + " points")
+}
+
 }
 /************************************************************** */
 function updateGrid(server_js) {

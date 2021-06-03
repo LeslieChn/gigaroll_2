@@ -1,0 +1,14 @@
+{
+  "name": "@harrislapiroff/massachusetts-covid-cases-town-by-town",
+  "main": "e8101aeed8ffaf07@945.js",
+  "version": "945.0.0",
+  "homepage": "https://observablehq.com/@harrislapiroff/massachusetts-covid-cases-town-by-town",
+  "author": {
+    "name": "Harris L.",
+    "url": "https://observablehq.com/@harrislapiroff"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4"
+  }
+}

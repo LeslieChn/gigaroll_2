@@ -40,6 +40,10 @@ body {
   font-size:12px
 }
 
+.w2ui-tb-image> .fa-sort-amount-down{ 
+ color: rgb(219,93,40) !important
+}
+
 .gby-item {
   background-color: rgb(5, 155, 155);
   border: none;
