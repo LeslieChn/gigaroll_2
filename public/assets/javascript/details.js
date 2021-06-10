@@ -1,6 +1,7 @@
 var coords = []
 var bounds = {}
 var map_center = {}
+var rec_ids = []
 var map = null
 var markers = [];
 var heatmap = null
@@ -177,12 +178,16 @@ function drawOnMap()
     },
     rectangleOptions: {
       editable: true,
-      draggable: true
+      draggable: true,
+      fillColor: 'red',
+      fillOpacity: 0.3
     },
     
     circleOptions: {
       editable: true,
-      draggable: true
+      draggable: true,
+      fillColor: 'red',
+      fillOpacity: 0.3
     },
     
     });
@@ -206,35 +211,50 @@ function drawOnMap()
 
 function findPoints()
 {
-if (rectangle != null)
-{
-  let bounds = rectangle.getBounds();
-  
-  let n_points = 0;
-  for (c of coords)
-  {
-    let contains = bounds.contains(c)
-    if (contains)
-      ++n_points;
-  }
-  alert("Found " + n_points + " points")
-}
-else if (circle != null)
-{
+  let filter_table = false
 
-  let n_points = 0;
-  let center = circle.getCenter()
-  let radius = circle.getRadius()
-  let dist = google.maps.geometry.spherical.computeDistanceBetween
-  for (c of coords)
+  if (rectangle != null)
   {
-    let contains = dist(center, new google.maps.LatLng(c)) <= radius;
-    if (contains)
-      ++n_points;
-  }
-  alert("Found " + n_points + " points")
-}
+    w2ui.grid.selectNone()
 
+    let bounds = rectangle.getBounds();
+    w2ui.grid.last.searchIds = []
+    
+    for (let i=0; i<coords.length; ++i)
+    {
+      let contains = bounds.contains(coords[i])
+      if (contains)
+        w2ui.grid.last.searchIds.push(rec_ids[i]-1);
+    }    
+    filter_table = true
+  }
+
+  else if (circle != null)
+  {
+    w2ui.grid.last.searchIds = []
+
+    let center = circle.getCenter()
+    let radius = circle.getRadius()
+    let dist = google.maps.geometry.spherical.computeDistanceBetween
+    
+    for (let i=0; i<coords.length; ++i)
+    {
+      let contains = dist(center, new google.maps.LatLng(coords[i])) <= radius;
+      if (contains)
+        w2ui.grid.last.searchIds.push(rec_ids[i]-1);
+    }
+    filter_table = true
+  }
+
+  if (filter_table)
+  {
+    w2ui.grid.last.multi = true
+    w2ui.grid.last.logic = 'OR'
+    w2ui.grid.total = w2ui.grid.last.searchIds.length
+    w2ui.grid.searchData = [{'field': 'recid', 'value':1}]
+    w2ui.grid.refresh();
+    w2ui.grid.selectAll();
+  }
 }
 /************************************************************** */
 function updateGrid(server_js) {
@@ -347,6 +367,8 @@ function launchMap()
   // sessionStorage.setItem("dim_filters", dim_filters)
   // sessionStorage.setItem("val_filters", val_filters)
   coords=[]
+  rec_ids = []
+
   let center_lat=0
   let center_lng=0
   let sel=w2ui.grid.getSelection()
@@ -357,6 +379,7 @@ function launchMap()
   let min_lat =  999, min_lng =  999
 
   for (let rec_id of sel){
+    rec_ids.push(rec_id)
     let rec=w2ui.grid.get(rec_id)
     let lat=rec.latitude/1e6
     let lng=rec.longitude/1e6
@@ -516,10 +539,10 @@ async function InitPage()
   };
 
   if (dim_filters.length > 0)
-    params.dim_filters = dim_filters
+    params.dim_filters = encodeURIComponent(dim_filters)
   
   if (val_filters.length > 0)
-    params.val_filters = val_filters
+    params.val_filters = encodeURIComponent(val_filters)
    
   serverRequest(params).then(processResp);
 

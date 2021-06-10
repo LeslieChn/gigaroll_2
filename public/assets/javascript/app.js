@@ -123,11 +123,57 @@ function formatNumber(num) {
   return num.toLocaleString("en");
 }
 
+function cloneDimFilters(dim_filters_obj){
+  let clone={}
+  for (let [dim,members] of Object.entries(dim_filters_obj)){
+    clone[dim]=new Set ()
+    for (let m of members)
+      clone[dim].add(m)
+  }
+  return clone
+}
+
+function getDimFilterStr(dim_filters_obj)
+{
+  let str = ''
+  for (let [dim,members] of Object.entries(dim_filters_obj)){
+    let m_str = ''
+    for (let m of members){
+      m_str += m + ','
+    }
+    str += dim + ':' + m_str + ';'
+  }
+  return str
+}
+
+function cloneValFilters(val_filters_obj)
+{
+  let clone = {}
+  for (let [meas, filters] of Object.entries(val_filters_obj)) {
+    clone[meas] = new Set()
+    for (let f of filters) {
+      clone[meas].add({ 'op':f.op, 'rhs':f.rhs} )
+    }
+  }
+  return clone
+}
+
+function getValFilterStr(val_filters_obj)
+{
+  let str=''
+  for (let [meas, filters] of Object.entries(val_filters_obj)) {
+    for (let f of filters) {
+      str += meas + f.op + f.rhs + ','
+    }
+  }
+  return str
+}
+
 function findMinMax(arr) 
 {
   let min = arr[0], max = arr[0];
 
-  for (let i = 1, len=arr.length; i < len; i++) 
+  for (let i = 1, len=arr.length; i < len; ++i) 
   {
     let v = arr[i];
 
@@ -135,7 +181,6 @@ function findMinMax(arr)
       min = v;
     else if (v > max)
       max = v
- 
   }
 
   return [min, max];
@@ -158,17 +203,63 @@ var myChart=null;
 var cds = null; //Chart_Data_State
 var selected_vals=null;
 var selected_gbys=null;
+var global_dim_filters = {}
+var global_val_filters = {}
+var treemap_showing = false
 /********************************************************/
 $(function () {    
   var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
   $('#layout').w2layout({
       name: 'layout',
       panels: [
-          { type: 'left', size: "65%", resizable: true, style: pstyle, hidden:false, content: '<div id="grid" style="width: 100%; height: 600px;"></div>' },
-          { type: 'main', size: "35%", style: pstyle + 'margin: 5px', hidden:false, content: '<canvas style="background-color:ghostwhite; width: 100%; height:100%" id="myChart"></canvas>', 
+          { type: 'left', size: "65%", resizable: true, style: pstyle, hidden:false, content: '<div id="grid" style="width: 100%; height: 1200px;"></div>' },
+          {
+            type: "bottom",
+            size: '50%',
+            resizable: true,
+            hidden: true,
+            style: pstyle,
+            content: '<div id="treemap" style="width: 1200; height: 1200px;background-color:#eee"></div>',
+            toolbar: {
+              name: "toolbar",
+              style:
+                "padding: 2px; border-bottom: 3px solid #9f9faf;" +
+                "background: linear-gradient(to bottom, #f0f2f4 0%,#e5e7e9 36%,#ccd6dc 100%);" +
+                "font-weight:bold; font-size: 1.875em;",
+              items: [
+                { type: "spacer"},
+                {
+                  type: 'html', id: 'hide-treemap', 
+                  html: 
+                  '<button style="border:0px;padding:0px;margin:2px" onclick="hideTreeMap()"> <img src="./assets/images/minimize.svg" style="height:16px;width:16px" /> </button>',
+                },      
+                //{ type: "html", html: "<pre> </pre>" }, 
+                {
+                  type: 'html', id: 'restore-treemap', 
+                  html: 
+                  '<button style="border:0px;padding:0px;margin:2px" onclick="restoreTreeMap()"> <img src="./assets/images/window-split.svg" style="height:16px;width:16px" /> </button>',
+                },
+                //{ type: "html", html: "<pre> </pre>" },
+                {
+                  type: 'html', id: 'max-treemap', 
+                  html: 
+                  '<button style="border:0px;padding:0px;margin:2px" onclick="maximizeTreeMap()"> <img src="./assets/images/maximize2.svg" style="height:16px;width:16px" /> </button>',
+                },
+              ],
+            }
+          },
+          { type: 'main', size: "35%", style: pstyle + 'margin: 5px', hidden:false, content: '<canvas style="background-color:ghostwhite; width: 100%; height:1200px" id="myChart"></canvas>', 
               toolbar: {
                   style: pstyle+'margin: 5px; background-color:rgb(235,235,235)',
                   items: [
+                    { type: 'menu', id: 'chart-type', text: 'Chart Type',
+                       items: [
+                       { id: 'bar-line', text: 'Bar/Line' },
+                       { id: 'scatter-bubble', text: 'Scatter/Bubble' },
+                      ]
+                    },
+                    { type: 'button', id: 'scattergram', text: 'Scattergram', icon: 'fa fa-wrench', onClick: createScatterChart},
+                    { type: 'new-line' },
                     { type: 'menu-check', id: 'l-axis-measures', text: 'Left Y-Axis',
                       items: []
                     },
@@ -182,6 +273,24 @@ $(function () {
                     items: [
                         {id: 'bar', text: 'Bar Chart'},
                         {id: 'line', text: 'Line Chart'},
+                    ]
+                    },
+                    { type: 'menu-radio', id: 'scatter-x', text: 'X-Axis',
+                    items: []
+                    },
+                    { type: 'menu-radio', id: 'scatter-y', text: 'Y-Axis',
+                    items: []
+                    },
+                    { type: 'menu-radio', id: 'sb-type',
+                    text: function (item) {
+                        var text = item.selected;
+                        var el   = this.get('sb-type:' + item.selected);
+                        return el.text;
+                    },
+                    selected: 'scatter',
+                    items: [
+                        {id: 'scatter', text: 'Scatter Chart'},
+                        {id: 'bubble', text: 'Bubble Chart'},
                     ]
                     },
                     {type:'spacer'},
@@ -229,6 +338,14 @@ $(function () {
                     else if (event.target=='r-axis-type:line'){
                       cds.update_type('right', 'line')
                     }
+                    else if (event.target=='chart-type:scatter-bubble'){
+                      w2ui.layout.get('main').toolbar.hide('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
+                      w2ui.layout.get('main').toolbar.show('scatter-x','scatter-y')
+                    }
+                    else if (event.target=='chart-type:bar-line'){
+                      w2ui.layout.get('main').toolbar.show('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
+                      w2ui.layout.get('main').toolbar.hide('scatter-x','scatter-y')
+                    }
                   }
               },
           }
@@ -245,7 +362,32 @@ function disableMenuItem (axis, label, state) {
     }
   }
 }
+function hideTreeMap()
+{
+  //w2ui.layout.get("main").size = '100%'
+  w2ui.layout.show("main", true)
+  w2ui.layout.show("left", true)
+  w2ui.layout.hide("bottom", true)
+  treemap_showing = false
+}
+function maximizeTreeMap()
+{
+  w2ui.layout.hide("main", true) 
+  w2ui.layout.hide("left", true)
+  w2ui.layout.get("bottom").size = '100%'
+  w2ui.layout.show("bottom", true)
+  treemap_showing = true
+}
 
+function restoreTreeMap()
+{
+  w2ui.layout.show("main", true)
+  w2ui.layout.show("left", true)
+  w2ui.layout.get("bottom").size = '50%'
+  w2ui.layout.show("bottom", true)
+  treemap_showing = true
+}
+/*********************************************************************/
 async function InitPage() {
   console.log("ready!");
   $("#submitButton").prop("disabled", true)
@@ -387,6 +529,18 @@ function onclick_addMeasureRow() {
   }
 }
 
+function onclick_updateDimFilter() {
+  var dim=$(this).attr('data-value')
+  delete global_dim_filters[dim]
+  updateQuery()
+}
+
+function onclick_updateValFilter() {
+  var meas=$(this).attr('data-meas')
+  delete global_val_filters[meas]
+  updateQuery()
+}
+
 function getRangeDef() {
   var range_dim = $("#rangedimdd").val();
   var range_val = $("#rangemeasuredd").val();
@@ -523,9 +677,446 @@ function cellAttribute2(cell, row, col) {
     }
   }
 }
+
+function updateQuery ()
+{
+  var params = {
+    qid: "MD_AGG",
+    dim: base_dim,
+    gby: Comma_Sep(selected_gbys),
+    val: Comma_Sep(selected_vals),
+    dim_filters: encodeURIComponent(getDimFilterStr(global_dim_filters)),
+    val_filters: getValFilterStr(global_val_filters)
+  };
+
+  //var response = await serverRequest(params);
+  serverRequest(params).then((server_result) => {
+    server_meta=server_result["meta"]
+    if (server_meta.status != "OK"){
+      alert("The data server returned "+ server_meta.status)
+      return
+    }
+    server_js=server_result["data"]
+    if (server_meta.is_range)
+      server_range = server_result.range;
+  
+    updateGrid(server_js, selected_gbys, selected_vals);
+    disableChart(false);
+    initChart(selected_vals);
+    if (myChart != null){ 
+      myChart.destroy();
+    }
+    createChart();
+    $('#chartlyaxisdd').trigger("change");
+    updateTreeMap();
+    showBreadCrumbs();
+  });
+}
+/****************************************************/
+function getTreeMapData()
+{
+  let root = selected_gbys[0]
+  data = [{id:root, value:0}]
+  let nodes = new Set()
+
+  let sel = w2ui.grid.getSelection();
+  let n_sel = sel.length
+  let n_rows = n_sel
+  if (n_rows == 0 )
+    n_rows = server_js.length
+
+  let ng = server_js[0][0].length - 1
+
+  for (let r = 0; r < n_rows; ++r )
+  {
+    let row = (n_sel == 0)? server_js[r] : server_js[sel[r]-1] 
+    let gby = row[0]
+    let val = row[1][0]
+    let str = root
+    for (let i = 0; i< gby.length; ++i)
+    {
+      let g2 = gby[i].replace(/\./g, '')
+      str += '.' + g2
+      if (i < ng && !nodes.has(str))
+      {
+        data.push( { id:str , value: 0});
+        nodes.add(str);
+      } 
+    }
+    data.push( { id:str , value: val});
+  }
+  
+  return data;
+}
+function updateTreeMap()
+{
+  if (treemap_showing)
+    showTreeMap();
+}
+
+function showTreeMap()
+{
+  if (!treemap_showing)
+    maximizeTreeMap();
+  var client_width = document.documentElement.clientWidth
+  var width = Math.round(client_width*0.67);
+  var height = Math.round(width*0.67);
+  var margin = Math.round((client_width - width)/2)
+
+  var format = d3.format(",d");
+
+  var color = d3.scaleOrdinal()
+    .range(d3.schemeCategory20
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.8; return c; }));
+
+  var stratify = d3.stratify()
+    .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
+
+  var treemap = d3.treemap()
+    .size([width, height])
+    .padding(1)
+    .round(true);
+
+
+  {
+
+  let data = getTreeMapData();
+  var root = stratify(data)
+      .sum(function(d) { return d.value; })
+      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
+
+treemap(root);
+d3.select("#treemap")
+   .html("")
+
+d3.select("#treemap")
+  .selectAll(".node")
+  .data(root.leaves())
+  .enter().append("div")
+    .attr("class", "node")
+    .attr("title", function(d) 
+    { 
+      return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
+    })
+    .style("left", function(d) { return d.x0 + margin + "px"; })
+    .style("top", function(d) { return d.y0 + "px"; })
+    .style("width", function(d) { return d.x1 - d.x0 + "px"; })
+    .style("height", function(d) { return d.y1 - d.y0 + "px"; })
+    .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
+  .append("div")
+    .attr("class", "node-label")
+    .text(function(d) 
+    { 
+      let s = d.id.substring(d.id.indexOf(".") + 1).replace(/\./g, "\n")//.split(/(?=[A-Z][^A-Z])/g).join("\n"); 
+      return s;
+    })
+  .append("div")
+    .attr("class", "node-value")
+    .text(function(d) { return format(d.value); });
+}
+
+function type(d) {
+d.value = +d.value;
+return d;
+}
+  
+}
+
+
+function showTreeMap2()
+{
+  maximizeTreeMap();
+
+  var width = 1500,
+    height = 1000,
+    ratio = 4;
+
+var format = d3.format(",d");
+
+var color = d3.scaleOrdinal()
+    .range(d3.schemeCategory10
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
+
+var stratify = d3.stratify()
+        .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
+    
+
+var treemap = d3.treemap()
+    .tile(d3.treemapSquarify.ratio(1))
+    .size([width / ratio, height]);
+
+ {
+  let data = getTreeMapData()
+
+  var root = stratify(data)
+      .sum(function(d) { return d.value; })
+      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
+
+  treemap(root);
+  
+  d3.select("#treemap")
+  .html("")
+
+  d3.select("#treemap")
+    .selectAll(".node")
+    .data(root.leaves())
+    .enter().append("div")
+      .attr("class", "node")
+      .attr("title", function(d) 
+      { 
+        return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
+      })
+      .style("left", function(d) { return Math.round(d.x0 * ratio) + "px"; })
+      .style("top", function(d) { return Math.round(d.y0) + "px"; })
+      .style("width", function(d) { return Math.round(d.x1 * ratio) - Math.round(d.x0 * ratio) - 1 + "px"; })
+      .style("height", function(d) { return Math.round(d.y1) - Math.round(d.y0) - 1 + "px"; })
+      .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
+    .append("div")
+      .attr("class", "node-label")
+      .text(function(d) 
+      { 
+        let s = d.id.substring(d.id.indexOf(".") + 1).replace(/\./g, "\n")//.split(/(?=[A-Z][^A-Z])/g).join("\n"); 
+        return s;
+      })
+    .append("div")
+      .attr("class", "node-value")
+      .text(function(d) { return format(d.value); });
+}
+
+function type(d) {
+  d.value = +d.value;
+  return d;
+}
+}
+
+function showTreeMap3()
+{
+  maximizeTreeMap()
+
+  d3.select("svg")
+   .html("")
+
+   var svg = d3.select("svg"),
+   width = 1200,
+   height = 1200;
+
+var format = d3.format(",d");
+
+//var color = d3.scaleMagma()
+//   .domain([-4, 4]);
+
+const color = d3.scaleOrdinal().range(['lightgrey', 'indianred', 'steelblue']).domain([2, 1, 0])
+// var color = d3.scaleOrdinal()
+//     .range(d3.schemeCategory10
+//         .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
+var stratify = d3.stratify()
+    .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
+
+var treemap = d3.treemap()
+    .size([width, height])
+    .paddingOuter(3)
+    .paddingTop(19)
+    .paddingInner(1)
+    .round(true);
+
+ {
+  
+  var data = getTreeMapData()
+
+  var root = stratify(data)
+      .sum(function(d) { return d.value; })
+      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
+
+  treemap(root);
+
+  var cell = svg
+    .selectAll(".node")
+    .data(root.descendants())
+    .enter().append("g")
+      .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+      .attr("class", "node")
+      .each(function(d) { d.node = this; })
+      .on("mouseover", hovered(true))
+      .on("mouseout", hovered(false));
+
+  cell.append("rect")
+      .attr("id", function(d) { return "rect-" + d.id; })
+      .attr("width", function(d) { return d.x1 - d.x0; })
+      .attr("height", function(d) { return d.y1 - d.y0; })
+      .style("fill", function(d) { return color(d.depth); });
+
+  cell.append("clipPath")
+      .attr("id", function(d) { return "clip-" + d.id; })
+    .append("use")
+      .attr("xlink:href", function(d) { return "#rect-" + d.id + ""; });
+
+  var label = cell.append("text")
+      .attr("clip-path", function(d) { return "url(#clip-" + d.id + ")"; });
+
+  label
+    .filter(function(d) { return d.children; })
+    .selectAll("tspan")
+      .data(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1).split(/(?=[A-Z][^A-Z])/g).concat("\xa0" + format(d.value)); })
+    .enter().append("tspan")
+      .attr("x", function(d, i) { return i ? null : 4; })
+      .attr("y", 13)
+      .text(function(d) { return d; });
+
+  label
+    .filter(function(d) { return !d.children; })
+    .selectAll("tspan")
+      .data(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); })
+    .enter().append("tspan")
+      .attr("x", 4)
+      .attr("y", function(d, i) { return 13 + i * 10; })
+      .text(function(d) { return d; });
+
+  cell.append("title")
+      .text(function(d) { return d.id + "\n" + format(d.value); });
+}
+
+function hovered(hover) {
+  return function(d) {
+    d3.selectAll(d.ancestors().map(function(d) { return d.node; }))
+        .classed("node--hover", hover)
+      .select("rect")
+        .attr("width", function(d) { return d.x1 - d.x0 - hover; })
+        .attr("height", function(d) { return d.y1 - d.y0 - hover; });
+  };
+}
+}
+
+function getGridSelectionFromTreeMap(title)
+{
+  let idx = title.indexOf("\n")
+  let gby = title.slice(0,idx).split('.')
+  let n_gby = gby.length
+
+  for (let r = 0; r < w2ui.grid.records.length; ++r )
+  {
+    let n_found = 0
+    let rec = w2ui.grid.records[r]
+    for (let i = 0; i< n_gby; ++i)
+    {
+      if (rec[selected_gbys[i]] != gby[i])
+        break
+      else
+        ++n_found 
+    }
+    if (n_gby == n_found)
+    {
+       return w2ui.grid.records[r].recid;
+    }
+  }
+  return -1; // not found
+}
+var dblclick_triggered = false;
+
+function onclick_treemapNode()
+{
+  let title=$(this).attr('title')
+  var $this = $(this);
+  if ($this.hasClass('clicked'))
+  {
+      dblclick_triggered = true
+      ondblclick_treemapNode(title);
+      return;
+  }
+  else
+  {
+        $this.addClass('clicked');
+        setTimeout(function() { 
+                if (!dblclick_triggered)
+                  process_click(title)
+                dblclick_triggered = false
+                $this.removeClass('clicked'); },200);
+  }
+  function process_click(title)
+  {
+    let idx = getGridSelectionFromTreeMap(title)
+    if (idx != -1)
+    {
+        w2ui.grid.selectNone();
+        w2ui.grid.select(idx);
+        popup();
+    }
+ }
+}
+
+function ondblclick_treemapNode(title)
+{
+  let idx = getGridSelectionFromTreeMap(title)
+  if (idx != -1)
+  {
+      w2ui.grid.selectNone();
+      w2ui.grid.select(idx);
+      openDetailsPage();
+  }
+}
+/****************************************************/
+function createScatterChart(){
+  if (myChart !== null) {
+    myChart.destroy()
+  }
+  let i=0
+  let j=0
+  if (server_js[0][1].length>1)
+    j=1
+
+  let points=[]
+  for (let row of server_js){
+    let x=row[1][i]
+    let y=row[1][j]
+    points.push({x:x,y:y})
+  }
+
+  console.log("creating chart");
+
+  var canvas = $('#myChart')
+
+  const data = {
+    datasets: [{
+      label: 'Scatter Dataset',
+      data: points,
+      backgroundColor: 'rgb(255, 99, 132)'
+    }],
+  };
+
+  const config ={
+    type:  'scatter',
+    data: data,
+    options: {
+      aspectRatio: 1.2,
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom'
+        }
+      },
+      plugins: {
+        tooltip: {
+            callbacks: {
+                label: function(ctx) {
+                    // console.log(ctx);
+                    let label = server_js[ctx.dataIndex][0][0] //ctx.dataset.labels[ctx.dataIndex];
+                    label += " (" + ctx.parsed.x + ", " + ctx.parsed.y + ")";
+                    return label;
+                }
+            }
+        }
+      }
+    }
+  }
+    myChart = new Chart(canvas, config);
+
+}
 /****************************************************/
 function openDetailsPage()
 {
+  //make deep copy of global filters 
+  let local_dim_filters=cloneDimFilters(global_dim_filters)
+  let local_val_filters=cloneValFilters(global_val_filters)
+
   let sel = w2ui.grid.getSelection();
   console.log(sel)
   let dim_filters = ""
@@ -556,26 +1147,36 @@ function openDetailsPage()
 
       let rg_interval = [ rg_interval1[0], rg_interval2[1]]
 
+      local_val_filters[meas]=new Set()
+
       if (rg_interval[0] == 'Below')
-        val_filters = `${meas}<${rg_interval[1]}`;
+        local_val_filters[meas].add ( {'op':'<', 'rhs':rg_interval[1]} )
+      
       else if (rg_interval[1] == 'Above')
-        val_filters = `${meas}>=${rg_interval[0]}`;
+        local_val_filters[meas].add ( {'op':'>=', 'rhs':rg_interval[0]} )
+    
       else
-        val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
+      {
+        local_val_filters[meas].add ( {'op':'<', 'rhs':rg_interval[1]} )
+        local_val_filters[meas].add ( {'op':'>=', 'rhs':rg_interval[0]} )
+      } 
     }
     else
     {
       let gby_set = new Set()
       for (let s of sel)
         gby_set.add(w2ui.grid.get(s)[g])
-        
-      gby_str = ""
-      for (let e of gby_set)
-        gby_str += e + ','
 
-      dim_filters += g + ':' + gby_str + ";"
+      if (!local_dim_filters.hasOwnProperty(g)){
+        local_dim_filters[g]=new Set()
+      }  
+      for (let e of gby_set)
+        local_dim_filters[g].add(e)
     }
-  }  
+  } 
+  dim_filters=getDimFilterStr(local_dim_filters)
+  val_filters=getValFilterStr(local_val_filters)
+
   sessionStorage.setItem("base_dim", base_dim)
   sessionStorage.setItem("dim_filters", dim_filters)
   sessionStorage.setItem("val_filters", val_filters)
@@ -584,6 +1185,64 @@ function openDetailsPage()
   console.log(dim_filters)
 }
 
+function showBreadCrumbs(){
+  showGbyBreadCrumbs()
+  showValBreadCrumbs()
+  showDimFilterBreadCrumbs()
+  showValFilterBreadCrumbs()
+}
+
+function showGbyBreadCrumbs(){
+
+  $(".gby-breadcrumb").html("")
+    for (i=0;i<selected_gbys.length;i++){
+      $(".gby-breadcrumb").append(`<button class="bread-crumb gby-item">${selected_gbys[i]}</button>`)
+    }
+
+}
+
+function showValBreadCrumbs(){
+
+  $(".val-breadcrumb").html("")
+    for (j=0;j<selected_vals.length;j++){
+    $(".val-breadcrumb").append(`<button class="bread-crumb val-item">${selected_vals[j]}</button>`)
+    }
+}
+
+function showDimFilterBreadCrumbs(){
+  
+  $(".dim-breadcrumb").html("")
+    for (let [dim, members] of Object.entries(global_dim_filters)){
+      let str=dim+':'
+      let count=0
+      for (let m of members){
+        str+=m
+        count++
+        if (count==2 && members.size>2){
+          str+= " \u22EF "
+          break
+        }
+        else if (count < members.size - 1)
+          str += " \u2014"
+
+      }
+    $(".dim-breadcrumb").append(`<button class="bread-crumb dim-item" data-value="${dim}">${str}</button>`)
+    }
+}
+
+function showValFilterBreadCrumbs(){
+  
+  $(".val-filter-breadcrumb").html("")
+    for (let [meas, filters] of Object.entries(global_val_filters)){
+      let str=""
+      for (let f of filters)
+      {
+        str = meas + f.op + f.rhs
+        $(".val-filter-breadcrumb").append(`<button class="bread-crumb val-filter-item" data-meas="${meas}">${str}</button>`)
+      }
+    
+    }
+}
 
 function updateGrid(server_js, gby_headers, val_headers) {
 
@@ -627,12 +1286,15 @@ function updateGrid(server_js, gby_headers, val_headers) {
           { type: 'break' },
           { type: 'button', id: 'launch-details', text: 'Details', img: 'icon-page', disabled: true },
           { type: 'button', id: 'drilldown', text: 'Drilldown', icon: 'fas fa-sort-amount-down', disabled: true },
-      ],
+          { type: 'button', id: 'treemap', text: 'Tree Map', icon: 'fas fa-tree' },
+        ],
       onClick: function (target, data) {
           if (target == 'launch-details')
             openDetailsPage();
-          if (target == 'drilldown')
+          else if (target == 'drilldown')
             popup();
+          else if (target == 'treemap' )
+            showTreeMap()
       }
     },
     multiSearch: true,
@@ -670,6 +1332,7 @@ function updateGrid(server_js, gby_headers, val_headers) {
      },
 
   })
+
 }
 /****************************************************/
 function popup() {
@@ -691,7 +1354,7 @@ function popup() {
         console.log('popup moved', event)
     }
     });
-    let g=new Set(selected_gbys)
+    let g=new Set(selected_gbys.concat(Object.keys(global_dim_filters)))
     let g2=all_group_bys.filter(e=>!g.has(e))
     $('input[type=list]').w2field('list', { items: g2})
 }
@@ -702,7 +1365,6 @@ function drillDownOk() {
 
   let sel = w2ui.grid.getSelection();
   console.log(sel)
-  let dim_filters = ""
   let val_filters = ""
 
   for (let i=0; i<selected_gbys.length; ++i)
@@ -730,41 +1392,57 @@ function drillDownOk() {
 
       let rg_interval = [ rg_interval1[0], rg_interval2[1]]
 
+      
+      global_val_filters[meas]=new Set()
+
       if (rg_interval[0] == 'Below')
-        val_filters = `${meas}<${rg_interval[1]}`;
+        global_val_filters[meas].add ( {'op':'<', 'rhs':rg_interval[1]} )
+      
       else if (rg_interval[1] == 'Above')
-        val_filters = `${meas}>=${rg_interval[0]}`;
+        global_val_filters[meas].add ( {'op':'>=', 'rhs':rg_interval[0]} )
+    
       else
-        val_filters = `${meas}>=${rg_interval[0]},${meas}<${rg_interval[1]}`;
+      {
+        global_val_filters[meas].add ( {'op':'<', 'rhs':rg_interval[1]} )
+        global_val_filters[meas].add ( {'op':'>=', 'rhs':rg_interval[0]} )
+      } 
     }
     else
     {
+      if (!global_dim_filters.hasOwnProperty(g)){
+        global_dim_filters[g]=new Set()
+      }
       let gby_set = new Set()
       for (let s of sel)
         gby_set.add(w2ui.grid.get(s)[g])
-        
-      gby_str = ""
+      
       for (let e of gby_set)
-        gby_str += e + ','
-
-      dim_filters += g + ':' + gby_str + ";"
+        global_dim_filters[g].add(e)
     }
   }  
-  console.log(dim_filters)
 
   var params = {
     qid: "MD_AGG",
     dim: base_dim,
     gby: groupby,
     val: Comma_Sep(selected_vals),
-    dim_filters: dim_filters
+    dim_filters: encodeURIComponent(getDimFilterStr(global_dim_filters)),
+    val_filters: getValFilterStr(global_val_filters)
   };
 
   selected_gbys=[groupby]
+  //make the state of gby's on the page
+  //consistent with the new drilldown gby
+  $('#ddgroupby1').val(groupby);
+  for (let idx of used_gby_indices)
+  {
+    if (idx != 1)
+      $("#gbytablerow" + idx).remove(); //don't remove row 1
+  }
+  used_gby_indices.clear();
+  used_gby_indices.add(1);//clear everything except row 1
 
-  //var response = await serverRequest(params);
   serverRequest(params).then((server_result) => {
-    console.time("process response");
     server_meta=server_result["meta"]
     if (server_meta.status != "OK"){
       alert("The data server returned "+ server_meta.status)
@@ -775,7 +1453,6 @@ function drillDownOk() {
       server_range = server_result.range;
   
     updateGrid(server_js, selected_gbys, selected_vals);
-    console.timeEnd("process response");
     disableChart(false);
     initChart(selected_vals);
     if (myChart != null){ 
@@ -783,8 +1460,9 @@ function drillDownOk() {
     }
     createChart();
     $('#chartlyaxisdd').trigger("change");
+    updateTreeMap();
+    showBreadCrumbs();
   });
-  console.timeEnd("onclick_submit");
 }
 
 /******************************************************************************** */
@@ -820,7 +1498,7 @@ function loadChartData(dataset, col_idx)
 
 function createChart() {
   // createStackedBarChart()
- 
+  
   console.log("creating chart");
   //var col_idx = parseInt($("#chartlyaxisdd").val());
   //var values = getDataColumn(col_idx)
@@ -1001,21 +1679,15 @@ async function onclick_submit() {
   selected_gbys = getSelectedGbys();
   selected_vals = getSelectedMeasures(); 
   
-  $(".gby-breadcrumb").html("")
-  for (i=0;i<selected_gbys.length;i++){
-  $(".gby-breadcrumb").append(`<button class="gby-item">${selected_gbys[i]}</button>`)
-  }
-
-  $(".val-breadcrumb").html("")
-  for (j=0;j<selected_vals.length;j++){
-  $(".val-breadcrumb").append(`<button class="val-item">${selected_vals[j]}</button>`)
-  }
+  showBreadCrumbs();
 
   var params = {
     qid: "MD_AGG",
     dim: base_dim,
     gby: Comma_Sep(selected_gbys),
     val: Comma_Sep(selected_vals),
+    dim_filters: encodeURIComponent(getDimFilterStr(global_dim_filters)),
+    val_filters: getValFilterStr(global_val_filters)
   };
 
   //var response = await serverRequest(params);
@@ -1039,6 +1711,7 @@ async function onclick_submit() {
     }
     createChart();
     $('#chartlyaxisdd').trigger("change");
+    updateTreeMap();
   });
   console.timeEnd("onclick_submit");
 }
@@ -1047,6 +1720,10 @@ $(document).ready(InitPage);
 $(document).on("click", "#submitButton", onclick_submit);
 $(document).on("click", "#addrow", onclick_addMeasureRow);
 $(document).on("click", "#addgbyrow", onclick_addGbyRow);
+$(document).on("click",".dim-item", onclick_updateDimFilter)
+$(document).on("click",".val-filter-item", onclick_updateValFilter)
+$(document).on("click",".node", onclick_treemapNode)
+
 
 $(document).on("hidden.bs.collapse", "#allmeasures2", function (e) {
   var msr_str = "Chosen Measures : ";

@@ -4,7 +4,11 @@
   "description": "A real-estate data aggregation tool",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "resolutions": {
+    "graceful-fs": "^4.2.4"
   },
   "repository": {
     "type": "git",
@@ -21,8 +25,12 @@
     "bower": "^1.8.12",
     "clusterize.js": "^0.18.1",
     "express": "^4.17.1",
+    "fomantic-ui": "^2.8.7",
     "node-fetch": "^2.6.1",
     "path": "^0.12.7",
     "require": "^2.4.20"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2"
   }
 }

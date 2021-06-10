@@ -33,3 +33,6 @@ body {
 html,
 body { height: 100%;margin: 0;padding: 0;}
 
+.w2ui-menu{
+  overflow: hidden !important
+}

@@ -43,7 +43,7 @@ httpsServer.listen(8001, function()
 });
 
 /*****************************************************************/
-var queryURL = "http://127.0.0.1:80/req?";
+var queryURL = "http://127.0.0.1:55555/req?";
 
 app.post('/gserver/:query', async (request, response) => {
     
