@@ -7,26 +7,18 @@
   pointer-events: all;
 }
 
-.state {
-  fill: #1f70b5; 
-  pointer-events: fill;
+.county {
+  fill: #000;
 }
 
-.counties:hover {
+.counties :hover {
   fill: red;
-  pointer-events: fill;
 }
-
-.state:hover {
-  fill: red; 
-}
-
-
 
 .county-border,
 .state-border {
   fill: none;
-  stroke: #fff;
+  stroke: #000;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -61,26 +53,21 @@ svg.append("rect")
     .attr("height", height)
     .call(zoom);
 
-d3.json("us.json", function(error, us) {
+d3.json("CT_counties.json", function(error, ct) {
   if (error) throw error;
 
   features.append("path")
-      .datum(topojson.feature(us, us.objects.states))
-      .attr("class", "state")
-      .attr("d", path);
-
-  features.append("path")
-      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-      .attr("class", "state-border")
+      .datum(topojson.feature(ct, ct.objects.cb_2015_connecticut_county_20m))
+      .attr("class", "county")
       .attr("d", path)
-      .style("stroke-width", "1.5px");
-
-  features.attr("class", "counties")
-	  .append("path")
-      .datum(topojson.mesh(us, us.objects.counties, function(a, b) { return a !== b && !(a.id / 1000 ^ b.id / 1000); }))
+	  .style("stroke-width", "2px");
+	
+  features.append("path")
+      .datum(topojson.mesh(ct, ct.objects.cb_2015_connecticut_county_20m, function(a, b) { return a !== b; }))
       .attr("class", "county-border")
       .attr("d", path)
-      .style("stroke-width", ".5px");
+      .style("stroke-width", "2px");
+
 });
 
 function zoomed() {

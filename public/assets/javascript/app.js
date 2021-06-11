@@ -207,7 +207,7 @@ var global_dim_filters = {}
 var global_val_filters = {}
 var treemap_showing = false
 /********************************************************/
-$(function () {    
+function createLayout() {    
   var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
   $('#layout').w2layout({
       name: 'layout',
@@ -252,13 +252,15 @@ $(function () {
               toolbar: {
                   style: pstyle+'margin: 5px; background-color:rgb(235,235,235)',
                   items: [
-                    { type: 'menu', id: 'chart-type', text: 'Chart Type',
+                    { type: 'menu-radio', id: 'chart-type', text: 'Chart Type',
+                       selected: 'bar-line',
                        items: [
                        { id: 'bar-line', text: 'Bar/Line' },
                        { id: 'scatter-bubble', text: 'Scatter/Bubble' },
                       ]
                     },
-                    { type: 'button', id: 'scattergram', text: 'Scattergram', icon: 'fa fa-wrench', onClick: createScatterChart},
+                    {type: 'spacer'},
+                    {id: 'R-squared', type: 'html', html: "<b>R<sup>2</sup>=1</b>"},
                     { type: 'new-line' },
                     { type: 'menu-check', id: 'l-axis-measures', text: 'Left Y-Axis',
                       items: []
@@ -339,19 +341,30 @@ $(function () {
                       cds.update_type('right', 'line')
                     }
                     else if (event.target=='chart-type:scatter-bubble'){
-                      w2ui.layout.get('main').toolbar.hide('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
-                      w2ui.layout.get('main').toolbar.show('scatter-x','scatter-y')
+                      showScatterControls()
+                      createScatterChart()
                     }
                     else if (event.target=='chart-type:bar-line'){
-                      w2ui.layout.get('main').toolbar.show('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
-                      w2ui.layout.get('main').toolbar.hide('scatter-x','scatter-y')
+                      hideScatterControls()
+                      createBarChart()
                     }
                   }
               },
           }
       ]
   });
-});
+};
+
+function showScatterControls() {
+  w2ui.layout.get('main').toolbar.hide('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
+  w2ui.layout.get('main').toolbar.show('scatter-x','scatter-y', 'sb-type')
+}
+
+function hideScatterControls() {
+  w2ui.layout.get('main').toolbar.show('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
+  w2ui.layout.get('main').toolbar.hide('scatter-x','scatter-y', 'sb-type')
+}
+
 
 function disableMenuItem (axis, label, state) {
   let axis_menu=w2ui.layout.get('main').toolbar.get(axis)
@@ -442,6 +455,10 @@ async function InitPage() {
   })
   $('#grid').hide()
   $("#submitButton").prop("disabled", false)
+  createLayout()
+  w2ui.layout.hide("main", true)
+  w2ui.layout.hide("left", true)
+  hideScatterControls()
 } //initPage
 
 //selected_* arrays should be of the form array of strings
@@ -706,7 +723,7 @@ function updateQuery ()
     if (myChart != null){ 
       myChart.destroy();
     }
-    createChart();
+    createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
     showBreadCrumbs();
@@ -1058,6 +1075,25 @@ function createScatterChart(){
   if (myChart !== null) {
     myChart.destroy()
   }
+
+  let toolbar=w2ui.layout.get('main').toolbar
+
+  var left_check_items=[]
+  var right_check_items=[]
+
+  for (let j = 0; j<selected_vals.length; ++j) 
+  {
+    let val = selected_vals[j]
+    left_check_items.push({id: j, text: val, checked:false, keepOpen: true})
+    right_check_items.push({id: j, text: val, checked:false, keepOpen: true})
+  }
+  toolbar.get("scatter-x").items=left_check_items
+  toolbar.get("scatter-y").items=right_check_items
+
+  toolbar.check(0)
+  toolbar.check(1)
+  toolbar.refresh()
+
   let i=0
   let j=0
   if (server_js[0][1].length>1)
@@ -1069,8 +1105,16 @@ function createScatterChart(){
     let y=row[1][j]
     points.push({x:x,y:y})
   }
+  const regression = d3.regressionLinear()
+  .x(d => d.x)
+  .y(d => d.y)
 
-  console.log("creating chart");
+  let reg = regression(points)
+  let r2 = Math.round(reg.rSquared*100)/100
+
+  let R2 = w2ui.layout.get('main').toolbar.get('R-squared')
+  R2.html = `<b>R<sup>2</sup>=${r2}</b>`
+  w2ui.layout.get('main').toolbar.refresh()
 
   var canvas = $('#myChart')
 
@@ -1103,6 +1147,34 @@ function createScatterChart(){
                     return label;
                 }
             }
+        },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'xy',
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: 'xy',
+          }
+        },
+        annotation: {
+          annotations: {
+            line1: {
+              type: 'line',
+              xMin: reg[0][0],
+              yMin: reg[0][1],
+              xMax: reg[1][0],
+              yMax: reg[1][1],
+              borderColor: 'rgb(99, 99, 99)',
+              borderWidth: 1,
+            }
+          }
         }
       }
     }
@@ -1458,7 +1530,7 @@ function drillDownOk() {
     if (myChart != null){ 
       myChart.destroy();
     }
-    createChart();
+    createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
     showBreadCrumbs();
@@ -1496,16 +1568,22 @@ function loadChartData(dataset, col_idx)
   // dataset.borderColor = chart_bo_color[dataset.yAxisID]
 }
 
-function createChart() {
-  // createStackedBarChart()
-  
-  console.log("creating chart");
-  //var col_idx = parseInt($("#chartlyaxisdd").val());
-  //var values = getDataColumn(col_idx)
- // var values2 = values.map(x=>x*2)
-  //var leftcharttype = $("#left-type-dd").val()
-  //var rightcharttype = $("#right-type-dd").val()
-  //const labels = getLabels();
+function createBarChart() {
+
+  let toolbar=w2ui.layout.get('main').toolbar
+  toolbar.get('l-axis-measures').selected = []
+  toolbar.get('r-axis-measures').selected = []
+
+  let axes=['l-axis-measures', 'r-axis-measures']
+  for (let axis of axes){
+    let items= toolbar.get(axis).items
+    for (let item of items){
+      item.disabled=false
+    }
+  }
+
+  if (myChart !== null)
+    myChart.destroy()
 
     var canvas = $('#myChart')
     const data = {
@@ -1530,18 +1608,19 @@ function createChart() {
       }
     }
     myChart = new Chart(canvas, config);
-
-    cds = new Chart_Data_State(myChart)
     var l_colors= []
     var r_colors= []
     for (let i=0; i<selected_vals.length;++i){
       l_colors.push(d3.interpolateBlues(0.25+(i+1)/selected_vals.length/2))
       r_colors.push(d3.interpolateReds(0.25+(i+1)/selected_vals.length/2))
     }
+    cds = new Chart_Data_State(myChart)
     cds.init_colors(l_colors, r_colors)    
     cds.init('left', 'none', 'bar')
     cds.init('right', 'none', 'bar')
     cds.onchange(loadChartData)
+
+    hideScatterControls()
 };
 
 function calculatePoint(i, intervalSize, colorRangeInfo) {
@@ -1709,9 +1788,11 @@ async function onclick_submit() {
     if (myChart != null){ 
       myChart.destroy();
     }
-    createChart();
+    createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
+    w2ui.layout.show("left", true)
+    w2ui.layout.show("main", true)
   });
   console.timeEnd("onclick_submit");
 }
