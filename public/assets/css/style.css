@@ -1,5 +1,18 @@
-body {
-  background-color: #f5f5f5;
+body{
+  background-color: linear-gradient(to bottom, #f0f2f4 0%,#e5e7e9 36%,#ccd6dc 100%);
+}
+
+main{
+  background-color: rgb(190, 190, 190);
+}
+
+.navbar-expand-sm{  
+  background-color: #126e64; 
+}
+
+
+.navbar-expand-sm .navbar-nav .nav-link {
+  color: rgb(0, 187, 40);
 }
 
 .table-striped > tbody > tr:nth-child(2n+1) > td{
@@ -22,6 +35,13 @@ body {
 
 #grid_grid_toolbar {
   background-color: linear-gradient(to bottom, #f0f2f4 0%,#e5e7e9 36%,#ccd6dc 100%);
+}
+
+#introbubble {
+  background-image: url("../images/City-skyline-in-the-daytime-Graphics-3680087-1-1-580x348-3.jpg");
+  color: #c80a22 !important;
+  text-shadow: 2px 2px 2px #dddddd;
+  font-weight: bold !important;
 }
 
 .gby-breadcrumb {
@@ -57,10 +77,7 @@ body {
   overflow: hidden !important
 }
 
-.navbar {
-  background-color:#ffffff;
-  color: #0056d6;
-}
+
 
 .navbar-toggler {
   color: #0056d6;

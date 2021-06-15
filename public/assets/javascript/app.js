@@ -1,5 +1,6 @@
+
 async function serverRequest(params) {
-  p = new URLSearchParams(params).toString();
+  let p = new URLSearchParams(params).toString();
 
   const api_url = `gserver/${p}`;
 
@@ -9,6 +10,16 @@ async function serverRequest(params) {
   const json = await response.json();
 
   return json;
+}
+
+function destroyChart()
+{
+  if (myChart != null)
+  { 
+    ChartZoom.stop(myChart);
+    myChart.destroy();
+    myChart = null;
+  }
 }
 
 class Chart_Data_State
@@ -110,10 +121,11 @@ class Chart_Data_State
 function Comma_Sep(a) {
   var s = "";
 
-  for (i = 0; i < a.length; i++) {
+  for (let i = 0; i < a.length; i++) {
     s += a[i];
 
-    if (i < a.length - 1) s += ",";
+    if (i < a.length - 1) 
+      s += ",";
   }
 
   return s;
@@ -248,7 +260,8 @@ function createLayout() {
               ],
             }
           },
-          { type: 'main', size: "35%", style: pstyle + 'margin: 5px', hidden:false, content: '<canvas style="background-color:ghostwhite; width: 100%; height:1200px" id="myChart"></canvas>', 
+          { type: 'main', size: "35%", style: pstyle + 'margin: 5px', hidden:false, 
+              content: '<canvas style="background-color:ghostwhite; width: 100%; height:1200px" id="myChart"></canvas>', 
               toolbar: {
                   style: pstyle+'margin: 5px; background-color:rgb(235,235,235)',
                   items: [
@@ -256,7 +269,7 @@ function createLayout() {
                        selected: 'bar-line',
                        items: [
                        { id: 'bar-line', text: 'Bar/Line' },
-                       { id: 'scatter-bubble', text: 'Scatter/Bubble' },
+                       { id: 'scatter', text: 'Scatter' },
                       ]
                     },
                     {type: 'spacer'},
@@ -277,23 +290,14 @@ function createLayout() {
                         {id: 'line', text: 'Line Chart'},
                     ]
                     },
-                    { type: 'menu-radio', id: 'scatter-x', text: 'X-Axis',
+                    { type: 'menu-radio', id: 'scatter-x', text: 'X-Scale',
                     items: []
                     },
-                    { type: 'menu-radio', id: 'scatter-y', text: 'Y-Axis',
+                    { type: 'menu-radio', id: 'scatter-y', text: 'Y-Scale',
                     items: []
                     },
-                    { type: 'menu-radio', id: 'sb-type',
-                    text: function (item) {
-                        var text = item.selected;
-                        var el   = this.get('sb-type:' + item.selected);
-                        return el.text;
-                    },
-                    selected: 'scatter',
-                    items: [
-                        {id: 'scatter', text: 'Scatter Chart'},
-                        {id: 'bubble', text: 'Bubble Chart'},
-                    ]
+                    { type: 'menu-radio', id: 'scatter-color', text: 'Color-Scale',
+                    items: []
                     },
                     {type:'spacer'},
                     { type: 'menu-check', id: 'r-axis-measures', text: 'Right Y-Axis',
@@ -340,7 +344,7 @@ function createLayout() {
                     else if (event.target=='r-axis-type:line'){
                       cds.update_type('right', 'line')
                     }
-                    else if (event.target=='chart-type:scatter-bubble'){
+                    else if (event.target=='chart-type:scatter'){
                       showScatterControls()
                       createScatterChart()
                     }
@@ -357,12 +361,12 @@ function createLayout() {
 
 function showScatterControls() {
   w2ui.layout.get('main').toolbar.hide('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
-  w2ui.layout.get('main').toolbar.show('scatter-x','scatter-y', 'sb-type')
+  w2ui.layout.get('main').toolbar.show('scatter-x','scatter-y', 'scatter-color')
 }
 
 function hideScatterControls() {
   w2ui.layout.get('main').toolbar.show('l-axis-measures','r-axis-measures', 'r-axis-type', 'l-axis-type')
-  w2ui.layout.get('main').toolbar.hide('scatter-x','scatter-y', 'sb-type')
+  w2ui.layout.get('main').toolbar.hide('scatter-x','scatter-y', 'scatter-color')
 }
 
 
@@ -433,7 +437,7 @@ async function InitPage() {
 
   var ddrangedim = $("#rangedimdd");
 
-  for ([d, measures] of Object.entries(all_dim_measures)) {
+  for (let [d, measures] of Object.entries(all_dim_measures)) {
     var rangeitem = $(`<option value=${d}>${d}</option>`);
     ddrangedim.append(rangeitem);
   }
@@ -459,6 +463,7 @@ async function InitPage() {
   w2ui.layout.hide("main", true)
   w2ui.layout.hide("left", true)
   hideScatterControls()
+
 } //initPage
 
 //selected_* arrays should be of the form array of strings
@@ -489,7 +494,7 @@ function onclick_addGbyRow() {
 
   var dropdowngby = $("#" + ddgroupby);
 
-  for (j = 0; j < all_group_bys.length; j++) {
+  for (let j = 0; j < all_group_bys.length; j++) {
     dropdowngby.append(
       "<option value=" + all_group_bys[j] + ">" + all_group_bys[j] + "</option>"
     );
@@ -533,13 +538,13 @@ function onclick_addMeasureRow() {
   var dropdownmeasure = $("#" + ddmeasure_id);
   var dropdownfunc = $("#" + ddfunc_id);
 
-  for (j = 0; j < all_measures.length; j++) {
+  for (let j = 0; j < all_measures.length; j++) {
     dropdownmeasure.append(
       "<option value=" + all_measures[j] + ">" + all_measures[j] + "</option>"
     );
   }
 
-  for (k = 0; k < all_funcs.length; k++) {
+  for (let k = 0; k < all_funcs.length; k++) {
     dropdownfunc.append(
       "<option value=" + all_funcs[k] + ">" + all_funcs[k] + "</option>"
     );
@@ -720,9 +725,6 @@ function updateQuery ()
     updateGrid(server_js, selected_gbys, selected_vals);
     disableChart(false);
     initChart(selected_vals);
-    if (myChart != null){ 
-      myChart.destroy();
-    }
     createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
@@ -733,7 +735,7 @@ function updateQuery ()
 function getTreeMapData()
 {
   let root = selected_gbys[0]
-  data = [{id:root, value:0}]
+  let data = [{id:root, value:0}]
   let nodes = new Set()
 
   let sel = w2ui.grid.getSelection();
@@ -840,169 +842,6 @@ return d;
 }
 
 
-function showTreeMap2()
-{
-  maximizeTreeMap();
-
-  var width = 1500,
-    height = 1000,
-    ratio = 4;
-
-var format = d3.format(",d");
-
-var color = d3.scaleOrdinal()
-    .range(d3.schemeCategory10
-        .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
-
-var stratify = d3.stratify()
-        .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
-    
-
-var treemap = d3.treemap()
-    .tile(d3.treemapSquarify.ratio(1))
-    .size([width / ratio, height]);
-
- {
-  let data = getTreeMapData()
-
-  var root = stratify(data)
-      .sum(function(d) { return d.value; })
-      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
-
-  treemap(root);
-  
-  d3.select("#treemap")
-  .html("")
-
-  d3.select("#treemap")
-    .selectAll(".node")
-    .data(root.leaves())
-    .enter().append("div")
-      .attr("class", "node")
-      .attr("title", function(d) 
-      { 
-        return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
-      })
-      .style("left", function(d) { return Math.round(d.x0 * ratio) + "px"; })
-      .style("top", function(d) { return Math.round(d.y0) + "px"; })
-      .style("width", function(d) { return Math.round(d.x1 * ratio) - Math.round(d.x0 * ratio) - 1 + "px"; })
-      .style("height", function(d) { return Math.round(d.y1) - Math.round(d.y0) - 1 + "px"; })
-      .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
-    .append("div")
-      .attr("class", "node-label")
-      .text(function(d) 
-      { 
-        let s = d.id.substring(d.id.indexOf(".") + 1).replace(/\./g, "\n")//.split(/(?=[A-Z][^A-Z])/g).join("\n"); 
-        return s;
-      })
-    .append("div")
-      .attr("class", "node-value")
-      .text(function(d) { return format(d.value); });
-}
-
-function type(d) {
-  d.value = +d.value;
-  return d;
-}
-}
-
-function showTreeMap3()
-{
-  maximizeTreeMap()
-
-  d3.select("svg")
-   .html("")
-
-   var svg = d3.select("svg"),
-   width = 1200,
-   height = 1200;
-
-var format = d3.format(",d");
-
-//var color = d3.scaleMagma()
-//   .domain([-4, 4]);
-
-const color = d3.scaleOrdinal().range(['lightgrey', 'indianred', 'steelblue']).domain([2, 1, 0])
-// var color = d3.scaleOrdinal()
-//     .range(d3.schemeCategory10
-//         .map(function(c) { c = d3.rgb(c); c.opacity = 0.6; return c; }));
-var stratify = d3.stratify()
-    .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
-
-var treemap = d3.treemap()
-    .size([width, height])
-    .paddingOuter(3)
-    .paddingTop(19)
-    .paddingInner(1)
-    .round(true);
-
- {
-  
-  var data = getTreeMapData()
-
-  var root = stratify(data)
-      .sum(function(d) { return d.value; })
-      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
-
-  treemap(root);
-
-  var cell = svg
-    .selectAll(".node")
-    .data(root.descendants())
-    .enter().append("g")
-      .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
-      .attr("class", "node")
-      .each(function(d) { d.node = this; })
-      .on("mouseover", hovered(true))
-      .on("mouseout", hovered(false));
-
-  cell.append("rect")
-      .attr("id", function(d) { return "rect-" + d.id; })
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
-      .style("fill", function(d) { return color(d.depth); });
-
-  cell.append("clipPath")
-      .attr("id", function(d) { return "clip-" + d.id; })
-    .append("use")
-      .attr("xlink:href", function(d) { return "#rect-" + d.id + ""; });
-
-  var label = cell.append("text")
-      .attr("clip-path", function(d) { return "url(#clip-" + d.id + ")"; });
-
-  label
-    .filter(function(d) { return d.children; })
-    .selectAll("tspan")
-      .data(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1).split(/(?=[A-Z][^A-Z])/g).concat("\xa0" + format(d.value)); })
-    .enter().append("tspan")
-      .attr("x", function(d, i) { return i ? null : 4; })
-      .attr("y", 13)
-      .text(function(d) { return d; });
-
-  label
-    .filter(function(d) { return !d.children; })
-    .selectAll("tspan")
-      .data(function(d) { return d.id.substring(d.id.lastIndexOf(".") + 1).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)); })
-    .enter().append("tspan")
-      .attr("x", 4)
-      .attr("y", function(d, i) { return 13 + i * 10; })
-      .text(function(d) { return d; });
-
-  cell.append("title")
-      .text(function(d) { return d.id + "\n" + format(d.value); });
-}
-
-function hovered(hover) {
-  return function(d) {
-    d3.selectAll(d.ancestors().map(function(d) { return d.node; }))
-        .classed("node--hover", hover)
-      .select("rect")
-        .attr("width", function(d) { return d.x1 - d.x0 - hover; })
-        .attr("height", function(d) { return d.y1 - d.y0 - hover; });
-  };
-}
-}
-
 function getGridSelectionFromTreeMap(title)
 {
   let idx = title.indexOf("\n")
@@ -1071,43 +910,98 @@ function ondblclick_treemapNode(title)
   }
 }
 /****************************************************/
-function createScatterChart(){
-  if (myChart !== null) {
-    myChart.destroy()
+var point_colors = null;
+
+function setupColors(min_data, max_data)
+{
+  let colors = []
+  let num_colors = 20
+  for (let i = 0; i <= num_colors; ++i)
+    colors.push(d3.interpolateYlOrRd(i/num_colors));
+
+  let domain = []
+  if (min_data <= 0 && max_data <= 0)
+  {
+    let m1 = (min_data == 0) ? -1 : min_data;
+    let m2 = (max_data == 0) ? -1 : max_data;
+    let r = (m2/m1)**(1/num_colors)
+
+    for (let x = m1; x <= m2; x *= r)
+      domain.push(x)
   }
+  else if (min_data >= 0 && max_data >= 0)
+  {
+    let m1 = (min_data == 0) ? 1 : min_data;
+    let m2 = (max_data == 0) ? 1 : max_data;
+    let r = (m2/m1)**(1/num_colors)
+
+    for (let x = m1; x <= m2; x *= r)
+      domain.push(x)
+  }
+  else
+  {
+    domain.push(min_data)
+    let r = (max_data)**(1/(num_colors-1))
+
+    for (let x = 1; x <= max_data; x *= r)
+      domain.push(x)
+  }
+
+    point_colors = d3.scaleThreshold()
+      .domain(domain)
+     .range(colors);
+}
+
+function createScatterChart(){
+  destroyChart()
 
   let toolbar=w2ui.layout.get('main').toolbar
 
   var left_check_items=[]
   var right_check_items=[]
+  var third_check_items=[]
 
   for (let j = 0; j<selected_vals.length; ++j) 
   {
     let val = selected_vals[j]
     left_check_items.push({id: j, text: val, checked:false, keepOpen: true})
     right_check_items.push({id: j, text: val, checked:false, keepOpen: true})
+    third_check_items.push({id: j, text: val, checked:false, keepOpen: true})
   }
   toolbar.get("scatter-x").items=left_check_items
   toolbar.get("scatter-y").items=right_check_items
+  toolbar.get("scatter-color").items=third_check_items
 
   toolbar.check(0)
   toolbar.check(1)
   toolbar.refresh()
 
+  let n_vals = selected_vals.length
   let i=0
   let j=0
-  if (server_js[0][1].length>1)
+  if (n_vals>1)
     j=1
 
+  let max_val = -Infinity, min_val = Infinity
   let points=[]
   for (let row of server_js){
     let x=row[1][i]
     let y=row[1][j]
     points.push({x:x,y:y})
+    if (n_vals >= 3)
+    {
+      let val = row[1][2]
+      max_val = Math.max(max_val, val)
+      min_val = Math.min(min_val, val)
+    }
   }
+
+  if (n_vals >= 3)
+    setupColors(min_val, max_val)
+
   const regression = d3.regressionLinear()
-  .x(d => d.x)
-  .y(d => d.y)
+    .x(d => d.x)
+    .y(d => d.y)
 
   let reg = regression(points)
   let r2 = Math.round(reg.rSquared*100)/100
@@ -1122,7 +1016,17 @@ function createScatterChart(){
     datasets: [{
       label: 'Scatter Dataset',
       data: points,
-      backgroundColor: 'rgb(255, 99, 132)'
+      //backgroundColor: 'rgb(255, 99, 132)'
+      pointBackgroundColor: function(context) {
+        if (selected_vals.length >= 3)
+        {
+            let val = server_js[context.dataIndex][1][2]
+            return point_colors(val)
+        }
+        else
+          return 'red';
+
+      }
     }],
   };
 
@@ -1158,7 +1062,7 @@ function createScatterChart(){
               enabled: true,
             },
             pinch: {
-              enabled: true,
+              enabled: true
             },
             mode: 'xy',
           }
@@ -1179,8 +1083,17 @@ function createScatterChart(){
       }
     }
   }
-    myChart = new Chart(canvas, config);
 
+  myChart = new Chart(canvas, config);
+
+}
+/****************************************************/
+function openMap()
+{
+  let sj = JSON.stringify(server_js)
+  sessionStorage.setItem("server_js", sj)
+
+  window.open('./counties-zoom.html', '_blank');
 }
 /****************************************************/
 function openDetailsPage()
@@ -1267,7 +1180,7 @@ function showBreadCrumbs(){
 function showGbyBreadCrumbs(){
 
   $(".gby-breadcrumb").html("")
-    for (i=0;i<selected_gbys.length;i++){
+    for (let i=0;i<selected_gbys.length;i++){
       $(".gby-breadcrumb").append(`<button class="bread-crumb gby-item">${selected_gbys[i]}</button>`)
     }
 
@@ -1276,7 +1189,7 @@ function showGbyBreadCrumbs(){
 function showValBreadCrumbs(){
 
   $(".val-breadcrumb").html("")
-    for (j=0;j<selected_vals.length;j++){
+    for (let j=0;j<selected_vals.length;j++){
     $(".val-breadcrumb").append(`<button class="bread-crumb val-item">${selected_vals[j]}</button>`)
     }
 }
@@ -1359,6 +1272,7 @@ function updateGrid(server_js, gby_headers, val_headers) {
           { type: 'button', id: 'launch-details', text: 'Details', img: 'icon-page', disabled: true },
           { type: 'button', id: 'drilldown', text: 'Drilldown', icon: 'fas fa-sort-amount-down', disabled: true },
           { type: 'button', id: 'treemap', text: 'Tree Map', icon: 'fas fa-tree' },
+          { type: 'button', id: 'map', text: 'Map', icon: 'fa-solid fa-earth-americas', onClick: openMap},
         ],
       onClick: function (target, data) {
           if (target == 'launch-details')
@@ -1412,7 +1326,7 @@ function popup() {
   w2popup.open({
       title: 'Drilldown',
       body: '<div class="w2ui-centered" style="line-height: 1.8">Choose a new Groupby<br><label>Available Groupbys:</label><input type="list" class="w2ui-input" id="drilldown-groupby" style="width: 300px"></div>',
-      buttons: '<button class="w2ui-btn" onclick="drillDownOk()">Ok</button>'+
+      buttons: '<button class="w2ui-btn" onclick=drillDownOk()>Ok</button>'+
       '<button class="w2ui-btn" onclick="w2popup.close()">Cancel</button>',
       onOpen(event) {
         event.done(() => {
@@ -1527,9 +1441,6 @@ function drillDownOk() {
     updateGrid(server_js, selected_gbys, selected_vals);
     disableChart(false);
     initChart(selected_vals);
-    if (myChart != null){ 
-      myChart.destroy();
-    }
     createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
@@ -1539,26 +1450,6 @@ function drillDownOk() {
 
 /******************************************************************************** */
 //Chart Logic
-function updateChart (col_idx, update_data, side){
-  const datasets=myChart.config.data.datasets
-  datasets[0].type=leftcharttype
-  // myChart.config.data.datasets[1].type=rightcharttype
-  // if (update_data==true){
-  //   if(col_idx==-1 && datasets.length==2){
-  //     datasets.pop()
-  //   }
-  //   else if (side==1 && col_idx>0)
-  //   let data_col=getDataColumn(col_idx)
-  //   myChart.data.datasets[0].data=data_col
-  // }
-  myChart.update()
-}
-var chart_bg_color = {'left': 'rgba(255, 67, 46, 0.8)',
-                 'right':  'rgba(54, 162, 235, 0.8)'}
-
-var chart_bo_color = {'left': 'rgba(255, 67, 46, 1)',
-'right':  'rgba(54, 162, 235, 1)'}
-
 
 function loadChartData(dataset, col_idx)
 {
@@ -1582,9 +1473,7 @@ function createBarChart() {
     }
   }
 
-  if (myChart !== null)
-    myChart.destroy()
-
+    destroyChart()
     var canvas = $('#myChart')
     const data = {
       labels: getLabels(),
@@ -1594,6 +1483,10 @@ function createBarChart() {
       type:  'bar',
       data: data,
       options: {
+        plugins: 
+        {
+          //zoom: false
+        },
         aspectRatio: 1.2,
         scales: {
             'left': {
@@ -1646,110 +1539,11 @@ function interpolateColors(dataLength, colorScale, colorRangeInfo) {
   return colorArray;
 }
 
-function createStackedBarChart() {
-
-  const DATA_COUNT = 3;
-  const colorRangeInfo1 = {
-    colorStart: 0.2,
-    colorEnd: 1,
-    useEndAsStart: true,
-  }
-  const colorRangeInfo2 = {
-    colorStart: .1,
-    colorEnd: 1,
-    useEndAsStart: true,
-  }
-  const colorRangeInfo3 = {
-    colorStart: 0,
-    colorEnd: 0.65,
-    useEndAsStart: true,
-  }
-  const colorScale1 = d3.interpolateInferno;
-  const colorScale2 = d3.interpolateRdYlBu;
-  const colorScale3 = d3.interpolateCool;
-
-  var COLORS1 = interpolateColors(DATA_COUNT, colorScale1, colorRangeInfo1);
-  var COLORS2 = interpolateColors(DATA_COUNT, colorScale2, colorRangeInfo2);
-  var COLORS3 = interpolateColors(DATA_COUNT, colorScale3, colorRangeInfo3);
-
-  const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
-
-  const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-  const data = {
-    labels: labels,
-    datasets: [
-      {
-        label: "Dataset 1",
-        yAxisID: 'A',
-        data: [1,0,0,0,0,0,2],
-        backgroundColor: COLORS2[0],
-        stack: "Stack 0",
-      },
-      {
-        label: "Dataset 2",
-        yAxisID: 'B',
-        data: [100,200,300,400,500,600,700],
-        backgroundColor: COLORS2[1],
-        stack: "Stack 1",
-      },
-      {
-        label: "Dataset 3",
-        yAxisID: 'A',
-        data: [1,2,5,6,7],
-        backgroundColor: COLORS2[2],
-        stack: "Stack 0",
-      },
-    ],
-  };
-  // </block:setup>
- /* Grab chart element by id */
-
- /* Create color array */
-
-  // <block:config:0>
-  const config = {
-    type: "bar",
-    data: data,
-    options: {
-      plugins: {
-        title: {
-          display: true,
-          text: "Chart.js Bar Chart - Stacked",
-        },
-      },
-      responsive: true,
-      interaction: {
-        intersect: false,
-      },
-      scales: {
-        yAxes: [{
-          id: 'A',
-          type: 'linear',
-          position: 'left',
-        }, {
-          id: 'B',
-          type: 'linear',
-          position: 'right',
-        }],
-        x: {
-          stacked: true,
-        },
-        y: {
-          stacked: true,
-        },
-      },
-    },
-  };
-  // </block:config>
-  myChart = new Chart($('#myChart'),config);
-}
-
 //two palettes, each with two colors (for odd and even rows)
 const table_row_colors = [
   ["#F0FFFF", "#F9FFFF"],
   ["#FFFFF0", "#FFFFF9"],
 ];
-
 
 async function onclick_submit() {
   disableChart(true);
@@ -1785,9 +1579,6 @@ async function onclick_submit() {
     console.timeEnd("process response");
     disableChart(false);
     initChart(selected_vals);
-    if (myChart != null){ 
-      myChart.destroy();
-    }
     createBarChart();
     $('#chartlyaxisdd').trigger("change");
     updateTreeMap();
@@ -1835,7 +1626,7 @@ $("#rangedimdd").on("change", function () {
   var dim = $("#rangedimdd").val();
   var ddrangemeasure = $("#rangemeasuredd");
   ddrangemeasure.html("");
-  for (measure of all_dim_measures[dim]) {
+  for (let measure of all_dim_measures[dim]) {
     ddrangemeasure.append(
       "<option value=" + measure + ">" + measure + "</updaoption>"
     );

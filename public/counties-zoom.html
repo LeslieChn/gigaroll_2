@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #111;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange; 
+}
+
+.counties {
+  fill: #111;
+  cursor: pointer;
+}
+
+/*
+.active {
+  opacity: 0.2 !important; 
+}
+*/
+
+.mesh {
+  fill: none;
+  stroke: rgb(0, 0, 0);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1px;
+}
+
+.county-borders {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+div.tooltip {   
+    position: absolute;         
+    text-align: center;    
+    /*     
+    width: 80px;                    
+    height: 28px;
+    */                   
+    padding: 8px;               
+    font: 16px sans-serif; 
+    font-weight: bold;     
+    background: lightsteelblue; 
+    border: 0px;        
+    border-radius: 8px;      
+    pointer-events: none;   
+    box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
+}
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v4.min.js"></script> <!-- Inclusion of d3 v4 -->
+<script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script>
+
+function buildCountyDataLookup()
+{
+  let min = Infinity, max = -Infinity
+  let lut = {}
+  for (let row of server_js)
+  {
+    let c = row[0][0]
+    let state = c.substring(c.length - 2)
+    let county = c.substring(0, c.length-3)
+    let code = state_code_from_name[state]
+    if (lut[code] == null)
+    {
+      lut[code] = {}
+    }
+    let value = row[1][0]
+    max = Math.max(value, max) 
+    min = Math.min(value, min)
+    lut[code][county] = row[1][0]
+  }
+  return {lut:lut, max:max, min:min}
+}
+
+var tooltipDiv = d3.select("body").append("div")    
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+    
+var server_js = null
+var county_data = null 
+var max_data = -Infinity
+var min_data = Infinity
+let state_codes = new Set(["09", "34", "36"])
+
+let state_code_from_name = 
+{CT:"09", NY:"36", NJ: "34", MA: "25" }
+
+let name_from_state_code= 
+{"09":"CT", "36":"NY", "34":"NJ", "25":"MA" }
+
+var width = 1200,
+    height = 800,
+    active = d3.select(null);
+
+server_js = JSON.parse(sessionStorage.getItem('server_js'))
+
+let result = buildCountyDataLookup()
+
+county_data = result.lut
+max_data = result.max
+min_data = result.min
+
+let colors = []
+let num_colors = 12
+for (let i = 0; i <= num_colors; ++i)
+  colors.push(d3.interpolateYlOrRd(i/num_colors));
+
+let domain = []
+if (min_data <= 0 && max_data <= 0)
+{
+  let m1 = (min_data == 0) ? -1 : min_data;
+  let m2 = (max_data == 0) ? -1 : max_data;
+  let r = (m2/m1)**(1/num_colors)
+
+  for (let x = m1; x <= m2; x *= r)
+    domain.push(x)
+}
+else if (min_data >= 0 && max_data >= 0)
+{
+  let m1 = (min_data == 0) ? 1 : min_data;
+  let m2 = (max_data == 0) ? 1 : max_data;
+  let r = (m2/m1)**(1/num_colors)
+
+  for (let x = m1; x <= m2; x *= r)
+    domain.push(x)
+}
+else
+{
+  domain.push(min_data)
+  let r = (max_data)**(1/(num_colors-1))
+
+  for (let x = 1; x <= max_data; x *= r)
+    domain.push(x)
+}
+
+
+var color = d3.scaleThreshold()
+    .domain(domain)
+    //.range(d3.schemePuBu[9]);
+    //.range(d3.schemeOrRd[9]);
+    //.range(d3.schemeYlOrRd[9])
+    .range(colors);
+
+var zoom = d3.zoom()
+    // no longer in d3 v4 - zoom initialises with zoomIdentity, so it's already at origin
+    // .translate([0, 0]) 
+    // .scale(1) 
+    .scaleExtent([1, 32])
+    .on("zoom", zoomed);
+
+var path = d3.geoPath() // updated for d3 v4
+    .projection(null);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .on("click", stopped, true);
+
+svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+    .on("click", reset);
+
+var g = svg.append("g");
+
+svg
+    .call(zoom); // delete this line to disable free zooming
+    // .call(zoom.event); // not in d3 v4
+
+d3.json("us.json", function(error, us) 
+{
+  if (error) throw error;
+
+  us.transform.scale[0] *= 4.5
+  us.transform.scale[1] *= 4.5
+
+  us.transform.translate[0] -= 3200
+  us.transform.translate[1] -= 400
+  
+
+  let states = topojson.feature(us, us.objects.states).features
+  let states_filtered = states.filter( d => state_codes.has(d.id))
+
+  g.selectAll("path")
+      .data(states_filtered)
+      .enter().append("path")
+      .attr("d", path)
+      .attr("class", "feature")
+      //.attr("style", function(d){return `fill:${colors[d.id]}` })
+      //.on("click", clicked);
+
+  
+    let county_features = topojson.feature(us, us.objects.counties).features
+    let county_filtered = county_features.filter(d=> state_codes.has(d.id.substring(0,2)))
+    g.append("g")
+      .attr("class", "counties")
+      .selectAll("path")
+      .data(county_filtered)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("style", function(d)
+      {
+        let code = d.id.substring(0,2)
+        if (!state_codes.has(code))
+        {
+          return 'fill: #000'
+        }
+        let s = parseInt(code)
+        let county = d.properties.name
+        let value = county_data[code][county]
+        //let op = 1-(value-min_data)/(max_data-min_data)
+        //op = 2**op - 1
+        //op = op*op
+        // let c = parseInt(d.id.substring(2)) % 12
+        // let op = [45,50,55,60,65,70,75,80,85,90,95,100]
+        // return `fill:${colors[s%60]}; opacity:${op}` 
+        //return `fill:${d3.interpolateRdYlBu(op)}`
+        return `fill:${color(value)}`
+        
+      }
+        )
+      .on("click", clicked)
+      .on("mouseover", hovered)
+      .on("mousemove", moved)
+      .on("mouseout", function(d) {       
+        tooltipDiv.style("opacity", 0);   
+        })
+
+  g.append("path")
+      .attr("class", "county-borders")
+      .attr("d", path(topojson.mesh(us, us.objects.counties, function(a, b) 
+      { 
+        let aCode = a.id.substring(0,2)
+        let bCode = b.id.substring(0,2)
+        
+        if (!state_codes.has(aCode) ||  !state_codes.has(bCode))
+          return false;
+        else
+          return a !== b; 
+      })));
+      
+  
+  g.append("path")
+  .datum(topojson.mesh(us, us.objects.states, function(a, b) 
+  { 
+        
+    if (!state_codes.has(a.id) &&  !state_codes.has(b.id))
+      return false;
+    else
+      return true; 
+  }
+  ))
+  .attr("class", "mesh")
+  .attr("d", path)
+
+})
+
+function clicked(d) {
+  if (active.node() === this) return reset();
+  active.classed("active", false);
+  active = d3.select(this).classed("active", true);
+
+  var bounds = path.bounds(d),
+      dx = bounds[1][0] - bounds[0][0],
+      dy = bounds[1][1] - bounds[0][1],
+      x = (bounds[0][0] + bounds[1][0]) / 2,
+      y = (bounds[0][1] + bounds[1][1]) / 2,
+      scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))),
+      translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+  svg.transition()
+      .duration(750)
+      // .call(zoom.translate(translate).scale(scale).event); // not in d3 v4
+      .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
+}
+
+  function hovered(d) {
+    let code = d.id.substring(0, 2)
+    let state = name_from_state_code[code]
+    if (!state_codes.has(code))
+      return
+    
+    let county = d.properties.name
+    let value = county_data[code][county]
+    tooltipDiv
+      .style("opacity", 0.9);
+    tooltipDiv.html(`${county} ${state} <br> ${value}`)
+      .style("left", (d3.event.pageX + 20) + "px")
+      .style("top", (d3.event.pageY + 20) + "px");
+  }
+  function moved(d)
+  {
+     tooltipDiv
+      .style("left", (d3.event.pageX + 20) + "px")
+      .style("top", (d3.event.pageY + 20) + "px");
+  }
+
+function reset() {
+  active.classed("active", false);
+  active = d3.select(null);
+
+  svg.transition()
+      .duration(750)
+      // .call( zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1) ); // not in d3 v4
+      .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
+}
+
+function zoomed() {
+  g.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+  // g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")"); // not in d3 v4
+  g.attr("transform", d3.event.transform); // updated for d3 v4
+}
+
+// If the drag behavior prevents the default click,
+// also stop propagation so we don’t click-to-zoom.
+function stopped() {
+  if (d3.event.defaultPrevented) d3.event.stopPropagation();
+}
+
+</script>
