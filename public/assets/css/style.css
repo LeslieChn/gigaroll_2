@@ -3,17 +3,49 @@ body{
 }
 
 main{
-  background-color: rgb(190, 190, 190);
+  /* background-color: #d7e9f3; */
 }
 
 .navbar-expand-sm{  
-  background-color: #126e64; 
+  /* background-color: #105e40;  */
+  background-color: #0b5f00;  
+  /* background-color: #000000; */
 }
 
+#logotext{
+  font-family: 'Fira Sans', sans-serif;
+  color:white;
+  text-shadow: 2px 2px 2px rgb(182, 182, 182);
+  /* text-shadow: 3px 3px 2px rgb(32,188,128); */
+  font-weight:bold;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  font-size: 2rem;
+}
+
+#logo{
+  filter: drop-shadow(3px 3px 5px rgba(255, 255, 0, 0.8));
+}
+
+#logo:hover{
+  filter: drop-shadow(3px 3px 5px rgba(255, 255, 0, 1));
+}
 
 .navbar-expand-sm .navbar-nav .nav-link {
-  color: rgb(0, 187, 40);
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
 }
+
+.navbar-expand-sm .navbar-nav .nav-link.active{
+  text-decoration:overline solid #ffff00;
+  text-decoration-thickness: 3px;
+}
+
+.navbar-expand-sm .navbar-nav .nav-link:hover {
+  text-shadow:0px 3px 5px rgba(255, 255, 0, 1);
+}
+
+
 
 .table-striped > tbody > tr:nth-child(2n+1) > td{
   background-color: #F0FFFF;
@@ -38,12 +70,16 @@ main{
 }
 
 #introbubble {
-  background-image: url("../images/City-skyline-in-the-daytime-Graphics-3680087-1-1-580x348-3.jpg");
-  color: #c80a22 !important;
-  text-shadow: 2px 2px 2px #dddddd;
+  background-image: url("../images/City-skyline-in-the-daytime-Graphics-3680087-1-1-580x348-4.jpg");
+  background-repeat: repeat-x;
+  color:#0b5f00  !important;
+  text-shadow: 2px 2px 2px #ffff00;
   font-weight: bold !important;
 }
 
+.carousel-caption {
+  position: absolute;top: 75%;left: 50%;transform: translate(-50%, 0%);background-color:#0075bf; color:white; font-weight: bold; border-radius: 20px;"
+}
 .gby-breadcrumb {
   margin-right: 10px;
 }
@@ -80,14 +116,12 @@ main{
 
 
 .navbar-toggler {
-  color: #0056d6;
-  border-color: #0056d6;
-  color: #0056d6;
-  border-color: #0056d6;
-  }
+  color: #ffffff;
+  border-color:#ffffff;
+}
 
 .navbar .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 86, 214, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;.."); background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
 }
 
 .bread-crumb {
