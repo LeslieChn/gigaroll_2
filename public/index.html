@@ -19,10 +19,11 @@
   <script src="https://d3js.org/d3-color.v1.min.js"></script>
   <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
- 
-  <script src="//d3js.org/d3.v4.min.js"></script>
 
+  <script src="//d3js.org/d3.v4.min.js"></script>
   <script src="https://kit.fontawesome.com/6c97ff330a.js" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@500&display=swap" rel="stylesheet"> 
   <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/style.css" />
 </head>
 
@@ -30,9 +31,10 @@
   <header>
     <nav class="navbar navbar-expand-sm" aria-label="Third navbar example">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/">
+        <a class="navbar-brand d-flex align-items-center" href="/">
           <img src="./assets/images/logo.png" class="" alt="Logo" width="38" height="30">
-          <img src="./assets/images/logo-text.png" class="" alt="Logo" width="100" height="30">
+          <!-- <img id="logotext" src="./assets/images/logo-text.png" class="" alt="Logo" width="100" height="30"> -->
+          <p id="logotext">GigaRoll</p>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gigarollMenu"
           aria-controls="gigarollMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,10 +43,10 @@
         <div class="collapse navbar-collapse" id="gigarollMenu">
           <ul class="navbar-nav me-auto mb-2 mb-sm-0">
             <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="./home.html">Home</a>
+              <a class="nav-link" aria-current="page" href="./home.html">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="./index.html">Explore</a>
+              <a class="nav-link active" href="./index.html">Explore</a>
             </li>
           </ul>
         </div>

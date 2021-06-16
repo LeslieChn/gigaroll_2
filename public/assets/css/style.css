@@ -7,12 +7,29 @@ main{
 }
 
 .navbar-expand-sm{  
-  background-color: #126e64; 
+  /* background-color: #105e40;  */
+  background-color: #0b5f00; 
+  /* background-color: #000000; */
 }
 
+#logotext{
+  font-family: 'Fira Sans', sans-serif;
+  color:white;
+  text-shadow: 2px 2px 2px rgb(182, 182, 182);
+  /* text-shadow: 3px 3px 2px rgb(32,188,128); */
+  font-weight:bold;
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
 
 .navbar-expand-sm .navbar-nav .nav-link {
-  color: rgb(0, 187, 40);
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
+}
+
+.navbar-expand-sm .navbar-nav .nav-link.active{
+  text-decoration:overline solid #ffff00;
+  text-decoration-thickness: 3px;
 }
 
 .table-striped > tbody > tr:nth-child(2n+1) > td{
