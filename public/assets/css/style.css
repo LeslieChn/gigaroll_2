@@ -72,8 +72,8 @@ main{
 #introbubble {
   background-image: url("../images/City-skyline-in-the-daytime-Graphics-3680087-1-1-580x348-4.jpg");
   background-repeat: repeat-x;
-  color:#0b5f00  !important;
-  text-shadow: 2px 2px 2px #ffff00;
+  color:#013e7d;
+  text-shadow: 2px 2px 2px #ffffff;
   font-weight: bold !important;
 }
 
