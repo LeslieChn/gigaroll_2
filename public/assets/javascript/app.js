@@ -445,9 +445,8 @@ async function InitPage() {
   //add a row for gby and measure
   //the delete button for the first row
   //will not be added in the call back
-
-  $("#addrow").trigger("click");
-  $("#addgbyrow").trigger("click");
+  onclick_addGbyRow();
+  onclick_addMeasureRow();
   $('#ddgroupby1').val("prop_type");
   $('#grid').w2grid({
     name : 'grid',  
@@ -470,6 +469,14 @@ async function InitPage() {
 // each element of selected_vals should be of the form measure:func
 function onclick_addGbyRow() {
   var str_row;
+  var add_gby_button=`<td class="button-cell"><button type="button" class="btn btn-sm btn-success table-button" id="addgbyrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+    </svg></button></td>`
+  var delete_gby_button=`<td class="button-cell"><button class='btn btn-sm btn-warning table-button delete-gbyrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+    </svg></button></td>`
   var gbytable = $("#gbytable");
   //create unique id's for the dropdowns
 
@@ -482,11 +489,11 @@ function onclick_addGbyRow() {
     "<td><select class='form-select groupby-select'aria-label='Default select example' id=" +
     ddgroupby +
     "></select></td>";
+  str_row += add_gby_button
+
   if (used_gby_indices.size > 1)
-    str_row +=
-      "<td><button class='btn btn-sm btn-warning delete-gbyrow-class'type='button' value=" +
-      last_index +
-      ">Delete</button></td>";
+    str_row+=delete_gby_button
+  
   str_row += "</tr>";
   gbytable.append(str_row);
 
@@ -508,6 +515,14 @@ function onclick_addGbyRow() {
 /*******************************************************************************************/
 function onclick_addMeasureRow() {
   var str_row;
+  var add_m_button=`<td class="button-cell"><button type="button" class="btn btn-sm btn-success table-button" id="addmrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+  </svg></button></td>`
+  var delete_m_button=`<td class="button-cell"><button class='btn btn-sm btn-warning table-button delete-mrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+  </svg></button></td>`
   var measuretable = $("#measuretable");
   //create unique id's for the dropdowns
 
@@ -525,11 +540,11 @@ function onclick_addMeasureRow() {
     "<td><select class='form-select'aria-label='Default select example' id=" +
     ddfunc_id +
     "></select></td>";
+  str_row += add_m_button
+
   if (used_indices.size > 1)
-    str_row +=
-      "<td><button class='btn btn-sm btn-warning delete-row-class'type='button' value=" +
-      last_index +
-      ">Delete</button></td>";
+    str_row += delete_m_button
+
   str_row += "</tr>";
   measuretable.append(str_row);
 
@@ -1590,7 +1605,7 @@ async function onclick_submit() {
 
 $(document).ready(InitPage);
 $(document).on("click", "#submitButton", onclick_submit);
-$(document).on("click", "#addrow", onclick_addMeasureRow);
+$(document).on("click", "#addmrow", onclick_addMeasureRow);
 $(document).on("click", "#addgbyrow", onclick_addGbyRow);
 $(document).on("click",".dim-item", onclick_updateDimFilter)
 $(document).on("click",".val-filter-item", onclick_updateValFilter)
@@ -1610,13 +1625,13 @@ $(document).on("hidden.bs.collapse", "#allmeasures2", function (e) {
   $("#measurestring").html(msr_str);
 });
 
-$(document).on("click", ".delete-gbyrow-class", function (e) {
+$(document).on("click", ".delete-gbyrow", function (e) {
   var index = parseInt(this.value);
   $("#gbytablerow" + index).remove();
   used_gby_indices.delete(index);
 });
 
-$(document).on("click", ".delete-row-class", function (e) {
+$(document).on("click", ".delete-mrow", function (e) {
   var index = parseInt(this.value);
   $("#measuretablerow" + index).remove();
   used_indices.delete(index);

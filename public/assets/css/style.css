@@ -2,10 +2,6 @@ body{
   background-color: linear-gradient(to bottom, #f0f2f4 0%,#e5e7e9 36%,#ccd6dc 100%);
 }
 
-main{
-  /* background-color: #d7e9f3; */
-}
-
 .navbar-expand-sm{  
   /* background-color: #105e40;  */
   /* background-color: #0b5f00;   */
@@ -13,15 +9,14 @@ main{
   /* background-color: #000000; */
 }
 
-#logotext{
+#logo-text{
   font-family: 'Fira Sans', sans-serif;
   color:white;
-  text-shadow: 2px 2px 2px rgb(182, 182, 182);
+  text-shadow: 1px 1px 2px rgb(182, 182, 182);
   /* text-shadow: 3px 3px 2px rgb(32,188,128); */
   font-weight:bold;
-  padding-top: 1rem;
   padding-left: 1rem;
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 #logo{
@@ -46,7 +41,17 @@ main{
   text-shadow:0px 3px 5px rgba(255, 255, 0, 1);
 }
 
+td.button-cell{
+  margin-top: .5rem;
+  margin-right: .5rem;
+  text-align: center; 
+  --bs-gutter-x: 0rem;
+  display: inline-table;
+}
 
+.accordion-body {
+  padding: 0.75rem;
+}
 
 .table-striped > tbody > tr:nth-child(2n+1) > td{
   background-color: #F0FFFF;
@@ -79,7 +84,7 @@ main{
 }
 
 .carousel-caption {
-  position: absolute;top: 75%;left: 50%;transform: translate(-50%, 0%);background-color:#0075bf; color:white; font-weight: bold; border-radius: 20px;"
+  position: absolute;top: 75%;left: 50%;transform: translate(-50%, 0%);background-color:#0075bf; color:white; font-weight: bold; border-radius: 20px;
 }
 .gby-breadcrumb {
   margin-right: 10px;
