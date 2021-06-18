@@ -469,11 +469,11 @@ async function InitPage() {
 // each element of selected_vals should be of the form measure:func
 function onclick_addGbyRow() {
   var str_row;
-  var add_gby_button=`<td class="button-cell"><button type="button" class="btn btn-sm btn-success table-button" id="addgbyrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+  var add_gby_button=`<td class="button-cell px-0 pe-md-1"><button type="button" class="btn btn-sm btn-success table-button" id="addgbyrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
     </svg></button></td>`
-  var delete_gby_button=`<td class="button-cell"><button class='btn btn-sm btn-warning table-button delete-gbyrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+  var delete_gby_button=`<td class="button-cell px-0 pe-md-1"><button class='btn btn-sm btn-warning table-button delete-gbyrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
     <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
     </svg></button></td>`
@@ -486,13 +486,15 @@ function onclick_addGbyRow() {
 
   str_row = "<tr id=" + "gbytablerow" + last_index + ">";
   str_row +=
-    "<td><select class='form-select groupby-select'aria-label='Default select example' id=" +
+    "<td class='px-0 px-sm-1'><select class='form-select groupby-select'aria-label='Default select example' id=" +
     ddgroupby +
     "></select></td>";
   str_row += add_gby_button
 
-  if (used_gby_indices.size > 1)
-    str_row+=delete_gby_button
+  if (used_gby_indices.size <= 1)
+    str_row +='<td></td>'
+    else
+    str_row += delete_gby_button
   
   str_row += "</tr>";
   gbytable.append(str_row);
@@ -515,11 +517,11 @@ function onclick_addGbyRow() {
 /*******************************************************************************************/
 function onclick_addMeasureRow() {
   var str_row;
-  var add_m_button=`<td class="button-cell"><button type="button" class="btn btn-sm btn-success table-button" id="addmrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+  var add_m_button=`<td class="button-cell px-0 pe-sm-1"><button type="button" class="btn btn-sm btn-success table-button" id="addmrow"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
   <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
   </svg></button></td>`
-  var delete_m_button=`<td class="button-cell"><button class='btn btn-sm btn-warning table-button delete-mrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+  var delete_m_button=`<td class="button-cell px-0 pe-sm-1"><button class='btn btn-sm btn-warning table-button delete-mrow' type='button' value='${last_index}'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
   <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
   </svg></button></td>`
@@ -533,16 +535,19 @@ function onclick_addMeasureRow() {
 
   str_row = "<tr id=" + "measuretablerow" + last_index + ">";
   str_row +=
-    "<td><select class='form-select'aria-label='Default select example' id=" +
+    "<td class='px-0 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
     ddmeasure_id +
     "></select></td>";
   str_row +=
-    "<td><select class='form-select'aria-label='Default select example' id=" +
+    "<td class='px-0 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
     ddfunc_id +
     "></select></td>";
   str_row += add_m_button
 
-  if (used_indices.size > 1)
+
+  if (used_indices.size <= 1)
+    str_row +='<td></td>'
+    else
     str_row += delete_m_button
 
   str_row += "</tr>";

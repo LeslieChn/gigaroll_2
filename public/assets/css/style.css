@@ -42,11 +42,20 @@ body{
 }
 
 td.button-cell{
-  margin-top: .5rem;
-  margin-right: .5rem;
   text-align: center; 
   --bs-gutter-x: 0rem;
-  display: inline-table;
+  width: 40px;
+}
+
+th.button-cell{
+  text-align: center; 
+  --bs-gutter-x: 0rem;
+  width: 40px;
+  padding-right: 0.25rem;
+}
+
+.card-body {
+  padding: .5rem;
 }
 
 .accordion-body {
