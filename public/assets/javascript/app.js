@@ -1113,6 +1113,9 @@ function openMap()
   let sj = JSON.stringify(server_js)
   sessionStorage.setItem("server_js", sj)
 
+  let sv = JSON.stringify(selected_vals)
+  sessionStorage.setItem("selected_vals", sv)
+
   window.open('./counties-zoom.html', '_blank');
 }
 /****************************************************/
