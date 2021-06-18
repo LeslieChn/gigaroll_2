@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
 
@@ -68,6 +68,52 @@ div.tooltip {
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script>
 
+function showLegend(color, min, max)
+{
+    var svg = d3.select("svg");
+
+    var path = d3.geoPath();
+
+    var x = d3.scaleLinear()
+        .domain([min, max])
+        .rangeRound([440, 950]);
+
+    var g = svg.append("g")
+        .attr("class", "key")
+        .attr("transform", "translate(0,40)");
+
+    g.selectAll("rect")
+        .data(color.range().map(function (d)
+        {
+            d = color.invertExtent(d);
+            if (d[0] == null) d[0] = x.domain()[0];
+            if (d[1] == null) d[1] = x.domain()[1];
+            return d;
+        }))
+        .enter().append("rect")
+        .attr("height", 8)
+        .attr("x", function (d) { return x(d[0]); })
+        .attr("width", function (d) { return x(d[1]) - x(d[0]); })
+        .attr("fill", function (d) { return color(d[0]); });
+
+    g.append("text")
+        .attr("class", "caption")
+        .attr("x", x.range()[0])
+        .attr("y", -6)
+        .attr("fill", "#000")
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .text("Legend");
+
+    g.call(d3.axisBottom(x)
+        .tickSize(13)
+        .tickValues(color.domain()))
+        .select(".domain")
+        .remove();
+
+}
+
+
 function buildCountyDataLookup()
 {
   let min = Infinity, max = -Infinity
@@ -123,11 +169,11 @@ let num_colors = 12
 for (let i = 0; i <= num_colors; ++i)
   colors.push(d3.interpolateYlOrRd(i/num_colors));
 
-let domain = []
+let domain = [], m1,m2
 if (min_data <= 0 && max_data <= 0)
 {
-  let m1 = (min_data == 0) ? -1 : min_data;
-  let m2 = (max_data == 0) ? -1 : max_data;
+  m1 = (min_data == 0) ? -1 : min_data;
+  m2 = (max_data == 0) ? -1 : max_data;
   let r = (m2/m1)**(1/num_colors)
 
   for (let x = m1; x <= m2; x *= r)
@@ -135,8 +181,8 @@ if (min_data <= 0 && max_data <= 0)
 }
 else if (min_data >= 0 && max_data >= 0)
 {
-  let m1 = (min_data == 0) ? 1 : min_data;
-  let m2 = (max_data == 0) ? 1 : max_data;
+  m1 = (min_data == 0) ? 1 : min_data;
+  m2 = (max_data == 0) ? 1 : max_data;
   let r = (m2/m1)**(1/num_colors)
 
   for (let x = m1; x <= m2; x *= r)
@@ -144,6 +190,9 @@ else if (min_data >= 0 && max_data >= 0)
 }
 else
 {
+  m1 = min_data;
+  m2 = max_data;
+
   domain.push(min_data)
   let r = (max_data)**(1/(num_colors-1))
 
@@ -185,6 +234,8 @@ var g = svg.append("g");
 svg
     .call(zoom); // delete this line to disable free zooming
     // .call(zoom.event); // not in d3 v4
+
+ showLegend(color,m1,m2)
 
 d3.json("us.json", function(error, us) 
 {
@@ -338,3 +389,4 @@ function stopped() {
 }
 
 </script>
+</body>

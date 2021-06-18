@@ -1,0 +1,15 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskName": "task-style",
+      "appliesTo": "public/assets/css/style.css",
+      "type": "launch"
+    },
+    {
+      "taskName": "task-app",
+      "appliesTo": "public/assets/javascript/app.js",
+      "type": "launch"
+    }
+  ]
+}
