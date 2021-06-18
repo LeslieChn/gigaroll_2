@@ -486,7 +486,7 @@ function onclick_addGbyRow() {
 
   str_row = "<tr id=" + "gbytablerow" + last_index + ">";
   str_row +=
-    "<td class='px-0 px-sm-1'><select class='form-select groupby-select'aria-label='Default select example' id=" +
+    "<td class='p-1 px-sm-1'><select class='form-select groupby-select'aria-label='Default select example' id=" +
     ddgroupby +
     "></select></td>";
   str_row += add_gby_button
@@ -535,11 +535,11 @@ function onclick_addMeasureRow() {
 
   str_row = "<tr id=" + "measuretablerow" + last_index + ">";
   str_row +=
-    "<td class='px-0 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
+    "<td class='p-1 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
     ddmeasure_id +
     "></select></td>";
   str_row +=
-    "<td class='px-0 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
+    "<td class='p-1 pe-sm-1'><select class='form-select'aria-label='Default select example' id=" +
     ddfunc_id +
     "></select></td>";
   str_row += add_m_button
