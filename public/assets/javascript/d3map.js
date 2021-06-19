@@ -145,6 +145,7 @@ function showLegend(color, min, max)
         .attr("font-weight", "bold")
         .text(text);
 
+    // Create the tickmarks
     for (let j = 0; j <= 4; ++j)
     {
         let idx = Math.floor(j * n_divs / 4)
