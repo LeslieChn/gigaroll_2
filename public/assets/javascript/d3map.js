@@ -150,7 +150,7 @@ function showLegend(color, min, max)
         let idx = Math.floor(j * n_divs / 4)
         let val_idx = Math.floor(j * (color.domain().length - 1) / 4);
         let mid_val = Math.round(10 * color.domain()[val_idx]) / 10;
-         
+           
         g.append("text")
             .attr("y", 30)
             .attr("x", rectPos(idx))
