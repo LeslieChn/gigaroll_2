@@ -94,15 +94,20 @@ function showLegend(color, min, max)
 
     var path = d3.geoPath();
 
+    let n_divs = color.range().length;
+
     var client_width = document.documentElement.clientWidth
     let legend_width = client_width / 3
     let left_margin = legend_width
-    let rect_width = legend_width / color.range().length
+    let rect_width = legend_width / n_divs
     let rect_idx = 0;
     let color_map = {}
-    for (let i = 0; i < color.range().length; ++i)
+
+    let rectPos = (i) => left_margin + i * rect_width;
+
+    for (let i = 0; i < n_divs; ++i)
     {
-        color_map[rect_width * i] = color.range()[i];
+        color_map[rectPos(i)] = color.range()[i];
     }
     console.log(color_map)
     var g = svg.append("g")
@@ -113,7 +118,7 @@ function showLegend(color, min, max)
         .data(color.range().map(function (d)
         {
             let r = []
-            r.push( rect_width * rect_idx);
+            r.push( rectPos(rect_idx) );
             r.push(r[0] + rect_width);
             ++rect_idx;
             return r;
@@ -122,7 +127,7 @@ function showLegend(color, min, max)
         ))
 
         .enter().append("rect")
-        .attr("height", 8)
+        .attr("height", 12)
         .attr("x", function (d) { return d[0]; })
         .attr("width", function (d) { return d[1] - d[0]; })
         .attr("fill", function (d) {  return color_map[d[0]]; });
@@ -133,24 +138,44 @@ function showLegend(color, min, max)
 
     g.append("text")
         .attr("class", "caption")
-        //.attr("x", x.range()[0])
+        .attr("x", left_margin)
         .attr("y", -6)
         .attr("fill", "#000")
         .attr("text-anchor", "start")
         .attr("font-weight", "bold")
         .text(text);
 
-    
-    let x = d3.scalePoint()
-        .domain(color.domain())
-        .range([0, rect_width*color.domain().length]);
+    for (let j = 0; j <= 4; ++j)
+    {
+        let idx = Math.floor(j * n_divs / 4)
+        let val_idx = Math.floor(j * (color.domain().length - 1) / 4);
+        let mid_val = Math.round(10 * color.domain()[val_idx]) / 10;
 
-    g.call(d3.axisBottom(x)
-        .tickSize(12))
-        //.tickValues(color.domain()))
-        .select(".domain")
-        .remove();
-        
+        g.append("text")
+            .attr("y", 30)
+            .attr("x", rectPos(idx))
+            .attr("fill", "#000")
+            .attr("style", "font-size: smaller")
+            .text(mid_val);
+    }
+
+    for (let i = 0; i <= n_divs; ++i)
+    {
+        let width = 1, height = 15;
+        if (i % 4 == 0)
+        {
+            width = 2;
+            height = 18;
+        }
+        g.append('line')
+            .style("stroke", "black")
+            .style("stroke-width", width)
+            .attr("x1", rectPos(i))
+            .attr("y1", 0)
+            .attr("x2", rectPos(i) )
+            .attr("y2", height); 
+    }
+      
 }
 
 function getColorScheme()
