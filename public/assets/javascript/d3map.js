@@ -5,6 +5,10 @@ let state_codes = new Set(["09", "34", "36"])
 var server_js = JSON.parse(sessionStorage.getItem('server_js'))
 var selected_vals = JSON.parse(sessionStorage.getItem('selected_vals'))
 var dd_vals = [];
+var colorschemes = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd},
+                    {id: 1, text: 'Blues', d3: d3.interpolateBlues},
+                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn},
+                    {id: 3, text: 'Greys', d3: d3.interpolateGreys}]
 
 for (let i = 0; i < selected_vals.length; ++i)
 {
@@ -17,13 +21,19 @@ var svg = null;
 var zoom = null;
 var tooltipDiv = null;
 var first_map_draw = true;
+var color;
 
 $('#layout').w2layout({
     name: 'layout',
     panels: [
         {
+            style: "border-bottom: 3px solid #9f9faf",
             type: 'top', size: 120, content: `<svg width="${document.documentElement.clientWidth * 0.8}" height="80"></svg>`, hidden: false,
             toolbar: {
+                style:
+                "padding: 2px; border-bottom: 3px solid #9f9faf;" +
+                "background: linear-gradient(to bottom, #f0f2f4 0%,#e5e7e9 36%,#ccd6dc 100%);" +
+                "font-weight:bold; font-size: 1.875em;",
                 items: [
                     {
                         type: "menu-radio",
@@ -31,7 +41,6 @@ $('#layout').w2layout({
                         text: function (item)
                         {
                             var el = this.get("values:" + item.selected);
-                            console.log(el)
                             return el.text;
                         },
                         items: dd_vals,
@@ -43,17 +52,11 @@ $('#layout').w2layout({
                         id: "color-scheme",
                         text: function (item)
                         {
-                            var text = item.selected;
                             var el = this.get("color-scheme:" + item.selected);
                             return el.text;
                         },
-                        selected: "yellow-orange-red",
-                        items: [
-                            { id: "yellow-orange-red", text: "Yellow-Orange-Red" },
-                            { id: "purple-blue-green", text: "Purple-Blue-Green" },
-                            { id: "blues", text: "Blues" },
-
-                        ],
+                        selected: 0,
+                        items: colorschemes,
                     }
                 ],
                 onClick: function (event)
@@ -79,13 +82,6 @@ $('#layout').w2layout({
     ]
 });
 
-/*
-let val_menu = w2ui.layout.get('top').toolbar.get("values")
-val_menu.items = selected_vals.slice()
-val_menu.selected = selected_vals[0]
-w2ui.layout.get('top').toolbar.refresh()
-*/
-
 function showLegend(color, min, max)
 {
     d3.select('svg').html('');
@@ -101,6 +97,7 @@ function showLegend(color, min, max)
     let left_margin = legend_width
     let rect_width = legend_width / n_divs
     let rect_idx = 0;
+    let rect_id = 0;
     let color_map = {}
 
     let rectPos = (i) => left_margin + i * rect_width;
@@ -109,7 +106,6 @@ function showLegend(color, min, max)
     {
         color_map[rectPos(i)] = color.range()[i];
     }
-    console.log(color_map)
     var g = svg.append("g")
         .attr("class", "key")
         .attr("transform", "translate(0,40)");
@@ -117,20 +113,17 @@ function showLegend(color, min, max)
     g.selectAll("rect")
         .data(color.range().map(function (d)
         {
-            let r = []
-            r.push( rectPos(rect_idx) );
-            r.push(r[0] + rect_width);
-            ++rect_idx;
-            return r;
+          return rectPos(rect_idx++)
         }
             
         ))
 
         .enter().append("rect")
         .attr("height", 12)
-        .attr("x", function (d) { return d[0]; })
-        .attr("width", function (d) { return d[1] - d[0]; })
-        .attr("fill", function (d) {  return color_map[d[0]]; });
+        .attr("x", function (d) { return d })
+        .attr("width", rect_width)
+        .attr("fill", function (d) { return color_map[d] })
+        .attr("id", d=>`rect_${rect_id++}`)
 
     let toolbar = w2ui.layout.get('top').toolbar
     let id = toolbar.get("values").selected
@@ -181,20 +174,8 @@ function showLegend(color, min, max)
 
 function getColorScheme()
 {
-    let scheme = w2ui.layout.get('top').toolbar.get("color-scheme")
-    console.log(scheme)
-    switch (scheme.selected) 
-    {
-        case 'yellow-orange-red':
-            return d3.interpolateYlOrRd
-            break;
-        case 'purple-blue-green':
-            return d3.interpolatePuBuGn
-            break;
-        case 'blues':
-            return d3.interpolateBlues
-            break;
-    }
+    let scheme = w2ui.layout.get('top').toolbar.get("color-scheme").selected
+    return w2ui.layout.get('top').toolbar.get("color-scheme").items[scheme].d3
 }
 
 function buildCountyDataLookup()
@@ -286,7 +267,7 @@ function drawMap()
     }
 
 
-    var color = d3
+        color = d3
         .scaleThreshold()
         .domain(domain)
         //.range(d3.schemePuBu[9]);
@@ -393,10 +374,7 @@ function drawMap()
             .on("click", clicked)
             .on("mouseover", hovered)
             .on("mousemove", moved)
-            .on("mouseout", function (d)
-            {
-                tooltipDiv.style("opacity", 0);
-            });
+            .on("mouseout", mouseOuted);
     
 
     g.append("path")
@@ -439,7 +417,7 @@ function clicked(d)
 }
 
 function hovered(d)
-{
+{ 
     let code = d.id.substring(0, 2)
     let state = name_from_state_code[code]
     if (!state_codes.has(code))
@@ -447,7 +425,12 @@ function hovered(d)
 
     let county = d.properties.name
     let value = county_data[code][county]
-
+    let idx = color.range().indexOf(color(value))
+    let rect_id = `rect_${idx}`
+    d3.select(`#rect_${idx}`)
+    .attr("style",`stroke:${color(value)};stroke-width:8`)
+    .attr("rx", "3")
+    .attr("ry","3")
     //console.log(d3.event)
     tooltipDiv
         .style("opacity", 0.9);
@@ -457,9 +440,23 @@ function hovered(d)
 }
 function moved(d)
 {
-    tooltipDiv
-        .style("left", (d3.event.layerX + 20) + "px")
-        .style("top", (d3.event.layerY + 20) + "px");
+  tooltipDiv
+      .style("left", (d3.event.layerX + 20) + "px")
+      .style("top", (d3.event.layerY + 20) + "px");
+}
+
+function mouseOuted(d)
+{
+  tooltipDiv.style("opacity", 0);
+  let code = d.id.substring(0, 2)
+  let county = d.properties.name
+  let value = county_data[code][county]
+  let idx = color.range().indexOf(color(value))
+  let rect_id = `rect_${idx}`
+  d3.select(`#rect_${idx}`)
+  .attr("style","stroke:black;stroke-width:0")
+  .attr("rx", "0")
+  .attr("ry","0")
 }
 
 function reset()
