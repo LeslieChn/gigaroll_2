@@ -17,6 +17,10 @@
   cursor: pointer;
 }
 
+body
+{
+    overflow: hidden
+}
 /*
 .active {
   opacity: 0.2 !important; 
@@ -28,16 +32,16 @@
   stroke: rgb(0, 0, 0);
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1px;
+  stroke-width: 2px;
 }
 
 .county-borders {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 0.5px;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  pointer-events: none;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 0.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
 }
 
 div.tooltip {   
