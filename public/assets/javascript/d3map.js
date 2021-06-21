@@ -63,12 +63,10 @@ $('#layout').w2layout({
                 {
                     if (event.target.indexOf('color-scheme:') >= 0) 
                     {
-                        console.log(event)
                         event.onComplete = drawMap
                     }
                     if (event.target.indexOf('values:') >= 0) 
                     {
-                        console.log(event)
                         event.onComplete = drawMap
                     }
                 }
@@ -88,8 +86,6 @@ function showLegend(color, min, max)
 
     var svg = d3.select("svg");
 
-    var path = d3.geoPath();
-
     let n_divs = color.range().length;
 
     var client_width = document.documentElement.clientWidth
@@ -98,32 +94,22 @@ function showLegend(color, min, max)
     let rect_width = legend_width / n_divs
     let rect_idx = 0;
     let rect_id = 0;
-    let color_map = {}
 
     let rectPos = (i) => left_margin + i * rect_width;
 
-    for (let i = 0; i < n_divs; ++i)
-    {
-        color_map[rectPos(i)] = color.range()[i];
-    }
     var g = svg.append("g")
         .attr("class", "key")
         .attr("transform", "translate(0,40)");
 
     g.selectAll("rect")
-        .data(color.range().map(function (d)
-        {
-          return rectPos(rect_idx++)
-        }
-            
-        ))
-
+        .data(color.range().map((d) => rect_idx++ ) )
         .enter().append("rect")
         .attr("height", 12)
-        .attr("x", function (d) { return d })
+        .attr("x", d => rectPos(d))
+        .attr("y", d => 0)
         .attr("width", rect_width)
-        .attr("fill", function (d) { return color_map[d] })
-        .attr("id", d=>`rect_${rect_id++}`)
+        .attr("fill", function (d) { return color.range()[d] })
+        .attr("id", d => `rect_${rect_id++}`)
 
     let toolbar = w2ui.layout.get('top').toolbar
     let id = toolbar.get("values").selected
@@ -139,18 +125,25 @@ function showLegend(color, min, max)
         .text(text);
 
     // Create the tickmarks
-    for (let j = 0; j <= 4; ++j)
+    let vals = [[min,0]]
+    for (let j = 1; j < 4; ++j)
     {
-        let idx = Math.floor(j * n_divs / 4)
-        let val_idx = Math.floor(j * (color.domain().length - 1) / 4);
-        let mid_val = Math.round(10 * color.domain()[val_idx]) / 10;
-           
+        //let idx = Math.floor(j * n_divs / 4)
+        let val_idx = Math.floor(j * (color.domain().length) / 4);
+        let val = color.domain()[val_idx]
+        let idx = color.range().indexOf(color(val))
+        vals.push([val, idx]);
+    }
+    vals.push([max, n_divs])
+
+    for (let val of vals)
+    {
         g.append("text")
             .attr("y", 30)
-            .attr("x", rectPos(idx))
+            .attr("x", rectPos(val[1]))
             .attr("fill", "#000")
             .attr("style", "font-size: smaller")
-            .text(mid_val);
+            .text(Math.round(10*val[0])/10);
     }
 
     for (let i = 0; i <= n_divs; ++i)
@@ -368,7 +361,7 @@ function drawMap()
                 let county = d.properties.name;
                 let value = county_data[code][county];
 
-                return `fill:${color(value)}; z-index:-1`;
+                return `fill:${color(value)}; `;
 
             })
             .on("click", clicked)
@@ -426,12 +419,21 @@ function hovered(d)
     let county = d.properties.name
     let value = county_data[code][county]
     let idx = color.range().indexOf(color(value))
-    let rect_id = `rect_${idx}`
-    d3.select(`#rect_${idx}`)
-    .attr("style",`stroke:${color(value)};stroke-width:8`)
-    .attr("rx", "3")
-    .attr("ry","3")
-    //console.log(d3.event)
+    let rect_id = `#rect_${idx}`
+    console.log("value=%d, idx= %d", value, idx)
+    //d3.select(rect_id)
+    //  .attr("y", 10)
+    let x = parseInt(d3.select(rect_id).attr("x"))
+    let height = parseInt(d3.select(rect_id).attr("height"))
+    let width = parseInt(d3.select(rect_id).attr("width"))
+
+    d3.select(rect_id)
+        .attr("y",  - 5)
+        .attr("x", x - 5)
+        .attr("height", height + 10)
+        .attr("width", width + 10)
+        .attr("style", ` stroke:black;stroke-width:2`)
+
     tooltipDiv
         .style("opacity", 0.9);
     tooltipDiv.html(`${county} ${state} <br> ${value}`)
@@ -452,11 +454,19 @@ function mouseOuted(d)
   let county = d.properties.name
   let value = county_data[code][county]
   let idx = color.range().indexOf(color(value))
-  let rect_id = `rect_${idx}`
-  d3.select(`#rect_${idx}`)
-  .attr("style","stroke:black;stroke-width:0")
-  .attr("rx", "0")
-  .attr("ry","0")
+  let rect_id = `#rect_${idx}`
+
+    let x = parseInt(d3.select(rect_id).attr("x"))
+    let height = parseInt(d3.select(rect_id).attr("height"))
+    let width = parseInt(d3.select(rect_id).attr("width"))
+
+    d3.select(rect_id)
+        .attr("y", 0)
+        .attr("x", x + 5)
+        .attr("height", height - 10)
+        .attr("width", width - 10)
+        .attr("style", "stroke:black;stroke-width:0")
+
 }
 
 function reset()

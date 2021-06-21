@@ -1295,7 +1295,12 @@ function updateGrid(server_js, gby_headers, val_headers) {
           { type: 'button', id: 'launch-details', text: 'Details', img: 'icon-page', disabled: true },
           { type: 'button', id: 'drilldown', text: 'Drilldown', icon: 'fas fa-sort-amount-down', disabled: true },
           { type: 'button', id: 'treemap', text: 'Tree Map', icon: 'fas fa-tree' },
-          { type: 'button', id: 'map', text: 'Map', icon: 'fa-solid fa-earth-americas', onClick: openMap},
+         // { type: 'button', id: 'map', text: 'Map', img: '<img src=./assets/images.NE_map.png/>', onClick: openMap},
+          {
+              type: 'html', id: 'map',
+              html:
+                  '<button style="border:0px;padding:0px;margin:2px;font-weight:normal" onclick="openMap()"> <img src="./assets/images/NE_map2.png" style="height:28px;width:32px" /> Map </button>',
+            }
         ],
       onClick: function (target, data) {
           if (target == 'launch-details')
