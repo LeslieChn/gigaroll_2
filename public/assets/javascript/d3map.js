@@ -117,8 +117,8 @@ function showLegend(color, min, max)
 
     g.append("text")
         .attr("class", "caption")
-        .attr("x", left_margin)
-        .attr("y", -6)
+        .attr("x", left_margin - 2 * rect_width/10*text.length) //to do: change to bbox calculation
+        .attr("y", 12)
         .attr("fill", "#000")
         .attr("text-anchor", "start")
         .attr("font-weight", "bold")
@@ -231,7 +231,7 @@ function drawMap()
         m2;
     if (min_data <= 0 && max_data <= 0)
     {
-        m1 = min_data == 0 ? -1 : min_data;
+        m1 = min_data == 0 ? -1 : min_data + 0.5;
         m2 = max_data == 0 ? -1 : max_data;
         let r = (m2 / m1) ** (1 / (num_colors));
 
@@ -240,7 +240,7 @@ function drawMap()
     }
     else if (min_data >= 0 && max_data >= 0) 
     {
-        m1 = min_data == 0 ? 1 : min_data;
+        m1 = min_data == 0 ? 1 : min_data + 0.5;
         m2 = max_data == 0 ? 1 : max_data;
         let r = (m2 / m1) ** (1 / (num_colors));
 
@@ -252,7 +252,7 @@ function drawMap()
         m1 = min_data;
         m2 = max_data;
 
-        domain.push(min_data);
+        domain.push(min_data + 0.5);
         let r = max_data ** (1 / (num_colors - 1));
 
         for (let x = 1; x <= max_data; x *= r)
@@ -426,7 +426,18 @@ function hovered(d)
     let x = parseInt(d3.select(rect_id).attr("x"))
     let height = parseInt(d3.select(rect_id).attr("height"))
     let width = parseInt(d3.select(rect_id).attr("width"))
-
+    
+    var g = svg.append("g")
+    .attr("class", "overline")
+    .attr("transform", "translate(0,40)");
+    
+    // g.select(".key")
+    //     .append("line")   
+    //     .attr("x1", x)
+    //     .attr("y1", -5)
+    //     .attr("x2", x + width)
+    //     .attr("y2", -5)
+    //     .attr("style", `stroke:black;stroke-width:2`)  
     d3.select(rect_id)
         .attr("y",  - 5)
         .attr("x", x - 5)

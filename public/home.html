@@ -29,16 +29,18 @@
 <body>
   <header>
     <nav class="navbar navbar-expand-sm" aria-label="Third navbar example">
-      <div class="container-fluid">
-        <a id="logotext" class="navbar-brand d-flex align-items-center" href="/">
-          <img id="logo" src="./assets/images/logo2.png" class="" width="50" height="40"><span id="logo-text">GigaRoll</span>
-        </a>
+      <div class="container-fluid">  
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gigarollMenu"
           aria-controls="gigarollMenu" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="gigarollMenu">
-          <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+        <div class="collapse navbar-collapse justify-content-md-center" id="gigarollMenu">
+          <ul class="navbar-nav mb-2 mb-sm-0">
+            <li class="nav-item">
+              <a id="logotext" class="navbar-brand" href="/">
+                <img id="logo" src="./assets/images/logo2.png" class="" width="50" height="40"><span id="logo-text">GigaRoll</span>
+              </a>      
+          </li>
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="./home.html">Home</a>
             </li>
@@ -51,12 +53,12 @@
     </nav>
   </header>
   <main class="container-fluid">
-    <div class="p-3 p-md-4 m-2 text-start rounded" id="introbubble">
+    <!-- <div class="p-3 p-md-4 m-2 text-start rounded" id="introbubble">
       <div class="col-md-7 px-0">
         <h1 class="display-4" style="font-weight:bolder">Welcome to Gigaroll </h1>
         <p class="lead my-3" style="font-weight:bold">A multi-faceted query engine and visualization tool for real-estate data</p>
       </div>
-    </div>
+    </div> -->
     <div class="row justify-content-md-center m-2">
       <div class="col-12 col-sm-9 d-flex justify-content-center">
         <div id="myCarousel" class="carousel carousel-dark slide mx-auto" data-bs-ride="carousel">
