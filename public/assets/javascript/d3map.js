@@ -116,13 +116,17 @@ function showLegend(color, min, max)
     let text = toolbar.get(`values:${id}`).text
 
     g.append("text")
-        .attr("class", "caption")
-        .attr("x", left_margin - 2 * rect_width/10*text.length) //to do: change to bbox calculation
+        .attr("id", "caption")
+        .attr("x", -200) 
         .attr("y", 12)
         .attr("fill", "#000")
         .attr("text-anchor", "start")
         .attr("font-weight", "bold")
         .text(text);
+
+    let text_pixels = document.getElementById("caption").getComputedTextLength()
+    g.select("#caption")
+        .attr("x", left_margin - text_pixels - 20);
 
     // Create the tickmarks
     let vals = [[min,0]]
@@ -420,30 +424,29 @@ function hovered(d)
     let value = county_data[code][county]
     let idx = color.range().indexOf(color(value))
     let rect_id = `#rect_${idx}`
-    console.log("value=%d, idx= %d", value, idx)
-    //d3.select(rect_id)
-    //  .attr("y", 10)
+
     let x = parseInt(d3.select(rect_id).attr("x"))
     let height = parseInt(d3.select(rect_id).attr("height"))
     let width = parseInt(d3.select(rect_id).attr("width"))
     
     var g = svg.append("g")
-    .attr("class", "overline")
     .attr("transform", "translate(0,40)");
     
-    // g.select(".key")
-    //     .append("line")   
-    //     .attr("x1", x)
-    //     .attr("y1", -5)
-    //     .attr("x2", x + width)
-    //     .attr("y2", -5)
-    //     .attr("style", `stroke:black;stroke-width:2`)  
-    d3.select(rect_id)
-        .attr("y",  - 5)
-        .attr("x", x - 5)
-        .attr("height", height + 10)
-        .attr("width", width + 10)
-        .attr("style", ` stroke:black;stroke-width:2`)
+    d3.select(".key")
+        .append("line")   
+        .attr("id", "overline")
+         .attr("x1", x)
+         .attr("y1", -5)
+         .attr("x2", x + width)
+         .attr("y2", -5)
+         .attr("style", `stroke:black;stroke-width:4`)  
+
+    //d3.select(rect_id)
+    //    .attr("y",  - 5)
+    //    .attr("x", x - 5)
+    //    .attr("height", height + 10)
+    //    .attr("width",  width + 10)
+    //    .attr("style", ` stroke:black;stroke-width:2`)
 
     tooltipDiv
         .style("opacity", 0.9);
@@ -471,12 +474,15 @@ function mouseOuted(d)
     let height = parseInt(d3.select(rect_id).attr("height"))
     let width = parseInt(d3.select(rect_id).attr("width"))
 
-    d3.select(rect_id)
-        .attr("y", 0)
-        .attr("x", x + 5)
-        .attr("height", height - 10)
-        .attr("width", width - 10)
-        .attr("style", "stroke:black;stroke-width:0")
+    d3.select("#overline")
+        .remove();
+       
+   // d3.select(rect_id)
+   //     .attr("y", 0)
+   //     .attr("x", x + 5)
+   //     .attr("height", height - 10)
+   //     .attr("width", width - 10)
+   //    .attr("style", "stroke:black;stroke-width:0")
 
 }
 
