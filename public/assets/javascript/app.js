@@ -12,6 +12,16 @@ async function serverRequest(params) {
   return json;
 }
 
+async function getUser() {
+
+  var request = new Request('/user', { method: "GET" });
+
+  const response = await fetch(request);
+  const json = await response.json();
+  
+  return json;
+}
+
 function destroyChart()
 {
   if (myChart != null)
@@ -218,6 +228,7 @@ var selected_gbys=null;
 var global_dim_filters = {}
 var global_val_filters = {}
 var treemap_showing = false
+var user_info;
 /********************************************************/
 function createLayout() {    
   var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
@@ -407,6 +418,20 @@ function restoreTreeMap()
 /*********************************************************************/
 async function InitPage() {
   console.log("ready!");
+  
+  user_info = await getUser();
+
+  console.log(user_info)
+
+  if (!user_info) 
+  { 
+    $("#gigarollMenu").append(`<li class="nav-item" id="login"><a class="nav-link" href="./login.html">Login</a></li>`)
+  }
+  else 
+  { 
+    $("#gigarollMenu").append(`<li class="nav-item" id="user-button"><a class="nav-link" href="/profile">${user_info.displayName}</a></li>`)
+  }
+
   $("#submitButton").prop("disabled", true)
   var dim_info = null;
   dim_info = await serverRequest({ qid: "GET_DIMS" });
