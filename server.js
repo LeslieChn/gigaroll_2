@@ -107,7 +107,7 @@ function(req, res) {
   res.redirect('/');
 });
 
-app.use(require('connect-ensure-login').ensureLoggedIn(),express.static('private') )
+app.use(require('connect-ensure-login').ensureLoggedIn(),express.static('private'))
 
 app.get('/', 
 require('connect-ensure-login').ensureLoggedIn(),
