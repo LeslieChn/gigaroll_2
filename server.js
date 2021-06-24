@@ -9,6 +9,12 @@ const path = require('path');
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var db = require('./db');
+const md5 = require('md5');
+const salt = 'cardamom'
+
+function hashPassword (pass){
+  return md5(salt+pass)
+}
 
 // Configure the local strategy for use by Passport.
 //
@@ -21,7 +27,7 @@ passport.use(new Strategy(
     db.users.findByUsername(username, function(err, user) {
       if (err) { return cb(err); }
       if (!user) { return cb(null, false); }
-      if (user.password != password) { return cb(null, false); }
+      if (user.password != hashPassword(password)) { return cb(null, false); }
       return cb(null, user);
     });
   }));
@@ -53,6 +59,14 @@ const options = {
 var app = express();
 var PORT = process.env.PORT || 8080;
 
+
+//Express Data Parsing
+app.use(express.urlencoded({extended:false}));
+app.use(express.json());
+app.use(express.static('public'))
+
+
+
 // Use application-level middleware for common functionality, including
 // logging, parsing, and session handling.
 app.use(require('morgan')('combined'));
@@ -63,15 +77,6 @@ app.use(require('express-session')({ secret: 'keyboard cat', resave: false, save
 // session.
 app.use(passport.initialize());
 app.use(passport.session());
-
-//Express Data Parsing
-app.use(express.urlencoded({extended:true}));
-app.use(express.json());
-app.use(express.static('public'))
-
-// // Routes
-// require("./routes/apiRoutes")(app);
-// require("./routes/htmlRoutes")(app);
 
 //Routes
 
@@ -91,14 +96,9 @@ app.post('/gserver/:query', async (request, response) => {
   console.timeEnd(request.params.query)
 });
 
-app.get('/',
-function(req, res) {
-  res.json(req.user);
-});
-
 app.get('/login',
 function(req, res){
-  res.render('login');
+  res.sendFile(path.join(__dirname, "/public/login.html"))
 });
 
 app.post('/login', 
@@ -107,17 +107,36 @@ function(req, res) {
   res.redirect('/');
 });
 
+app.use(require('connect-ensure-login').ensureLoggedIn(),express.static('private') )
+
+app.get('/', 
+require('connect-ensure-login').ensureLoggedIn(),
+function (req, res) {
+  res.redirect('/');
+});
+
+app.get('/user', 
+function(req, res) {
+  if (!req.user) {
+    // The user is not logged in, send back an empty object
+    res.json(null);
+  }
+  else {
+    // Otherwise send back the user's username and id
+   res.json(req.user);
+  }
+});
+
 app.get('/logout',
 function(req, res){
   req.logout();
   res.redirect('/');
 });
 
-app.get('/profile',
-require('connect-ensure-login').ensureLoggedIn(),
-function(req, res){
-  res.render('index', { user: req.user });
-});
+
+// // Routes
+// require("./routes/apiRoutes")(app);
+// require("./routes/htmlRoutes")(app);
 
 /*****************************************************************/
 
