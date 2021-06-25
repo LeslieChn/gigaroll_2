@@ -71,7 +71,7 @@ app.use(express.static('public'))
 // logging, parsing, and session handling.
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false,  cookie: { sameSite: 'strict' }}));
 
 // Initialize Passport and restore authentication state, if any, from the
 // session.
