@@ -1,16 +1,18 @@
 //Dependencies
-var express = require ("express");
+const express = require ("express");
+const session = require ("express-session")
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const { cpuUsage } = require("process");
 const path = require('path');
-var passport = require('passport');
-var Strategy = require('passport-local').Strategy;
-var db = require('./db');
+const passport = require('passport');
+const Strategy = require('passport-local').Strategy;
+const db = require('./db');
 const md5 = require('md5');
 const salt = 'cardamom'
+const flash = require ('connect-flash')
 
 function hashPassword (pass){
   return md5(salt+pass)
@@ -71,12 +73,23 @@ app.use(express.static('public'))
 // logging, parsing, and session handling.
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').urlencoded({ extended: true }));
-app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false,  cookie: { sameSite: 'strict' }}));
+app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: false,  cookie: { sameSite: 'strict' }}));
 
 // Initialize Passport and restore authentication state, if any, from the
 // session.
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Connect flash
+app.use(flash());
+
+// Global variables
+app.use(function(req, res, next) {
+  res.locals.success_msg = req.flash('success_msg');
+  res.locals.error_msg = req.flash('error_msg');
+  res.locals.error = req.flash('error');
+  next();
+});
 
 //Routes
 
@@ -109,11 +122,11 @@ function(req, res) {
 
 app.use(require('connect-ensure-login').ensureLoggedIn(),express.static('private'))
 
-app.get('/', 
-require('connect-ensure-login').ensureLoggedIn(),
-function (req, res) {
-  res.redirect('/');
-});
+// app.get('/', 
+// require('connect-ensure-login').ensureLoggedIn(),
+// function (req, res) {
+//   res.redirect('/');
+// });
 
 app.get('/user', 
 function(req, res) {
@@ -130,13 +143,9 @@ function(req, res) {
 app.get('/logout',
 function(req, res){
   req.logout();
+  req.flash('success_msg', 'You are logged out');
   res.redirect('/');
 });
-
-
-// // Routes
-// require("./routes/apiRoutes")(app);
-// require("./routes/htmlRoutes")(app);
 
 /*****************************************************************/
 
