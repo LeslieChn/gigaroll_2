@@ -425,11 +425,12 @@ async function InitPage() {
 
   if (!user_info) 
   { 
-    $("#gigarollMenu").append(`<li class="nav-item" id="login"><a class="nav-link" href="./login.html">Login</a></li>`)
+    $("#profileMenu").append(`<li class="nav-item" id="login"><a class="nav-link" href="./login.html">Login</a></li>`)
   }
   else 
   { 
-    $("#gigarollMenu").append(`<li class="nav-item" id="user-button"><a class="nav-link" href="/profile">${user_info.displayName}</a></li>`)
+    $("#profileMenu").append(`<li class="nav-item" id="user-button"><a class="nav-link" href="/profile">${user_info.displayName}</a></li>`)
+    $("#profileMenu").append(`<li class="nav-item" id="user-button"><a class="nav-link" href="/logout">Logout</a></li>`)
   }
 
   $("#submitButton").prop("disabled", true)
@@ -615,8 +616,7 @@ function getRangeDef() {
   var range_size = parseFloat($("#rangeSize").val());
   var range_buckets = parseInt($("#numBuckets").val());
   if (isNaN(range_start) || isNaN(range_size) || isNaN(range_buckets)) {
-    alert("Range definition is incomplete!");
-    return "";
+    throw "Range definition is incomplete!";
   }
   var range_def =
     "range(" +
@@ -633,15 +633,20 @@ function getRangeDef() {
   return range_def;
 }
 
-function getSelectedGbys() {
+function getSelectedGbys() 
+{
   var g_array=[]
-  for (let idx of used_gby_indices) {
+  for (let idx of used_gby_indices) 
+  {
     var ddgroupby = "#ddgroupby" + idx;
     var selected_gby = $(ddgroupby).val();
-    if (selected_gby == "RANGE") {
+    if (selected_gby == "RANGE") 
+    {
       var range_def = getRangeDef();
       g_array.push(range_def);
-    } else g_array.push(selected_gby);
+    } 
+    else
+     g_array.push(selected_gby);
   }
   return g_array;
 }
@@ -1602,11 +1607,18 @@ async function onclick_submit() {
   disableChart(true);
   // await new Promise(r => setTimeout(r, 5000));
   console.time("onclick_submit");
-  selected_gbys = getSelectedGbys();
-  selected_vals = getSelectedMeasures(); 
+  try 
+  {
+    selected_gbys = getSelectedGbys();
+    selected_vals = getSelectedMeasures(); 
   
-  showBreadCrumbs();
-
+    showBreadCrumbs();  
+  }
+  catch (err)
+  {
+    alert(err)
+    return
+  }
   var params = {
     qid: "MD_AGG",
     dim: base_dim,

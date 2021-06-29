@@ -102,7 +102,7 @@ function(req, res){
 });
 
 app.post('/login', 
-passport.authenticate('local', { failureRedirect: '/login' }),
+passport.authenticate('local', { failureRedirect: '/login'}),
 function(req, res) {
   res.redirect('/');
 });

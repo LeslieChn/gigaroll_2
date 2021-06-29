@@ -28,25 +28,27 @@
 
 <body>
   <header>
-    <nav class="navbar navbar-expand-sm" aria-label="Third navbar example">
-      <div class="container-fluid">  
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gigarollMenu"
+    <nav class="navbar navbar-expand-sm" aria-label="gigaNav">
+      <div class="container-fluid"> 
+        <div class="mx-auto">
+          <a id="logotext" class="navbar-brand abs" href="/">
+            <img id="logo" src="./assets/images/logo_sun.svg" class="" width="60" height="40"><span id="logo-text" class="align-middle">GigaRoll</span>
+          </a> 
+        </div>      
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gigarollNav"
           aria-controls="gigarollMenu" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse justify-content-md-center">
-          <ul class="navbar-nav mb-2 mb-sm-0" id="gigarollMenu">
-            <li class="nav-item">
-              <a id="logotext" class="navbar-brand" href="/">
-                <img id="logo" src="./assets/images/logo_sun.svg" class="" width="60" height="40"><span id="logo-text">GigaRoll</span>
-              </a>      
-          </li>
+        <div class="collapse navbar-collapse text-start" id="gigarollNav">
+          <ul class="navbar-nav mb-2 mb-sm-0 me-auto" id="gigarollMenu">
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="./home.html">Home</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="./index.html">Explore</a>
             </li>
+          </ul>
+          <ul class="navbar-nav mb-2 mb-sm-0 ms-auto" id="profileMenu">
           </ul>
         </div>
       </div>

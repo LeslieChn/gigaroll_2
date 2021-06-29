@@ -15,7 +15,6 @@ body{
   text-shadow: 1px 1px 2px rgb(182, 182, 182);
   /* text-shadow: 3px 3px 2px rgb(32,188,128); */
   font-weight:bold;
-  padding-left: 1rem;
   font-size: 1.5rem;
 }
 
@@ -40,6 +39,7 @@ body{
 .navbar-expand-sm .navbar-nav .nav-link:hover {
   text-shadow:0px 3px 5px rgba(255, 255, 0, 1);
 }
+
 
 td.button-cell{
   text-align: center; 
