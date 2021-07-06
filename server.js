@@ -59,8 +59,8 @@ const options = {
 
 //Set Up Express
 var app = express();
-var PORT = process.env.PORT || 8080;
-
+var HTTP_PORT = process.env.GR_HTTP_PORT || 8080;
+var HTTPS_PORT = process.env.GR_HTTPS_PORT || 8001;
 
 //Express Data Parsing
 app.use(express.urlencoded({extended:false}));
@@ -151,16 +151,21 @@ function(req, res){
 
 var httpServer = http.createServer(app);
 var httpsServer = https.createServer(options, app)
-httpServer.listen(8080, function()
+if (HTTP_PORT>0)
+  {
+    httpServer.listen(HTTP_PORT, function()
+    {
+        console.log(`http server listening on port ${HTTP_PORT}`)
+    });
+  }
+if (HTTPS_PORT>0)
 {
-    console.log("http server listening on port 8080")
-});
-httpsServer.listen(8001, function()
-{
-      console.log("https server listening on port 8001")
-});
+  httpsServer.listen(HTTPS_PORT, function()
+  {
+      console.log(`https server listening on port ${HTTPS_PORT}`)
+  });
+}
 
-module.exports = app;
 
 
 
