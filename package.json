@@ -20,6 +20,7 @@
   "homepage": "https://github.com/pcarey1213/gigaroll2#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
     "connect-ensure-login": "^0.1.1",
     "connect-flash": "^0.1.1",
     "express": "^4.17.1",

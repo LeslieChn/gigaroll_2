@@ -5,6 +5,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const compression = require('compression');
 const { cpuUsage } = require("process");
 const path = require('path');
 const passport = require('passport');
@@ -90,6 +91,28 @@ app.use(function(req, res, next) {
   res.locals.error = req.flash('error');
   next();
 });
+
+// Compression
+const shouldCompress = (req, res) =>
+{
+    if (req.headers['x-no-compression'])
+    {
+        // don't compress responses if this request header is present
+        return false;
+    }
+
+    // fallback to standard compression
+    return compression.filter(req, res);
+};
+
+app.use(compression({
+    // filter decides if the response should be compressed or not,
+    // based on the `shouldCompress` function above
+    filter: shouldCompress,
+    // threshold is the byte threshold for the response body size
+    // before compression is considered, the default is 1kb
+    threshold: 4096
+}));
 
 //Routes
 
