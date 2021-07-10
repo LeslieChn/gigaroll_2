@@ -17,6 +17,10 @@
   cursor: pointer;
 }
 
+.w2ui-menu{
+  overflow: hidden !important
+}
+
 body
 {
     overflow: hidden
