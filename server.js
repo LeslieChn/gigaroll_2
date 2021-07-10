@@ -92,6 +92,16 @@ app.use(function(req, res, next) {
   next();
 });
 
+// Make sure maps are being cached by the browser
+app.use(function (req, res, next)
+{
+    if (req.url.includes("map_"))
+    {
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // cache header
+    }
+    next();
+});
+
 // Compression
 const shouldCompress = (req, res) =>
 {

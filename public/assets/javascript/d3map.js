@@ -310,7 +310,7 @@ function drawMap()
     }
     showLegend(color, m1, m2);
 
-    d3.json("us.json", function (error, us)
+    d3.json("map_us_counties.json", function (error, us)
     {
         if (error) throw error;
 
