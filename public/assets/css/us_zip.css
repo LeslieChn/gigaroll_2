@@ -1,0 +1,66 @@
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #111;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange; 
+}
+
+.zipcodes {
+  fill: #111;
+  cursor: pointer;
+}
+
+.w2ui-menu{
+  overflow: hidden !important
+}
+
+body
+{
+    overflow: hidden
+}
+/*
+.active {
+  opacity: 0.2 !important; 
+}
+*/
+
+.mesh {
+  fill: none;
+  stroke: rgb(0, 0, 0);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+}
+
+.zip-borders {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 0.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+div.tooltip {   
+    position: absolute;         
+    text-align: center;    
+    /*     
+    width: 80px;                    
+    height: 28px;
+    */                   
+    padding: 8px;               
+    font: 16px sans-serif; 
+    font-weight: bold;     
+    background: lightsteelblue; 
+    border: 0px;        
+    border-radius: 8px;      
+    pointer-events: none;   
+    box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
+}

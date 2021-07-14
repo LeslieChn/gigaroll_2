@@ -1145,8 +1145,11 @@ function openMap()
 
   let sv = JSON.stringify(selected_vals)
   sessionStorage.setItem("selected_vals", sv)
-
-  window.open('./counties-zoom.html', '_blank');
+  
+  if (selected_gbys[0] == "postal_code")
+    window.open('./us_zip.html', '_blank')
+  else
+    window.open('./counties-zoom.html', '_blank')
 }
 /****************************************************/
 function openDetailsPage()
