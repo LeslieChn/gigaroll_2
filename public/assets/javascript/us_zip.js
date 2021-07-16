@@ -294,7 +294,7 @@ function drawMap()
     }
     showLegend(color, m1, m2);
 
-    d3.json("map_us_zip.json", function (error, us)
+    d3.json("map_zip_state.json", function (error, us)
     {
         if (error) throw error;
 
@@ -304,20 +304,38 @@ function drawMap()
         us.transform.translate[0] = 500;
         us.transform.translate[1] = 700;
 
-        let zip_features = topojson.feature(us, us.objects.tl_2020_us_zcta510).features;
+        let zip_features = topojson.feature(us, us.objects.zip).features;
+        let zip_filtered = zip_features.filter((zip) => zip_data[zip.id]);
+        let state_features = topojson.feature(us, us.objects.states).features;
+        
+        g.selectAll("path")
+            .data(state_features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("class", "feature");
+
+        g.append("path")
+            .datum(
+                topojson.mesh(us, us.objects.states, function (a, b)
+                {
+                    return true;
+                })
+            )
+            .attr("class", "mesh")
+            .attr("d", path);
 
         g.append("g")
             .attr("class", "zipcodes")
             .selectAll("path")
-            .data(zip_features)
+            .data(zip_filtered)
             .enter()
             .append("path")
             .attr("d", path)
             .attr("style", function (d)
             {
-                let code = d.id;
-                let value = zip_data[code];
-
+                let zip = d.id;
+                let value = zip_data[zip];
                 return `fill:${color(value)}; `;
 
             })
@@ -332,7 +350,7 @@ function drawMap()
         .attr(
             "d",
             path(
-                topojson.mesh(us, us.objects.tl_2020_us_zcta510, function (a, b)
+                topojson.mesh(us, us.objects.zip, function (a, b)
                 {
                     return a !== b;
                 })
