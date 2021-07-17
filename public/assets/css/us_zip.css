@@ -4,12 +4,15 @@
 }
 
 .feature { 
-  fill: rgb(238, 238, 238);
+  fill: url(#pattern-checkers);  ;
   cursor: pointer;
 }
 
 .feature.active {
-  fill: orange; 
+  fill: rgb(248, 248, 248); 
+}
+.checker {
+  fill: #CBCBCB;
 }
 
 .zipcodes {
@@ -42,7 +45,7 @@ body
 .zip-borders {
     fill: none;
     stroke: #ffffff;
-    stroke-width: 0.0006px;
+    stroke-width: 0.006px;
     stroke-linejoin: round;
     stroke-linecap: round;
     pointer-events: none;
