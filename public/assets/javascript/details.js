@@ -3,8 +3,13 @@ var bounds = {}
 var map_center = {}
 var rec_ids = []
 var map = null
-var markers = [];
-var heatmap = null
+var markers = L.layerGroup();
+var heatmap = L.heatLayer([],{radius: 30},{blur: 0},{0.4: 'blue', 0.65: 'lime', 1: 'red'});
+var radiusVal = 20
+var opacity = 1
+var gardCase = 0
+var osMap = null
+var layerGroup = null
 
 async function serverRequest(params) {
   p = new URLSearchParams(params).toString();
@@ -17,10 +22,6 @@ async function serverRequest(params) {
   const json = await response.json();
 
   return json;
-}
-
-function initMap (){
-
 }
 
 $(function () {
@@ -67,14 +68,12 @@ $(function () {
               text: "Change Gradient",
               onClick: changeGradient,
             },
-            { type: "html", html: "<pre> </pre>" },
             {
               type: "button",
               id: "item4",
               text: "Change Radius",
               onClick: changeRadius,
             },
-            { type: "html", html: "<pre> </pre>" },
             {
               type: "button",
               id: "item5",
@@ -88,7 +87,7 @@ $(function () {
               text: "Draw on Map",
                  onClick: drawOnMap,
             },
-            { type: "html", html: "<pre> </pre>" },
+            //{ type: "html", html: "<pre> </pre>" },
             {
               type: "button",
               id: "item7",
@@ -99,29 +98,29 @@ $(function () {
             {
               type: 'html', id: 'hide-map', 
               html: 
-              '<button style="border:0px;padding:0px;" onclick="hideMap()"> <img src="./assets/images/minimize.svg" style="height:16px;width:16px" /> </button>',
+              '<button style="border:0px;padding:0px 2px 0px;" onclick="hideMap()"> <img src="./assets/images/minimize.svg" style="height:16px;width:16px" /> </button>',
             },      
-            { type: "html", html: "<pre> </pre>" }, 
+            //{ type: "html", html: "<pre> </pre>" }, 
             {
               type: 'html', id: 'restore-map', 
               html: 
-              '<button style="border:0px;padding:0px;" onclick="restoreMap()"> <img src="./assets/images/window-split.svg" style="height:16px;width:16px" /> </button>',
+              '<button style="border:0px;padding:0px 2px 0px;" onclick="restoreMap()"> <img src="./assets/images/window-split.svg" style="height:16px;width:16px" /> </button>',
             },
-            { type: "html", html: "<pre> </pre>" },
+            // { type: "html", html: "<pre> </pre>" },
             {
               type: 'html', id: 'max-map', 
               html: 
-              '<button style="border:0px;padding:0px;" onclick="maximizeMap()"> <img src="./assets/images/maximize2.svg" style="height:16px;width:16px" /> </button>',
+              '<button style="border:0px;padding:0px 2px 0px;" onclick="maximizeMap()"> <img src="./assets/images/maximize2.svg" style="height:16px;width:16px" /> </button>',
             },
           ],
           onClick: function (event) {
             if (event.target == "map-type:regular-map") {
-              getHeatMap().setMap(null);
-              setMapOnAll(map);
+              console.log("map changed to regular")
+              switchReg()
             } 
             else if (event.target == "map-type:heat-map") {
-              getHeatMap().setMap(map);
-              setMapOnAll(null);
+              console.log("map changed to heat")
+              switchHeat()
             }
           },
         },
@@ -141,6 +140,9 @@ function maximizeMap()
   w2ui.layout.hide("main", true)
   w2ui.layout.get("bottom").size = '100%'
   w2ui.layout.show("bottom", true)
+  $(map).ready(function () {
+    osMap.invalidateSize()
+  });
 }
 
 function restoreMap()
@@ -148,6 +150,9 @@ function restoreMap()
   w2ui.layout.show("main", true)
   w2ui.layout.get("bottom").size = '50%'
   w2ui.layout.show("bottom", true)
+  $(map).ready(function () {
+    osMap.invalidateSize()
+  });
 }
 var drawingManager = null
 var rectangle = null
@@ -363,9 +368,6 @@ function processResp(resp)
 
 function launchMap()
 {
-  // sessionStorage.setItem("base_dim", base_dim)
-  // sessionStorage.setItem("dim_filters", dim_filters)
-  // sessionStorage.setItem("val_filters", val_filters)
   coords=[]
   rec_ids = []
 
@@ -390,7 +392,7 @@ function launchMap()
     min_lat = (lat<min_lat)? lat : min_lat
     min_lng = (lng<min_lng)? lng : min_lng
   
-    coords.push({lat:lat,lng:lng})
+    coords.push(L.latLng(lat, lng))
   }
   center_lat = (max_lat + min_lat)/2
   center_lng = (max_lng + min_lng)/2
@@ -404,123 +406,127 @@ function launchMap()
 }
 
 function showMap(){
-  if (map==null) {
-  map = new google.maps.Map(document.getElementById("map"), {
-    fullscreenControl: false,
-    zoom: 8,
-    center: { lat: map_center[0], lng: map_center[1] },
-  });
+  if (osMap==null) {
+    osMap = L.map("map").setView(map_center, 8);
+    L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
+    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+    }).addTo(osMap);
+    $(map).ready(function () {
+      osMap.invalidateSize()
+    });
   }
   else {
-    map.setCenter({ lat: map_center[0], lng: map_center[1] })
-    map.setZoom(8)
+    osMap.panTo(new L.LatLng(map_center[0], map_center[1]));
+    osMap.setZoom(8)
   }
-  deleteMarkers()
-  if (heatmap)
-  {
-     heatmap.setMap(null)
-     heatmap = null    
-  }
+  
   var map_type = w2ui.layout.get('bottom').toolbar.get('map-type').selected
-
+  console.log("clear everything")
+  markers.clearLayers()
+  osMap.removeLayer(heatmap)
+  
   if (map_type == "regular-map")
   {
-    setMarkers(map);
+    setMarkers()
+    markers.addTo(osMap)
   }
   else if (map_type == 'heat-map')
   {
-    setMarkers(null)
-    initHeatMap(map);
+    initHeatMap()
+    heatmap.addTo(osMap)
   }
-  //w2ui.layout.get('bottom').size = '50%'
+  w2ui.layout.get('bottom').size = '50%'
   w2ui.layout.show('bottom', true)
 }
-
-
-// Adds a marker to the map and push to the array.
-function addMarker(location, map) 
-{
-  const marker = new google.maps.Marker({
-    position: location,
-    map: map,
-  });
-  markers.push(marker);
+function switchReg(){
+  osMap.removeLayer(heatmap)
+  setMarkers()
+}
+function switchHeat(){
+  markers.clearLayers()
+  initHeatMap()
+  heatmap.addTo(osMap)
 }
 
-// Sets the map on all markers in the array.
-function setMapOnAll(map) {
-  for (let marker of markers) {
-    marker.setMap(map);
-  }
-}
-
-// Removes the markers from the map, but keeps them in the array.
-function clearMarkers() {
-  setMapOnAll(null);
-}
-
-// Shows any markers currently in the array.
-function showMarkers() {
-  setMapOnAll(map);
-}
-
-// Deletes all markers in the array by removing references to them.
-function deleteMarkers() {
-  clearMarkers();
-  markers = [];
-}
-
-function setMarkers(map) {
+function setMarkers() {
+  console.time("markers");
   for (let coord of coords) 
-    addMarker(coord, map)
+    L.marker(coord).addTo(osMap);
+  console.timeEnd("markers");
 }
 
-function initHeatMap(map)
+function initHeatMap()
 {
   let data = []
-  for (let c of coords)
-    data.push( new google.maps.LatLng(c) );
-
-  heatmap = new google.maps.visualization.HeatmapLayer({
-    data: data,
-    map: map,
-  });
-
+  for (let coord of coords)
+    data.push(coord);
+  heatmap = L.heatLayer(data,{radius: radiusVal, blur: 0, max: 1, minOpacity: opacity, gradient:{
+    '0.00': 'rgb(255,0,255)',
+    '0.25': 'rgb(0,0,255)',
+    '0.50': 'rgb(0,255,0)',
+    '0.75': 'rgb(255,255,0)',
+    '1.00': 'rgb(255,0,0)'
+  }});
 }
 
 function getHeatMap()
 {
  if (heatmap == null)
     initHeatMap(map);
-
  return heatmap;
 }
 
 function changeRadius() {
-  getHeatMap().set("radius", getHeatMap().get("radius") ? null : 20);
+  radiusVal = (radiusVal == 100) ? 20:100;
+  heatmap.setOptions({radius:radiusVal})
 }
 
 function changeOpacity() {
-  getHeatMap().set("opacity", getHeatMap().get("opacity") ? null : 0.2);
+  opacity = (opacity == 1) ? 0.3:1;
+  heatmap.setOptions({minOpacity:opacity})
 }
+
 function changeGradient() {
-  const gradient = [
-    "rgba(0, 255, 255, 0)",
-    "rgba(0, 255, 255, 1)",
-    "rgba(0, 191, 255, 1)",
-    "rgba(0, 127, 255, 1)",
-    "rgba(0, 63, 255, 1)",
-    "rgba(0, 0, 255, 1)",
-    "rgba(0, 0, 223, 1)",
-    "rgba(0, 0, 191, 1)",
-    "rgba(0, 0, 159, 1)",
-    "rgba(0, 0, 127, 1)",
-    "rgba(63, 0, 91, 1)",
-    "rgba(127, 0, 63, 1)",
-    "rgba(191, 0, 31, 1)",
-    "rgba(255, 0, 0, 1)",
-  ];
-  getHeatMap().set("gradient", getHeatMap().get("gradient") ? null : gradient);
+  var gradientVal
+  gardCase += 1
+  switch(gardCase){
+    case 1:
+      gradientVal = {
+        '0': 'Black',
+        '0.5': 'Aqua',
+        '1': 'White'
+      };
+      break;
+    case 2:
+      gradientVal = {
+        '0': 'Black',
+        '0.4': 'Purple',
+        '0.6': 'Red',
+        '0.8': 'Yellow',
+        '1': 'White'
+      }
+      break;
+    case 3:
+      gradientVal = {
+        '0.0': 'rgb(0, 0, 0)',
+        '0.6': 'rgb(24, 53, 103)',
+        '0.75': 'rgb(46, 100, 158)',
+        '0.9': 'rgb(23, 173, 203)',
+        '1.0': 'rgb(0, 250, 250)'
+      }
+      break;
+    default:
+      gradientVal = {
+        '0.00': 'rgb(255,0,255)',
+        '0.25': 'rgb(0,0,255)',
+        '0.50': 'rgb(0,255,0)',
+        '0.75': 'rgb(255,255,0)',
+        '1.00': 'rgb(255,0,0)'
+      }
+      gardCase = 0;
+      
+  }
+  heatmap.setOptions({gradient:gradientVal})
 }
 
 async function InitPage() 
