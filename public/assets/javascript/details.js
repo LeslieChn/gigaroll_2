@@ -169,7 +169,6 @@ function drawOnMap()
       editableLayers.removeLayer(rectangle)
     if (circle)
       editableLayers.removeLayer(circle)
-    console.log("var drawControl")
   }
   else{
     var drawPluginOptions = {
