@@ -14,43 +14,6 @@ var tileLayer
 var layerGroup = null
 var mapZoom
 
-var drawPluginOptions = {
-  position: 'topright',
-  draw: {
-    polyline: {
-      shapeOptions: {
-        color: '#f357a1',
-        weight: 10
-      }
-    },
-    polygon: {
-      allowIntersection: false, // Restricts shapes to simple polygons
-      drawError: {
-        color: '#e1e100', // Color the shape will turn when intersects
-        message: '<strong>Polygon draw does not allow intersections!<strong> (allowIntersection: false)' // Message that will show when intersect
-      },
-      shapeOptions: {
-        color: '#bada55'
-      }
-    },
-    circle: false, // Turns off this drawing tool
-    rectangle: {
-      shapeOptions: {
-        clickable: false
-      }
-    },
-    marker: {
-      icon: new MyCustomMarker()
-    }
-  },
-  edit: {
-    featureGroup: editableLayers, //REQUIRED!!
-    remove: false
-  }
-};
-
-
-
 
 async function serverRequest(params) {
   p = new URLSearchParams(params).toString();
@@ -193,19 +156,56 @@ function restoreMap()
   w2ui.layout.show("bottom", true)
   autoZoom()
 }
-var drawingManager = null
+
 var rectangle = null
 var circle = null
 
 function drawOnMap()
 {
+  var editableLayers = new L.featureGroup();
+  var drawPluginOptions = {
+    position: 'topright',
+    draw: {
+      polyline: false,
+      polygon: false,
+      circle: {
+        shapeOptions: {
+        color: 'blue',
+        clickable: false
+        }
+      }, 
+      rectangle: {
+        shapeOptions: {
+          color: 'red',
+          clickable: false
+        }
+      },
+      marker: false,
+    },
+    edit: {
+      featureGroup: editableLayers, //REQUIRED!!
+      remove: false
+    }
+  };
   var drawControl = new L.Control.Draw(drawPluginOptions);
   osMap.addControl(drawControl);
-  
-  
-  var editableLayers = new L.FeatureGroup();
   osMap.addLayer(editableLayers);
-
+  osMap.on('draw:created', function(e) {
+    var type = e.layerType,
+      layer = e.layer;
+    if (rectangle)
+      editableLayers.removeLayer(rectangle)
+    if (circle)
+      editableLayers.removeLayer(circle)
+    if (type === 'rectangle') {
+      rectangle = e.layer
+      editableLayers.addLayer(rectangle)
+    }
+    if (type === 'circle') {
+      circle = e.layer
+      editableLayers.addLayer(circle)
+    }
+  });
 }
 
 function findPoints()
@@ -473,6 +473,7 @@ function switchType(){
   } */
   autoZoom()
 }
+
 function switchClus(){
   disableBn()
   clearMap()
@@ -490,22 +491,20 @@ function switchReg(){
 function disableBn(){
   w2ui.layout.get('bottom').toolbar.hide("item3")
 }
+
 function switchHeat(){
   clearMap()
   setHeatMap()
   autoZoom()
 }
+
 function clearMap(){
-  if (markers){
+  if (markers)
     osMap.removeLayer(markers);
-  }
   if (heatmap)
     osMap.removeLayer(heatmap);
   if (cluMarkers)
     osMap.removeLayer(cluMarkers);
-  $('#item3').hide();
-  $('#item4').hide();
-  $('#item5').hide();
 }
 
 function setMarkers() {
