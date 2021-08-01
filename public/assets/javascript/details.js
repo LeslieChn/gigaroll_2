@@ -1,15 +1,56 @@
-var coords = []
-var bounds = {}
+var coords
+var bounds
 var map_center = {}
 var rec_ids = []
 var map = null
-var markers = L.layerGroup();
+var cluMarkers
+var markers 
 var heatmap = L.heatLayer([],{radius: 30},{blur: 0},{0.4: 'blue', 0.65: 'lime', 1: 'red'});
 var radiusVal = 20
 var opacity = 1
 var gardCase = 0
 var osMap = null
+var tileLayer
 var layerGroup = null
+var mapZoom
+
+var drawPluginOptions = {
+  position: 'topright',
+  draw: {
+    polyline: {
+      shapeOptions: {
+        color: '#f357a1',
+        weight: 10
+      }
+    },
+    polygon: {
+      allowIntersection: false, // Restricts shapes to simple polygons
+      drawError: {
+        color: '#e1e100', // Color the shape will turn when intersects
+        message: '<strong>Polygon draw does not allow intersections!<strong> (allowIntersection: false)' // Message that will show when intersect
+      },
+      shapeOptions: {
+        color: '#bada55'
+      }
+    },
+    circle: false, // Turns off this drawing tool
+    rectangle: {
+      shapeOptions: {
+        clickable: false
+      }
+    },
+    marker: {
+      icon: new MyCustomMarker()
+    }
+  },
+  edit: {
+    featureGroup: editableLayers, //REQUIRED!!
+    remove: false
+  }
+};
+
+
+
 
 async function serverRequest(params) {
   p = new URLSearchParams(params).toString();
@@ -48,7 +89,7 @@ $(function () {
             "font-weight:bold; font-size: 1.875em;",
           items: [
             {
-              type: "menu-radio",
+              type: "menu",
               id: "map-type",
               text: function (item) {
                 var text = item.selected;
@@ -59,6 +100,7 @@ $(function () {
               items: [
                 { id: "regular-map", text: "Regular Map" },
                 { id: "heat-map", text: "Heat Map" },
+                { id: "clustering-map", text: "Clustering Map" },
               ],
             },
             { type: "break" },
@@ -115,12 +157,13 @@ $(function () {
           ],
           onClick: function (event) {
             if (event.target == "map-type:regular-map") {
-              console.log("map changed to regular")
               switchReg()
             } 
             else if (event.target == "map-type:heat-map") {
-              console.log("map changed to heat")
               switchHeat()
+            }
+            else if (event.target == "map-type:clustering-map"){
+              switchClus()
             }
           },
         },
@@ -140,9 +183,7 @@ function maximizeMap()
   w2ui.layout.hide("main", true)
   w2ui.layout.get("bottom").size = '100%'
   w2ui.layout.show("bottom", true)
-  $(map).ready(function () {
-    osMap.invalidateSize()
-  });
+  autoZoom()
 }
 
 function restoreMap()
@@ -150,9 +191,7 @@ function restoreMap()
   w2ui.layout.show("main", true)
   w2ui.layout.get("bottom").size = '50%'
   w2ui.layout.show("bottom", true)
-  $(map).ready(function () {
-    osMap.invalidateSize()
-  });
+  autoZoom()
 }
 var drawingManager = null
 var rectangle = null
@@ -160,57 +199,12 @@ var circle = null
 
 function drawOnMap()
 {
-  if (rectangle)
-  {
-    rectangle.setMap(null)
-    rectangle = null
-  }
-
-  if (circle)
-  {
-    circle.setMap(null)
-    circle = null
-  }
-
-
-  if (drawingManager == null)
-    drawingManager = new google.maps.drawing.DrawingManager({
-    drawingMode: google.maps.drawing.OverlayType.RECTANGLE,
-    drawingControl: true,
-    drawingControlOptions: {
-      position: google.maps.ControlPosition.BOTTOM_CENTER,
-      drawingModes: ['rectangle', 'circle']
-    },
-    rectangleOptions: {
-      editable: true,
-      draggable: true,
-      fillColor: 'red',
-      fillOpacity: 0.3
-    },
-    
-    circleOptions: {
-      editable: true,
-      draggable: true,
-      fillColor: 'red',
-      fillOpacity: 0.3
-    },
-    
-    });
-    drawingManager.setMap(map);
-    
-    google.maps.event.addListener(drawingManager, 'rectanglecomplete', 
-    function(rect) {
-    //event.overlay.set('editable', false);
-    drawingManager.setMap(null);
-    rectangle = rect;
-    console.log(rect);
-    });
-    google.maps.event.addListener(drawingManager, 'circlecomplete', 
-    function(circ) {
-    drawingManager.setMap(null);
-    circle = circ;
-    console.log(circle);
-    });
+  var drawControl = new L.Control.Draw(drawPluginOptions);
+  osMap.addControl(drawControl);
+  
+  
+  var editableLayers = new L.FeatureGroup();
+  osMap.addLayer(editableLayers);
 
 }
 
@@ -365,7 +359,6 @@ function processResp(resp)
   updateGrid(resp);
 }
 
-
 function launchMap()
 {
   coords=[]
@@ -392,13 +385,13 @@ function launchMap()
     min_lat = (lat<min_lat)? lat : min_lat
     min_lng = (lng<min_lng)? lng : min_lng
   
-    coords.push(L.latLng(lat, lng))
+    coords.push([lat,lng])
   }
   center_lat = (max_lat + min_lat)/2
   center_lng = (max_lng + min_lng)/2
- 
-  bounds = { max_lat: max_lat, min_lat: min_lat, 
-                 max_lng: max_lng, min_lng: min_lng}
+  var minPoint = L.latLng(min_lat,min_lng)
+  var maxPoint = L.latLng(max_lat,max_lng)
+  bounds = L.latLngBounds(minPoint,maxPoint)
 
   map_center=[center_lat, center_lng]
   
@@ -407,55 +400,133 @@ function launchMap()
 
 function showMap(){
   if (osMap==null) {
-    osMap = L.map("map").setView(map_center, 8);
-    L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
+    osMap = L.map("map", {preferCanvas: true
+    }).setView(map_center,6)
+    tileLayer = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
     attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-    }).addTo(osMap);
-    $(map).ready(function () {
-      osMap.invalidateSize()
     });
+/*     tileLayer = L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
+      attribution: 'google'
+  })
+ */    tileLayer.addTo(osMap);
   }
-  else {
-    osMap.panTo(new L.LatLng(map_center[0], map_center[1]));
-    osMap.setZoom(8)
-  }
+/*   else {
+    osMap.panTo(new L.latLng(map_center[0], map_center[1]));
+    osMap.setZoom(mapZoom)
+  } */
   
-  var map_type = w2ui.layout.get('bottom').toolbar.get('map-type').selected
-  console.log("clear everything")
-  markers.clearLayers()
-  osMap.removeLayer(heatmap)
   
-  if (map_type == "regular-map")
+  clearMap()
+  var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
+  console.log(selectedType)
+  if (selectedType == "regular-map")
   {
     setMarkers()
-    markers.addTo(osMap)
   }
-  else if (map_type == 'heat-map')
+  else if (selectedType == 'heat-map')
   {
-    initHeatMap()
-    heatmap.addTo(osMap)
+    setHeatMap()
   }
+  else if (selectedType == 'clustering-map'){
+    setClusterMap()
+  }
+
+  
   w2ui.layout.get('bottom').size = '50%'
   w2ui.layout.show('bottom', true)
+  autoZoom()
 }
+
+
+function autoZoom(){
+  $(map).ready(function () {
+    osMap.invalidateSize()
+    var mapSize = osMap.getSize()
+    mapZoom = osMap.getBoundsZoom(bounds)
+    osMap.fitBounds(bounds)  
+  });
+}
+
+function setClusterMap(){
+  cluMarkers = L.markerClusterGroup();
+  for (let coord of coords) {
+    cluMarkers.addLayer(L.marker(coord));
+  }
+  osMap.addLayer(cluMarkers);
+}
+
+function switchType(){
+  clearMap()
+  var mapType = $("tb_layout_bottom_toolbar_item_map-type").children(":selected").attr("id")
+  // var mapType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
+  console.log(mapType)
+/*   switch (mapType) {
+    case "heat-map":
+        setHeatMap
+      break;
+    case "clustering-map":
+        setClusterMap
+      break;  
+    default:
+        setMarkers
+      break;
+  } */
+  autoZoom()
+}
+function switchClus(){
+  disableBn()
+  clearMap()
+  setClusterMap()
+  autoZoom()
+}
+
 function switchReg(){
-  osMap.removeLayer(heatmap)
+  disableBn()
+  clearMap()
   setMarkers()
+  autoZoom()
+}
+
+function disableBn(){
+  w2ui.layout.get('bottom').toolbar.hide("item3")
 }
 function switchHeat(){
-  markers.clearLayers()
-  initHeatMap()
-  heatmap.addTo(osMap)
+  clearMap()
+  setHeatMap()
+  autoZoom()
+}
+function clearMap(){
+  if (markers){
+    osMap.removeLayer(markers);
+  }
+  if (heatmap)
+    osMap.removeLayer(heatmap);
+  if (cluMarkers)
+    osMap.removeLayer(cluMarkers);
+  $('#item3').hide();
+  $('#item4').hide();
+  $('#item5').hide();
 }
 
 function setMarkers() {
-  console.time("markers");
-  for (let coord of coords) 
-    L.marker(coord).addTo(osMap);
-  console.timeEnd("markers");
+  markers = L.featureGroup()
+  for (let coord of coords) {
+    L.circleMarker(coord, {
+        fillColor: "red",
+        fillOpacity: 1,
+        stroke: true,
+        color: 'white',
+        weight: 1,
+        boostType: "balloon",
+        boostScale: 1,
+        boostExp: 0,
+        radius: 6
+    }).addTo(markers);
+  }
+  markers.addTo(osMap);
 }
 
-function initHeatMap()
+function setHeatMap()
 {
   let data = []
   for (let coord of coords)
@@ -467,13 +538,10 @@ function initHeatMap()
     '0.75': 'rgb(255,255,0)',
     '1.00': 'rgb(255,0,0)'
   }});
-}
-
-function getHeatMap()
-{
- if (heatmap == null)
-    initHeatMap(map);
- return heatmap;
+  heatmap.addTo(osMap)
+  $('#item3').show();
+  $('#item4').show();
+  $('#item5').show();
 }
 
 function changeRadius() {
