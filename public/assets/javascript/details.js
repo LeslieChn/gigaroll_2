@@ -69,30 +69,32 @@ $(function () {
             { type: "break" },
             {
               type: "button",
-              id: "item3",
+              id: "he_gradient",
+              class: "heat",
               text: "Change Gradient",
               onClick: changeGradient,
             },
             {
               type: "button",
-              id: "item4",
+              id: "he_radius",
+              class: "heat",
               text: "Change Radius",
               onClick: changeRadius,
             },
             {
               type: "button",
-              id: "item5",
+              id: "he_opacity",
+              class: "heat",
               text: "Change Opacity",
               onClick: changeOpacity,
             },
             { type: "break" },
             {
               type: "button",
-              id: "item6",
+              id: "bn_draw",
               text: "Draw on Map",
                  onClick: drawOnMap,
             },
-            //{ type: "html", html: "<pre> </pre>" },
             {
               type: "button",
               id: "item7",
@@ -105,13 +107,11 @@ $(function () {
               html: 
               '<button style="border:0px;padding:0px 2px 0px;" onclick="hideMap()"> <img src="./assets/images/minimize.svg" style="height:16px;width:16px" /> </button>',
             },      
-            //{ type: "html", html: "<pre> </pre>" }, 
             {
               type: 'html', id: 'restore-map', 
               html: 
               '<button style="border:0px;padding:0px 2px 0px;" onclick="restoreMap()"> <img src="./assets/images/window-split.svg" style="height:16px;width:16px" /> </button>',
             },
-            // { type: "html", html: "<pre> </pre>" },
             {
               type: 'html', id: 'max-map', 
               html: 
@@ -161,14 +161,38 @@ var rectangle = null
 var circle = null
 var drawControl =null
 var editableLayers = new L.featureGroup();
+L.Control.RemoveAll = L.Control.extend({
+  options: {
+      position: 'topright',
+  },
+
+  onAdd: function () {
+      var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+      var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+      controlUI.setAttribute('href', '#');
+      controlUI.title = 'Delete layers.';
+
+
+      L.DomEvent
+          .addListener(controlUI, 'click', L.DomEvent.stopPropagation)
+          .addListener(controlUI, 'click', L.DomEvent.preventDefault)
+          .addListener(controlUI, 'click', function () {
+            editableLayers.clearLayers();
+              if(window.console) window.console.log('Drawings deleted...');
+          });
+      return controlDiv;
+  }
+});
+
+removeAllControl = new L.Control.RemoveAll();
 
 function drawOnMap()
 {
   if (drawControl){
-    if (rectangle)
-      editableLayers.removeLayer(rectangle)
-    if (circle)
-      editableLayers.removeLayer(circle)
+    editableLayers.clearLayers();
+    drawControl.remove();
+    removeAllControl.remove();
+    drawControl = null;
   }
   else{
     var drawPluginOptions = {
@@ -179,11 +203,13 @@ function drawOnMap()
         circle: {
           shapeOptions: {
           color: 'blue',
-          clickable: false
+          clickable: false,
+          draggable: true
           }
         }, 
         rectangle: {
           shapeOptions: {
+            draggable: true,
             color: 'red',
             clickable: false
           }
@@ -199,13 +225,11 @@ function drawOnMap()
     
     osMap.addControl(drawControl)
     osMap.addLayer(editableLayers)
+    osMap.addControl(removeAllControl)
+
     osMap.on('draw:created', function(e) {
-      var type = e.layerType,
-        layer = e.layer;
-      if (rectangle)
-        editableLayers.removeLayer(rectangle)
-      if (circle)
-        editableLayers.removeLayer(circle)
+      var type = e.layerType
+      editableLayers.clearLayers();
       if (type === 'rectangle') {
         rectangle = e.layer
         editableLayers.addLayer(rectangle)
@@ -232,7 +256,9 @@ function findPoints()
     
     for (let i=0; i<coords.length; ++i)
     {
-      let contains = bounds.contains(coords[i])
+      
+      let contains = rectangle.getBounds().contains(coords[i]);
+
       if (contains)
         w2ui.grid.last.searchIds.push(rec_ids[i]-1);
     }    
@@ -243,13 +269,14 @@ function findPoints()
   {
     w2ui.grid.last.searchIds = []
 
-    let center = circle.getCenter()
-    let radius = circle.getRadius()
-    let dist = google.maps.geometry.spherical.computeDistanceBetween
-    
+/*     let center = circle.getCenter()
+    let radius = circle.getRadius() */
+/*     let dist = google.maps.geometry.spherical.computeDistanceBetween
+ */    
     for (let i=0; i<coords.length; ++i)
     {
-      let contains = dist(center, new google.maps.LatLng(coords[i])) <= radius;
+      let contains = circle.getLatLng().distanceTo(coords[i]) < circle.getRadius();
+
       if (contains)
         w2ui.grid.last.searchIds.push(rec_ids[i]-1);
     }
@@ -499,8 +526,14 @@ function switchReg(){
   autoZoom()
 }
 
-function disableBn(){
-  w2ui.layout.get('bottom').toolbar.hide("item3")
+function disableBn(buttons){
+  for (bn of buttons)
+    w2ui.layout.get('bottom').toolbar.hide("bn")
+}
+
+function enableBn(buttons){
+  for (bn of buttons)
+    w2ui.layout.get('bottom').toolbar.show("bn")
 }
 
 function switchHeat(){
@@ -549,9 +582,6 @@ function setHeatMap()
     '1.00': 'rgb(255,0,0)'
   }});
   heatmap.addTo(osMap)
-  $('#item3').show();
-  $('#item4').show();
-  $('#item5').show();
 }
 
 function changeRadius() {
