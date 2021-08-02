@@ -15,7 +15,6 @@ async function serverRequest(params) {
 async function getUser() {
 
   var request = new Request('/user', { method: "GET" });
-
   const response = await fetch(request);
   const json = await response.json();
   
