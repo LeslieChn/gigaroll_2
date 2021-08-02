@@ -159,53 +159,65 @@ function restoreMap()
 
 var rectangle = null
 var circle = null
+var drawControl =null
+var editableLayers = new L.featureGroup();
 
 function drawOnMap()
 {
-  var editableLayers = new L.featureGroup();
-  var drawPluginOptions = {
-    position: 'topright',
-    draw: {
-      polyline: false,
-      polygon: false,
-      circle: {
-        shapeOptions: {
-        color: 'blue',
-        clickable: false
-        }
-      }, 
-      rectangle: {
-        shapeOptions: {
-          color: 'red',
-          clickable: false
-        }
-      },
-      marker: false,
-    },
-    edit: {
-      featureGroup: editableLayers, //REQUIRED!!
-      remove: false
-    }
-  };
-  var drawControl = new L.Control.Draw(drawPluginOptions);
-  osMap.addControl(drawControl);
-  osMap.addLayer(editableLayers);
-  osMap.on('draw:created', function(e) {
-    var type = e.layerType,
-      layer = e.layer;
+  if (drawControl){
     if (rectangle)
       editableLayers.removeLayer(rectangle)
     if (circle)
       editableLayers.removeLayer(circle)
-    if (type === 'rectangle') {
-      rectangle = e.layer
-      editableLayers.addLayer(rectangle)
-    }
-    if (type === 'circle') {
-      circle = e.layer
-      editableLayers.addLayer(circle)
-    }
-  });
+    console.log("var drawControl")
+  }
+  else{
+    var drawPluginOptions = {
+      position: 'topright',
+      draw: {
+        polyline: false,
+        polygon: false,
+        circle: {
+          shapeOptions: {
+          color: 'blue',
+          clickable: false
+          }
+        }, 
+        rectangle: {
+          shapeOptions: {
+            color: 'red',
+            clickable: false
+          }
+        },
+        marker: false,
+      },
+      edit: {
+        featureGroup: editableLayers, //REQUIRED!!
+        remove: false
+      }
+    };
+    drawControl = new L.Control.Draw(drawPluginOptions);
+    
+    osMap.addControl(drawControl)
+    osMap.addLayer(editableLayers)
+    osMap.on('draw:created', function(e) {
+      var type = e.layerType,
+        layer = e.layer;
+      if (rectangle)
+        editableLayers.removeLayer(rectangle)
+      if (circle)
+        editableLayers.removeLayer(circle)
+      if (type === 'rectangle') {
+        rectangle = e.layer
+        editableLayers.addLayer(rectangle)
+      }
+      if (type === 'circle') {
+        circle = e.layer
+        editableLayers.addLayer(circle)
+      }
+    });
+  }
+
 }
 
 function findPoints()
