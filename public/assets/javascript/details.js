@@ -513,7 +513,6 @@ function switchType(){
 }
 
 function switchClus(){
-  disableBn()
   clearMap()
   setClusterMap()
   autoZoom()
