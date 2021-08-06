@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/customize-presets.css">
+    <link rel="stylesheet" href="lib/presets/p1.css">
+    <link rel="stylesheet" href="lib/presets/p2.css">
+    <link rel="stylesheet" href="lib/presets/p3.css">
+    <link rel="stylesheet" href="lib/presets/p4.css">
+    <link rel="stylesheet" href="lib/presets/p5.css">
+    <script type="text/javascript" src="dist/knob.js"></script>
+    <script type="text/javascript" src="lib/presets/p1.js"></script>
+    <script type="text/javascript" src="lib/presets/p2.js"></script>
+    <script type="text/javascript" src="lib/presets/p3.js"></script>
+    <script type="text/javascript" src="lib/presets/p4.js"></script>
+    <script type="text/javascript" src="lib/presets/p5.js"></script>
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lekton:400italic' rel='stylesheet' type='text/css'>
+    <link href="http://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,700" rel="stylesheet"
+          type="text/css">
+</head>
+<body>
+<p></p>
+<ul class="row">
+    <ul class="row">
+        <li>
+            <input id="preset1" type="range" min="0" max="10" data-width="100" data-height="100" data-angleOffset="220"
+                   data-angleRange="280">
+        </li>
+        <li>
+            <input class="preset2" type="range" min="0" max="10" data-width="100" data-height="100" data-angleOffset="220"
+                   data-angleRange="280">
+        </li>
+        <li>
+            <input class="preset3" type="range" min="0" max="10" data-width="100" data-height="100" data-angleOffset="220"
+                   data-angleRange="280">
+        </li>
+        <li>
+            <input class="preset4" type="range" min="0" max="10" data-width="100" data-height="100" data-angleOffset="220"
+                   data-angleRange="280">
+        </li>
+        <li>
+            <input class="preset5" type="range" min="0" max="10" data-width="100" data-height="100" data-angleOffset="220"
+                   data-angleRange="280">
+        </li>
+    </ul>
+</ul>
+
+
+<script type="text/javascript">
+    let input=document.getElementById('preset1')
+    input.dataset.labels=["spring", "summer", "autumn", "winter"]
+    new Knob(document.getElementById('preset1'), new Ui.P1({}));
+    for (var i = 2; i < 6; i++) {
+        Array.prototype.slice.call(document.getElementsByClassName('preset' + i)).forEach(function(el) {
+            new Knob(el, new Ui['P' + i]());
+            el.addEventListener('change', function  () {
+              console.log(el.value)
+            })
+        })
+    }
+</script>
+<svg>
+    <filter id="dropshadow" height="150%" width="150%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+        <feOffset dx="0" dy="3" result="offsetblur"/>
+        <feMerge>
+            <feMergeNode/>
+            <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+    </filter>
+    <filter id='inner-shadow'>
+
+        <!-- Shadow Offset -->
+        <feOffset
+                dx='0'
+                dy='5'
+                />
+
+        <!-- Shadow Blur -->
+        <feGaussianBlur
+                stdDeviation='5'
+                result='offset-blur'
+                />
+
+        <!-- Invert the drop shadow
+             to create an inner shadow -->
+        <feComposite
+                operator='out'
+                in='SourceGraphic'
+                in2='offset-blur'
+                result='inverse'
+                />
+
+        <!-- Color & Opacity -->
+        <feFlood
+                flood-color='black'
+                flood-opacity='0.75'
+                result='color'
+                />
+
+        <!-- Clip color inside shadow -->
+        <feComposite
+                operator='in'
+                in='color'
+                in2='inverse'
+                result='shadow'
+                />
+
+        <!-- Put shadow over original object -->
+        <feComposite
+                operator='over'
+                in='shadow'
+                in2='SourceGraphic'
+                />
+    </filter>
+</svg>
+</body>
+</html>
