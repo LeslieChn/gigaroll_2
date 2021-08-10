@@ -69,21 +69,21 @@ $(function () {
             { type: "break" },
             {
               type: "button",
-              id: "he_gradient",
+              id: "heat_gradient",
               class: "heat",
               text: "Change Gradient",
               onClick: changeGradient,
             },
             {
               type: "button",
-              id: "he_radius",
+              id: "heat_radius",
               class: "heat",
               text: "Change Radius",
               onClick: changeRadius,
             },
             {
               type: "button",
-              id: "he_opacity",
+              id: "heat_opacity",
               class: "heat",
               text: "Change Opacity",
               onClick: changeOpacity,
@@ -491,6 +491,7 @@ function setClusterMap(){
     cluMarkers.addLayer(L.marker(coord));
   }
   osMap.addLayer(cluMarkers);
+  disableBn(["heat_gradient","heat_radius","heat_opacity"])
 }
 
 function switchType(){
@@ -519,7 +520,6 @@ function switchClus(){
 }
 
 function switchReg(){
-  // disableBn()
   clearMap()
   setMarkers()
   autoZoom()
@@ -527,12 +527,12 @@ function switchReg(){
 
 function disableBn(buttons){
   for (bn of buttons)
-    w2ui.layout.get('bottom').toolbar.hide("bn")
+    w2ui.layout.get('bottom').toolbar.hide(bn)
 }
 
 function enableBn(buttons){
   for (bn of buttons)
-    w2ui.layout.get('bottom').toolbar.show("bn")
+    w2ui.layout.get('bottom').toolbar.show(bn)
 }
 
 function switchHeat(){
@@ -566,6 +566,7 @@ function setMarkers() {
     }).addTo(markers);
   }
   markers.addTo(osMap);
+  disableBn(["heat_gradient","heat_radius","heat_opacity"])
 }
 
 function setHeatMap()
@@ -581,6 +582,7 @@ function setHeatMap()
     '1.00': 'rgb(255,0,0)'
   }});
   heatmap.addTo(osMap)
+  enableBn(["heat_gradient","heat_radius","heat_opacity"])
 }
 
 function changeRadius() {
