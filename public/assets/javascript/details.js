@@ -52,7 +52,7 @@ $(function () {
             "font-weight:bold; font-size: 1.875em;",
           items: [
             {
-              type: "menu",
+              type: "menu-radio",
               id: "map-type",
               text: function (item) {
                 var text = item.selected;
@@ -519,7 +519,7 @@ function switchClus(){
 }
 
 function switchReg(){
-  disableBn()
+  // disableBn()
   clearMap()
   setMarkers()
   autoZoom()
