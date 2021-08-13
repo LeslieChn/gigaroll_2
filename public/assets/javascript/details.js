@@ -4,15 +4,17 @@ var map_center = {}
 var rec_ids = []
 var map = null
 var cluMarkers
-var markers 
+var boostType = "balloon"
+var markers
 var heatmap = L.heatLayer([],{radius: 30},{blur: 0},{0.4: 'blue', 0.65: 'lime', 1: 'red'});
-var radiusVal = 20
+var radiusVal = 10
 var opacity = 1
 var gardCase = 0
 var osMap = null
 var tileLayer
 var layerGroup = null
 var mapZoom
+var markerColor = "red"
 
 
 async function serverRequest(params) {
@@ -54,19 +56,70 @@ $(function () {
             {
               type: "menu-radio",
               id: "map-type",
-              text: function (item) {
-                var text = item.selected;
+              text: 
+              function (item) {
                 var el = this.get("map-type:" + item.selected);
                 return el.text;
               },
               selected: "regular-map",
               items: [
                 { id: "regular-map", text: "Regular Map" },
-                { id: "heat-map", text: "Heat Map" },
-                { id: "clustering-map", text: "Clustering Map" },
+                { id: "heat-map", text: "Heat Map"},
+                { id: "clustering-map", text: "Clustering Map"},
               ],
+              onRefresh: function(event){
+                switchMapType(event.item.selected)
+              }
             },
             { type: "break" },
+            {
+              type: "menu-radio",
+              id: "marker_type",
+              text: 
+              function (item) {
+                var el = this.get("marker_type:" + item.selected);
+                return el.text;
+              },
+              selected: "balloon",
+              items: [
+                { id: "balloon", text: "Balloon"},
+                { id: "ball", text: "Ball"},
+                { id: "circle", text: "Circle"},
+              ],
+              onRefresh: function(event){
+                if (boostType != event.item.selected)
+                {
+                  boostType = event.item.selected
+                  setMarkers()
+                  autoZoom()
+                }
+
+              }
+            },
+            {
+              type: "menu-radio",
+              id: "marker_color",
+              text: 
+              function (item) {
+                var bb = this.get("marker_color:" + item.selected);
+                return bb.text;
+              },
+              selected: "red",
+              items: [
+                { id: "black", text: "Black"},
+                { id: "green", text: "Green"},
+                { id: "blue", text: "Blue"},
+                { id: "red", text: "Red"},
+                { id: "orange", text: "Orange"},
+              ],
+              onRefresh: function(event){
+                if (markerColor != event.item.selected)
+                {
+                  markerColor = event.item.selected
+                  setMarkers()
+                }
+              }
+            },
             {
               type: "button",
               id: "heat_gradient",
@@ -97,7 +150,8 @@ $(function () {
             },
             {
               type: "button",
-              id: "item7",
+              id: "bn_fdPt",
+              disabled: true,
               text: "Find Points",
                   onClick: findPoints,
             },
@@ -118,17 +172,6 @@ $(function () {
               '<button style="border:0px;padding:0px 2px 0px;" onclick="maximizeMap()"> <img src="./assets/images/maximize2.svg" style="height:16px;width:16px" /> </button>',
             },
           ],
-          onClick: function (event) {
-            if (event.target == "map-type:regular-map") {
-              switchReg()
-            } 
-            else if (event.target == "map-type:heat-map") {
-              switchHeat()
-            }
-            else if (event.target == "map-type:clustering-map"){
-              switchClus()
-            }
-          },
         },
       },
     ],
@@ -188,11 +231,13 @@ removeAllControl = new L.Control.RemoveAll();
 
 function drawOnMap()
 {
+  // let buText = w2ui.layout.get('bottom').toolbar.get('bn_draw').text
   if (drawControl){
     editableLayers.clearLayers();
     drawControl.remove();
     removeAllControl.remove();
     drawControl = null;
+    w2ui.layout.get('bottom').toolbar.disable('bn_fdPt')
   }
   else{
     var drawPluginOptions = {
@@ -204,12 +249,12 @@ function drawOnMap()
           shapeOptions: {
           color: 'blue',
           clickable: false,
-          draggable: true
+          draggable: false
           }
         }, 
         rectangle: {
           shapeOptions: {
-            draggable: true,
+            draggable: false,
             color: 'red',
             clickable: false
           }
@@ -218,7 +263,8 @@ function drawOnMap()
       },
       edit: {
         featureGroup: editableLayers, //REQUIRED!!
-        remove: false
+        remove: false,
+        moveMarkers: false
       }
     };
     drawControl = new L.Control.Draw(drawPluginOptions);
@@ -230,6 +276,7 @@ function drawOnMap()
     osMap.on('draw:created', function(e) {
       var type = e.layerType
       editableLayers.clearLayers();
+
       if (type === 'rectangle') {
         rectangle = e.layer
         editableLayers.addLayer(rectangle)
@@ -239,8 +286,10 @@ function drawOnMap()
         editableLayers.addLayer(circle)
       }
     });
+    w2ui.layout.get('bottom').toolbar.enable('bn_fdPt')
   }
-
+  // buText = "Remove Drawing"
+  // w2ui.layout.get('bottom').toolbar.refresh()
 }
 
 function findPoints()
@@ -347,7 +396,7 @@ function updateGrid(server_js) {
     toolbar: {
       items: [
           { type: 'break' },
-          { type: 'html', id: 'launch-map', text: 'Show on Map', 
+          { type: 'html', id: 'launch-map',  
           html: 
           '<button style="border:1px;padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
           disabled: true,
@@ -459,7 +508,7 @@ function showMap(){
   console.log(selectedType)
   if (selectedType == "regular-map")
   {
-    setMarkers()
+    setRegMap()
   }
   else if (selectedType == 'heat-map')
   {
@@ -472,7 +521,6 @@ function showMap(){
   
   w2ui.layout.get('bottom').size = '50%'
   w2ui.layout.show('bottom', true)
-  autoZoom()
 }
 
 
@@ -491,38 +539,25 @@ function setClusterMap(){
     cluMarkers.addLayer(L.marker(coord));
   }
   osMap.addLayer(cluMarkers);
-  disableBn(["heat_gradient","heat_radius","heat_opacity"])
-}
-
-function switchType(){
-  clearMap()
-  var mapType = $("tb_layout_bottom_toolbar_item_map-type").children(":selected").attr("id")
-  // var mapType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
-  console.log(mapType)
-/*   switch (mapType) {
-    case "heat-map":
-        setHeatMap
-      break;
-    case "clustering-map":
-        setClusterMap
-      break;  
-    default:
-        setMarkers
-      break;
-  } */
+  disableBn(["heat_gradient","heat_radius","heat_opacity","marker_type","marker_color"])
   autoZoom()
 }
 
-function switchClus(){
-  clearMap()
-  setClusterMap()
-  autoZoom()
-}
-
-function switchReg(){
-  clearMap()
-  setMarkers()
-  autoZoom()
+function switchMapType(mapType){
+  if (osMap){
+    clearMap()
+    switch (mapType) {
+      case "heat-map":
+          setHeatMap()
+        break;
+      case "clustering-map":
+          setClusterMap()
+        break;  
+      default:
+          setRegMap()
+        break;
+    }
+  }
 }
 
 function disableBn(buttons){
@@ -535,12 +570,6 @@ function enableBn(buttons){
     w2ui.layout.get('bottom').toolbar.show(bn)
 }
 
-function switchHeat(){
-  clearMap()
-  setHeatMap()
-  autoZoom()
-}
-
 function clearMap(){
   if (markers)
     osMap.removeLayer(markers);
@@ -551,22 +580,30 @@ function clearMap(){
 }
 
 function setMarkers() {
+  if (markers)
+    osMap.removeLayer(markers)
   markers = L.featureGroup()
   for (let coord of coords) {
     L.circleMarker(coord, {
-        fillColor: "red",
+        fillColor: markerColor,
         fillOpacity: 1,
         stroke: true,
         color: 'white',
         weight: 1,
-        boostType: "balloon",
+        boostType: boostType,
         boostScale: 1,
         boostExp: 0,
         radius: 6
     }).addTo(markers);
   }
   markers.addTo(osMap);
+  autoZoom()
+}
+
+function setRegMap(){
+  setMarkers()
   disableBn(["heat_gradient","heat_radius","heat_opacity"])
+  enableBn(["marker_type","marker_color"])
 }
 
 function setHeatMap()
@@ -582,11 +619,13 @@ function setHeatMap()
     '1.00': 'rgb(255,0,0)'
   }});
   heatmap.addTo(osMap)
+  disableBn(["marker_type",,"marker_color"])
   enableBn(["heat_gradient","heat_radius","heat_opacity"])
+  autoZoom()
 }
 
 function changeRadius() {
-  radiusVal = (radiusVal == 100) ? 20:100;
+  radiusVal = (radiusVal == 30) ? 10:30;
   heatmap.setOptions({radius:radiusVal})
 }
 

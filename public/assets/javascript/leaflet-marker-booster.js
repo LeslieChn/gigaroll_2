@@ -40,8 +40,9 @@
 					grd.addColorStop(1, options.color);
 					ctx.beginPath();
 					ctx.fillStyle = grd;
-					ctx.arc(p.x, p.y,  r, 0, Math.PI * 2, false);
+					ctx.arc(p.x, p.y, r, 0, Math.PI * 2, false);
 					ctx.fill(options.fillRule || 'evenodd');
+					ctx.closePath();
 				}
 				break;
 			case 'balloon':
@@ -62,12 +63,23 @@
 					ctx.fill(options.fillRule = 'nonzero');
 				}
 				break;
+			case 'circle':
+					ctx.beginPath();
+					ctx.strokeStyle = options.fillColor;
+					ctx.lineWidth = 3;
+					ctx.arc(p.x, p.y, r + options.weight * 0.25 * scale, 0, Math.PI * 2, false);
+					ctx.moveTo(p.x, p.y);
+					ctx.stroke();
+					ctx.closePath();
+				break;
 			default:
 				if (options.stroke && options.weight !== 0) {
 					ctx.beginPath();
-					ctx.arc(p.x, p.y, r + options.weight * 0.5 * scale, 0, Math.PI * 2, false);
+					ctx.arc(p.x, p.y, r + options.weight * 0.25 * scale, 0, Math.PI * 2, false);
+					ctx.fillStyle =  "red";
 					ctx.fillStyle = options.color;
 					ctx.fill(options.fillRule || 'evenodd');
+					ctx.closePath();
 				}
 
 				if (options.fill) {

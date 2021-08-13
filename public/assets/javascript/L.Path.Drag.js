@@ -3,4 +3,564 @@
  * @author Alexander Milevski <info@w8r.name>
  * @preserve
  */
-L.Path.include({_transform:function(t){if(this._renderer){if(t){this._renderer.transformPath(this,t)}else{this._renderer._resetTransformPath(this);this._update()}}return this},_onMouseClick:function(t){if(this.dragging&&this.dragging.moved()||this._map.dragging&&this._map.dragging.moved()){return}this._fireMouseEvent(t)}});var END={mousedown:"mouseup",touchstart:"touchend",pointerdown:"touchend",MSPointerDown:"touchend"};var MOVE={mousedown:"mousemove",touchstart:"touchmove",pointerdown:"touchmove",MSPointerDown:"touchmove"};function distance(t,a){var i=t.x-a.x,n=t.y-a.y;return Math.sqrt(i*i+n*n)}L.Handler.PathDrag=L.Handler.extend({statics:{DRAGGING_CLS:"leaflet-path-draggable"},initialize:function(t){this._path=t;this._matrix=null;this._startPoint=null;this._dragStartPoint=null;this._mapDraggingWasEnabled=false},addHooks:function(){this._path.on("mousedown",this._onDragStart,this);this._path.options.className=this._path.options.className?this._path.options.className+" "+L.Handler.PathDrag.DRAGGING_CLS:L.Handler.PathDrag.DRAGGING_CLS;if(this._path._path){L.DomUtil.addClass(this._path._path,L.Handler.PathDrag.DRAGGING_CLS)}},removeHooks:function(){this._path.off("mousedown",this._onDragStart,this);this._path.options.className=this._path.options.className.replace(new RegExp("\\s+"+L.Handler.PathDrag.DRAGGING_CLS),"");if(this._path._path){L.DomUtil.removeClass(this._path._path,L.Handler.PathDrag.DRAGGING_CLS)}},moved:function(){return this._path._dragMoved},_onDragStart:function(t){var a=t.originalEvent._simulated?"touchstart":t.originalEvent.type;this._mapDraggingWasEnabled=false;this._startPoint=t.containerPoint.clone();this._dragStartPoint=t.containerPoint.clone();this._matrix=[1,0,0,1,0,0];L.DomEvent.stop(t.originalEvent);L.DomUtil.addClass(this._path._renderer._container,"leaflet-interactive");L.DomEvent.on(document,MOVE[a],this._onDrag,this).on(document,END[a],this._onDragEnd,this);if(this._path._map.dragging.enabled()){this._path._map.dragging.disable();this._mapDraggingWasEnabled=true}this._path._dragMoved=false;if(this._path._popup){this._path._popup._close()}this._replaceCoordGetters(t)},_onDrag:function(t){L.DomEvent.stop(t);var a=t.touches&&t.touches.length>=1?t.touches[0]:t;var i=this._path._map.mouseEventToContainerPoint(a);if(t.type==="touchmove"&&!this._path._dragMoved){var n=this._dragStartPoint.distanceTo(i);if(n<=this._path._map.options.tapTolerance){return}}var e=i.x;var r=i.y;var s=e-this._startPoint.x;var o=r-this._startPoint.y;if(s||o){if(!this._path._dragMoved){this._path._dragMoved=true;this._path.fire("dragstart",t);this._path.bringToFront()}this._matrix[4]+=s;this._matrix[5]+=o;this._startPoint.x=e;this._startPoint.y=r;this._path.fire("predrag",t);this._path._transform(this._matrix);this._path.fire("drag",t)}},_onDragEnd:function(t){var a=this._path._map.mouseEventToContainerPoint(t);var i=this.moved();if(i){this._transformPoints(this._matrix);this._path._updatePath();this._path._project();this._path._transform(null);L.DomEvent.stop(t)}L.DomEvent.off(document,"mousemove touchmove",this._onDrag,this);L.DomEvent.off(document,"mouseup touchend",this._onDragEnd,this);this._restoreCoordGetters();if(i){this._path.fire("dragend",{distance:distance(this._dragStartPoint,a)});var n=this._path._containsPoint;this._path._containsPoint=L.Util.falseFn;L.Util.requestAnimFrame(function(){L.DomEvent.skipped({type:"click"});this._path._containsPoint=n},this)}this._matrix=null;this._startPoint=null;this._dragStartPoint=null;this._path._dragMoved=false;if(this._mapDraggingWasEnabled){if(i)L.DomEvent.fakeStop({type:"click"});this._path._map.dragging.enable()}},_transformPoints:function(t,a){var i=this._path;var n,e,r;var s=L.point(t[4],t[5]);var o=i._map.options.crs;var h=o.transformation;var _=o.scale(i._map.getZoom());var g=o.projection;var d=h.untransform(s,_).subtract(h.untransform(L.point(0,0),_));var p=!a;i._bounds=new L.LatLngBounds;if(i._point){a=g.unproject(g.project(i._latlng)._add(d));if(p){i._latlng=a;i._point._add(s)}}else if(i._rings||i._parts){var l=i._rings||i._parts;var f=i._latlngs;a=a||f;if(!L.Util.isArray(f[0])){f=[f];a=[a]}for(n=0,e=l.length;n<e;n++){a[n]=a[n]||[];for(var u=0,c=l[n].length;u<c;u++){r=f[n][u];a[n][u]=g.unproject(g.project(r)._add(d));if(p){i._bounds.extend(f[n][u]);l[n][u]._add(s)}}}}return a},_replaceCoordGetters:function(){if(this._path.getLatLng){this._path.getLatLng_=this._path.getLatLng;this._path.getLatLng=L.Util.bind(function(){return this.dragging._transformPoints(this.dragging._matrix,{})},this._path)}else if(this._path.getLatLngs){this._path.getLatLngs_=this._path.getLatLngs;this._path.getLatLngs=L.Util.bind(function(){return this.dragging._transformPoints(this.dragging._matrix,[])},this._path)}},_restoreCoordGetters:function(){if(this._path.getLatLng_){this._path.getLatLng=this._path.getLatLng_;delete this._path.getLatLng_}else if(this._path.getLatLngs_){this._path.getLatLngs=this._path.getLatLngs_;delete this._path.getLatLngs_}}});L.Handler.PathDrag.makeDraggable=function(t){t.dragging=new L.Handler.PathDrag(t);return t};L.Path.prototype.makeDraggable=function(){return L.Handler.PathDrag.makeDraggable(this)};L.Path.addInitHook(function(){if(this.options.draggable){this.options.interactive=true;if(this.dragging){this.dragging.enable()}else{L.Handler.PathDrag.makeDraggable(this);this.dragging.enable()}}else if(this.dragging){this.dragging.disable()}});L.SVG.include({_resetTransformPath:function(t){t._path.setAttributeNS(null,"transform","")},transformPath:function(t,a){t._path.setAttributeNS(null,"transform","matrix("+a.join(" ")+")")}});L.SVG.include(!L.Browser.vml?{}:{_resetTransformPath:function(t){if(t._skew){t._skew.on=false;t._path.removeChild(t._skew);t._skew=null}},transformPath:function(t,a){var i=t._skew;if(!i){i=L.SVG.create("skew");t._path.appendChild(i);i.style.behavior="url(#default#VML)";t._skew=i}var n=a[0].toFixed(8)+" "+a[1].toFixed(8)+" "+a[2].toFixed(8)+" "+a[3].toFixed(8)+" 0 0";var e=Math.floor(a[4]).toFixed()+", "+Math.floor(a[5]).toFixed()+"";var r=this._path.style;var s=parseFloat(r.left);var o=parseFloat(r.top);var h=parseFloat(r.width);var _=parseFloat(r.height);if(isNaN(s))s=0;if(isNaN(o))o=0;if(isNaN(h)||!h)h=1;if(isNaN(_)||!_)_=1;var g=(-s/h-.5).toFixed(8)+" "+(-o/_-.5).toFixed(8);i.on="f";i.matrix=n;i.origin=g;i.offset=e;i.on=true}});function TRUE_FN(){return true}L.Canvas.include({_resetTransformPath:function(t){if(!this._containerCopy)return;delete this._containerCopy;if(t._containsPoint_){t._containsPoint=t._containsPoint_;delete t._containsPoint_;this._requestRedraw(t)}},transformPath:function(t,a){var i=this._containerCopy;var n=this._ctx,e;var r=L.Browser.retina?2:1;var s=this._bounds;var o=s.getSize();var h=s.min;if(!i){i=this._containerCopy=document.createElement("canvas");e=i.getContext("2d");i.width=r*o.x;i.height=r*o.y;this._removePath(t);this._redraw();e.translate(r*s.min.x,r*s.min.y);e.drawImage(this._container,0,0);this._initPath(t);t._containsPoint_=t._containsPoint;t._containsPoint=TRUE_FN}n.save();n.clearRect(h.x,h.y,o.x*r,o.y*r);n.setTransform(1,0,0,1,0,0);n.restore();n.save();n.drawImage(this._containerCopy,0,0,o.x,o.y);n.transform.apply(n,a);this._drawing=true;t._updatePath();this._drawing=false;n.restore()}});
+
+/**
+ * Matrix transform path for SVG/VML
+ * Renderer-independent
+ */
+ L.Path.include({
+
+	/**
+	 * Applies matrix transformation to SVG
+	 * @param {Array.<Number>?} matrix
+	 */
+	_transform: function(matrix) {
+		if (this._renderer) {
+			if (matrix) {
+				this._renderer.transformPath(this, matrix);
+			} else {
+				// reset transform matrix
+				this._renderer._resetTransformPath(this);
+				this._update();
+			}
+		}
+		return this;
+	},
+
+	/**
+	 * Check if the feature was dragged, that'll supress the click event
+	 * on mouseup. That fixes popups for example
+	 *
+	 * @param  {MouseEvent} e
+	 */
+	_onMouseClick: function(e) {
+		if ((this.dragging && this.dragging.moved()) ||
+			(this._map.dragging && this._map.dragging.moved())) {
+			return;
+		}
+
+		this._fireMouseEvent(e);
+	}
+
+});
+var END = {
+  mousedown:     'mouseup',
+  touchstart:    'touchend',
+  pointerdown:   'touchend',
+  MSPointerDown: 'touchend'
+};
+
+var MOVE = {
+  mousedown:     'mousemove',
+  touchstart:    'touchmove',
+  pointerdown:   'touchmove',
+  MSPointerDown: 'touchmove'
+};
+
+function distance(a, b) {
+  var dx = a.x - b.x, dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Drag handler
+ * @class L.Path.Drag
+ * @extends {L.Handler}
+ */
+L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
+
+  statics: {
+    DRAGGING_CLS: 'leaflet-path-draggable',
+  },
+
+
+  /**
+   * @param  {L.Path} path
+   * @constructor
+   */
+  initialize: function(path) {
+
+    /**
+     * @type {L.Path}
+     */
+    this._path = path;
+
+    /**
+     * @type {Array.<Number>}
+     */
+    this._matrix = null;
+
+    /**
+     * @type {L.Point}
+     */
+    this._startPoint = null;
+
+    /**
+     * @type {L.Point}
+     */
+    this._dragStartPoint = null;
+
+    /**
+     * @type {Boolean}
+     */
+    this._mapDraggingWasEnabled = false;
+
+  },
+
+  /**
+   * Enable dragging
+   */
+  addHooks: function() {
+    this._path.on('mousedown', this._onDragStart, this);
+
+    this._path.options.className = this._path.options.className ?
+        (this._path.options.className + ' ' + L.Handler.PathDrag.DRAGGING_CLS) :
+         L.Handler.PathDrag.DRAGGING_CLS;
+
+    if (this._path._path) {
+      L.DomUtil.addClass(this._path._path, L.Handler.PathDrag.DRAGGING_CLS);
+    }
+  },
+
+  /**
+   * Disable dragging
+   */
+  removeHooks: function() {
+    this._path.off('mousedown', this._onDragStart, this);
+
+    this._path.options.className = this._path.options.className
+      .replace(new RegExp('\\s+' + L.Handler.PathDrag.DRAGGING_CLS), '');
+    if (this._path._path) {
+      L.DomUtil.removeClass(this._path._path, L.Handler.PathDrag.DRAGGING_CLS);
+    }
+  },
+
+  /**
+   * @return {Boolean}
+   */
+  moved: function() {
+    return this._path._dragMoved;
+  },
+
+  /**
+   * Start drag
+   * @param  {L.MouseEvent} evt
+   */
+  _onDragStart: function(evt) {
+    var eventType = evt.originalEvent._simulated ? 'touchstart' : evt.originalEvent.type;
+
+    this._mapDraggingWasEnabled = false;
+    this._startPoint = evt.containerPoint.clone();
+    this._dragStartPoint = evt.containerPoint.clone();
+    this._matrix = [1, 0, 0, 1, 0, 0];
+    L.DomEvent.stop(evt.originalEvent);
+
+    L.DomUtil.addClass(this._path._renderer._container, 'leaflet-interactive');
+    L.DomEvent
+      .on(document, MOVE[eventType], this._onDrag,    this)
+      .on(document, END[eventType],  this._onDragEnd, this);
+    
+    if (this._path._map.dragging.enabled()) {
+      // I guess it's required because mousdown gets simulated with a delay
+      //this._path._map.dragging._draggable._onUp(evt);
+
+      this._path._map.dragging.disable();
+      this._mapDraggingWasEnabled = true;
+    }
+    this._path._dragMoved = false;
+
+    if (this._path._popup) { // that might be a case on touch devices as well
+      this._path._popup._close();
+    }
+
+    this._replaceCoordGetters(evt);
+  },
+
+  /**
+   * Dragging
+   * @param  {L.MouseEvent} evt
+   */
+  _onDrag: function(evt) {
+    L.DomEvent.stop(evt);
+
+    var first = (evt.touches && evt.touches.length >= 1 ? evt.touches[0] : evt);
+    var containerPoint = this._path._map.mouseEventToContainerPoint(first);
+
+    // skip taps
+    if (evt.type === 'touchmove' && !this._path._dragMoved) {
+      var totalMouseDragDistance = this._dragStartPoint.distanceTo(containerPoint);
+      if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
+        return;
+      }
+    }
+
+    var x = containerPoint.x;
+    var y = containerPoint.y;
+
+    var dx = x - this._startPoint.x;
+    var dy = y - this._startPoint.y;
+
+    // Send events only if point was moved
+    if (dx || dy) {
+      if (!this._path._dragMoved) {
+        this._path._dragMoved = true;
+        this._path.fire('dragstart', evt);
+        // we don't want that to happen on click
+        this._path.bringToFront();
+      }
+
+      this._matrix[4] += dx;
+      this._matrix[5] += dy;
+
+      this._startPoint.x = x;
+      this._startPoint.y = y;
+
+      this._path.fire('predrag', evt);
+      this._path._transform(this._matrix);
+      this._path.fire('drag', evt);
+    }
+  },
+
+  /**
+   * Dragging stopped, apply
+   * @param  {L.MouseEvent} evt
+   */
+  _onDragEnd: function(evt) {
+    var containerPoint = this._path._map.mouseEventToContainerPoint(evt);
+    var moved = this.moved();
+
+    // apply matrix
+    if (moved) {
+      this._transformPoints(this._matrix);
+      this._path._updatePath();
+      this._path._project();
+      this._path._transform(null);
+
+      L.DomEvent.stop(evt);
+    }
+
+
+    L.DomEvent.off(document, 'mousemove touchmove', this._onDrag,    this);
+    L.DomEvent.off(document, 'mouseup touchend',    this._onDragEnd, this);
+
+    this._restoreCoordGetters();
+
+    // consistency
+    if (moved) {
+      this._path.fire('dragend', {
+        distance: distance(this._dragStartPoint, containerPoint)
+      });
+
+      // hack for skipping the click in canvas-rendered layers
+      var contains = this._path._containsPoint;
+      this._path._containsPoint = L.Util.falseFn;
+      L.Util.requestAnimFrame(function() {
+        L.DomEvent.skipped({ type: 'click' });
+        this._path._containsPoint = contains;
+      }, this);
+    }
+
+    this._matrix          = null;
+    this._startPoint      = null;
+    this._dragStartPoint  = null;
+    this._path._dragMoved = false;
+
+    if (this._mapDraggingWasEnabled) {
+      if (moved) L.DomEvent.fakeStop({ type: 'click' });
+      this._path._map.dragging.enable();
+    }
+
+  },
+
+
+  /**
+   * Applies transformation, does it in one sweep for performance,
+   * so don't be surprised about the code repetition.
+   *
+   * [ x ]   [ a  b  tx ] [ x ]   [ a * x + b * y + tx ]
+   * [ y ] = [ c  d  ty ] [ y ] = [ c * x + d * y + ty ]
+   *
+   * @param {Array.<Number>} matrix
+   */
+  _transformPoints: function(matrix, dest) {
+    var path = this._path;
+    var i, len, latlng;
+
+    var px = L.point(matrix[4], matrix[5]);
+
+    var crs = path._map.options.crs;
+    var transformation = crs.transformation;
+    var scale = crs.scale(path._map.getZoom());
+    var projection = crs.projection;
+
+    var diff = transformation.untransform(px, scale)
+      .subtract(transformation.untransform(L.point(0, 0), scale));
+    var applyTransform = !dest;
+
+    path._bounds = new L.LatLngBounds();
+
+    // console.time('transform');
+    // all shifts are in-place
+    if (path._point) { // L.Circle
+      dest = projection.unproject(
+        projection.project(path._latlng)._add(diff));
+      if (applyTransform) {
+        path._latlng = dest;
+        path._point._add(px);
+      }
+    } else if (path._rings || path._parts) { // everything else
+      var rings   = path._rings || path._parts;
+      var latlngs = path._latlngs;
+      dest = dest || latlngs;
+      if (!L.Util.isArray(latlngs[0])) { // polyline
+        latlngs = [latlngs];
+        dest    = [dest];
+      }
+      for (i = 0, len = rings.length; i < len; i++) {
+        dest[i] = dest[i] || [];
+        for (var j = 0, jj = rings[i].length; j < jj; j++) {
+          latlng     = latlngs[i][j];
+          dest[i][j] = projection
+            .unproject(projection.project(latlng)._add(diff));
+          if (applyTransform) {
+            path._bounds.extend(latlngs[i][j]);
+            rings[i][j]._add(px);
+          }
+        }
+      }
+    }
+    return dest;
+    // console.timeEnd('transform');
+  },
+
+
+
+  /**
+   * If you want to read the latlngs during the drag - your right,
+   * but they have to be transformed
+   */
+  _replaceCoordGetters: function() {
+    if (this._path.getLatLng) { // Circle, CircleMarker
+      this._path.getLatLng_ = this._path.getLatLng;
+      this._path.getLatLng = L.Util.bind(function() {
+        return this.dragging._transformPoints(this.dragging._matrix, {});
+      }, this._path);
+    } else if (this._path.getLatLngs) {
+      this._path.getLatLngs_ = this._path.getLatLngs;
+      this._path.getLatLngs = L.Util.bind(function() {
+        return this.dragging._transformPoints(this.dragging._matrix, []);
+      }, this._path);
+    }
+  },
+
+
+  /**
+   * Put back the getters
+   */
+  _restoreCoordGetters: function() {
+    if (this._path.getLatLng_) {
+      this._path.getLatLng = this._path.getLatLng_;
+      delete this._path.getLatLng_;
+    } else if (this._path.getLatLngs_) {
+      this._path.getLatLngs = this._path.getLatLngs_;
+      delete this._path.getLatLngs_;
+    }
+  }
+
+});
+
+
+/**
+ * @param  {L.Path} layer
+ * @return {L.Path}
+ */
+L.Handler.PathDrag.makeDraggable = function(layer) {
+  layer.dragging = new L.Handler.PathDrag(layer);
+  return layer;
+};
+
+
+/**
+ * Also expose as a method
+ * @return {L.Path}
+ */
+L.Path.prototype.makeDraggable = function() {
+  return L.Handler.PathDrag.makeDraggable(this);
+};
+
+
+L.Path.addInitHook(function() {
+  if (this.options.draggable) {
+    // ensure interactive
+    this.options.interactive = true;
+
+    if (this.dragging) {
+      this.dragging.enable();
+    } else {
+      L.Handler.PathDrag.makeDraggable(this);
+      this.dragging.enable();
+    }
+  } else if (this.dragging) {
+    this.dragging.disable();
+  }
+});
+L.SVG.include({
+
+	/**
+	 * Reset transform matrix
+	 */
+	_resetTransformPath: function(layer) {
+		layer._path.setAttributeNS(null, 'transform', '');
+	},
+
+	/**
+	 * Applies matrix transformation to SVG
+	 * @param {L.Path}         layer
+	 * @param {Array.<Number>} matrix
+	 */
+	transformPath: function(layer, matrix) {
+		layer._path.setAttributeNS(null, 'transform',
+			'matrix(' + matrix.join(' ') + ')');
+	}
+
+});
+L.SVG.include(!L.Browser.vml ? {} : {
+
+	/**
+	 * Reset transform matrix
+	 */
+	_resetTransformPath: function(layer) {
+		if (layer._skew) {
+			// super important! workaround for a 'jumping' glitch:
+			// disable transform before removing it
+			layer._skew.on = false;
+			layer._path.removeChild(layer._skew);
+			layer._skew = null;
+		}
+	},
+
+	/**
+	 * Applies matrix transformation to VML
+	 * @param {L.Path}         layer
+	 * @param {Array.<Number>} matrix
+	 */
+	transformPath: function(layer, matrix) {
+		var skew = layer._skew;
+
+		if (!skew) {
+			skew = L.SVG.create('skew');
+			layer._path.appendChild(skew);
+			skew.style.behavior = 'url(#default#VML)';
+			layer._skew = skew;
+		}
+
+		// handle skew/translate separately, cause it's broken
+		var mt = matrix[0].toFixed(8) + ' ' + matrix[1].toFixed(8) + ' ' +
+			matrix[2].toFixed(8) + ' ' + matrix[3].toFixed(8) + ' 0 0';
+		var offset = Math.floor(matrix[4]).toFixed() + ', ' +
+			Math.floor(matrix[5]).toFixed() + '';
+
+		var s = this._path.style;
+		var l = parseFloat(s.left);
+		var t = parseFloat(s.top);
+		var w = parseFloat(s.width);
+		var h = parseFloat(s.height);
+
+		if (isNaN(l))       l = 0;
+		if (isNaN(t))       t = 0;
+		if (isNaN(w) || !w) w = 1;
+		if (isNaN(h) || !h) h = 1;
+
+		var origin = (-l / w - 0.5).toFixed(8) + ' ' + (-t / h - 0.5).toFixed(8);
+
+		skew.on = 'f';
+		skew.matrix = mt;
+		skew.origin = origin;
+		skew.offset = offset;
+		skew.on = true;
+	}
+
+});
+function TRUE_FN () { return true; }
+
+L.Canvas.include({
+
+  /**
+   * Do nothing
+   * @param  {L.Path} layer
+   */
+  _resetTransformPath: function(layer) {
+    if (!this._containerCopy) return;
+
+    delete this._containerCopy;
+
+    if (layer._containsPoint_) {
+      layer._containsPoint = layer._containsPoint_;
+      delete layer._containsPoint_;
+
+      this._requestRedraw(layer);
+    }
+  },
+
+
+  /**
+   * Algorithm outline:
+   *
+   * 1. pre-transform - clear the path out of the canvas, copy canvas state
+   * 2. at every frame:
+   *    2.1. save
+   *    2.2. redraw the canvas from saved one
+   *    2.3. transform
+   *    2.4. draw path
+   *    2.5. restore
+   * 3. Repeat
+   *
+   * @param  {L.Path}         layer
+   * @param  {Array.<Number>} matrix
+   */
+  transformPath: function(layer, matrix) {
+    var copy   = this._containerCopy;
+    var ctx    = this._ctx, copyCtx;
+    var m      = L.Browser.retina ? 2 : 1;
+    var bounds = this._bounds;
+    var size   = bounds.getSize();
+    var pos    = bounds.min;
+
+    if (!copy) { // get copy of all rendered layers
+      copy = this._containerCopy = document.createElement('canvas');
+      copyCtx = copy.getContext('2d');
+      // document.body.appendChild(copy);
+
+      copy.width  = m * size.x;
+      copy.height = m * size.y;
+
+      this._removePath(layer);
+      this._redraw();
+
+      copyCtx.translate(m * bounds.min.x, m * bounds.min.y);
+      copyCtx.drawImage(this._container, 0, 0);
+      this._initPath(layer);
+
+      // avoid flickering because of the 'mouseover's
+      layer._containsPoint_ = layer._containsPoint;
+      layer._containsPoint  = TRUE_FN;
+    }
+
+    ctx.save();
+    ctx.clearRect(pos.x, pos.y, size.x * m, size.y * m);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.restore();
+    ctx.save();
+
+    ctx.drawImage(this._containerCopy, 0, 0, size.x, size.y);
+    ctx.transform.apply(ctx, matrix);
+
+    // now draw one layer only
+    this._drawing = true;
+    layer._updatePath();
+    this._drawing = false;
+
+    ctx.restore();
+  }
+
+});
