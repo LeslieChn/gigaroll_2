@@ -66,10 +66,11 @@
 			case 'circle':
 					ctx.beginPath();
 					ctx.strokeStyle = options.fillColor;
-					ctx.lineWidth = 3;
+					ctx.lineWidth = 1;
 					ctx.arc(p.x, p.y, r + options.weight * 0.25 * scale, 0, Math.PI * 2, false);
 					ctx.moveTo(p.x, p.y);
 					ctx.stroke();
+					ctx.fillStyle =  "orange";
 					ctx.closePath();
 				break;
 			default:
@@ -79,6 +80,7 @@
 					ctx.fillStyle =  "red";
 					ctx.fillStyle = options.color;
 					ctx.fill(options.fillRule || 'evenodd');
+					
 					ctx.closePath();
 				}
 

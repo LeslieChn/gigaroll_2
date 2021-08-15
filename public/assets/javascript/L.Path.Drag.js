@@ -38,7 +38,6 @@
 			(this._map.dragging && this._map.dragging.moved())) {
 			return;
 		}
-
 		this._fireMouseEvent(e);
 	}
 
@@ -269,6 +268,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       if (moved) L.DomEvent.fakeStop({ type: 'click' });
       this._path._map.dragging.enable();
     }
+    console.log(this._path._map)
+    // this._path._map.layer.
 
   },
 

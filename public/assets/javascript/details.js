@@ -91,7 +91,6 @@ $(function () {
                 {
                   boostType = event.item.selected
                   setMarkers()
-                  autoZoom()
                 }
 
               }
@@ -249,12 +248,12 @@ function drawOnMap()
           shapeOptions: {
           color: 'blue',
           clickable: false,
-          draggable: false
+          draggable: true
           }
         }, 
         rectangle: {
           shapeOptions: {
-            draggable: false,
+            draggable: true,
             color: 'red',
             clickable: false
           }
@@ -509,6 +508,7 @@ function showMap(){
   if (selectedType == "regular-map")
   {
     setRegMap()
+    autoZoom()
   }
   else if (selectedType == 'heat-map')
   {
@@ -597,11 +597,11 @@ function setMarkers() {
     }).addTo(markers);
   }
   markers.addTo(osMap);
-  autoZoom()
 }
 
 function setRegMap(){
   setMarkers()
+  autoZoom()
   disableBn(["heat_gradient","heat_radius","heat_opacity"])
   enableBn(["marker_type","marker_color"])
 }
