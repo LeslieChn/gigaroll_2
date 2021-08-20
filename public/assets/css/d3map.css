@@ -2,7 +2,9 @@
   fill: none;
   pointer-events: all;
 }
-
+.ldegree{
+  color : aquamarine;
+}
 .feature {
   fill: #111;
   cursor: pointer;

@@ -248,12 +248,12 @@ function drawOnMap()
           shapeOptions: {
           color: 'blue',
           clickable: false,
-          draggable: true
+          draggable: false
           }
         }, 
         rectangle: {
           shapeOptions: {
-            draggable: true,
+            draggable: false,
             color: 'red',
             clickable: false
           }
@@ -275,6 +275,10 @@ function drawOnMap()
     osMap.on('draw:created', function(e) {
       var type = e.layerType
       editableLayers.clearLayers();
+      if(circle)
+        circle = null;
+      if (rectangle)
+        rectangle = null;
 
       if (type === 'rectangle') {
         rectangle = e.layer
@@ -491,20 +495,11 @@ function showMap(){
     tileLayer = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
     attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
     });
-/*     tileLayer = L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-      attribution: 'google'
-  })
- */    tileLayer.addTo(osMap);
+    tileLayer.addTo(osMap);
   }
-/*   else {
-    osMap.panTo(new L.latLng(map_center[0], map_center[1]));
-    osMap.setZoom(mapZoom)
-  } */
-  
   
   clearMap()
   var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
-  console.log(selectedType)
   if (selectedType == "regular-map")
   {
     setRegMap()

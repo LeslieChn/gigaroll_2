@@ -488,7 +488,7 @@ L.Canvas.include({
 
   /**
    * Do nothing
-   * @param  {L.Path} layer
+   * @param  {L.Path} 
    */
   _resetTransformPath: function(layer) {
     if (!this._containerCopy) return;
