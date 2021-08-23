@@ -268,9 +268,8 @@ L.Handler.PathDrag = L.Handler.extend( /** @lends  L.Path.Drag.prototype */ {
       if (moved) L.DomEvent.fakeStop({ type: 'click' });
       this._path._map.dragging.enable();
     }
-    console.log(this._path._map)
     // this._path._map.layer.
-
+    this._path._map._onResize()
   },
 
 
@@ -552,8 +551,9 @@ L.Canvas.include({
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.restore();
     ctx.save();
-
+    console.log(this._containerCopy)
     ctx.drawImage(this._containerCopy, 0, 0, size.x, size.y);
+    
     ctx.transform.apply(ctx, matrix);
 
     // now draw one layer only

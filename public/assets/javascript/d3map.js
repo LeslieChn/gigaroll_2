@@ -359,7 +359,7 @@ function drawMap()
                 let code = d.id.substring(0, 2);
                 if (!state_codes.has(code))
                 {
-                    return "fill: #000";
+                    return "fill: #000;"
                 }
                 let s = parseInt(code);
                 let county = d.properties.name;

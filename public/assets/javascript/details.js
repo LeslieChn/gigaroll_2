@@ -25,6 +25,7 @@ async function serverRequest(params) {
   var request = new Request(api_url, { method: "POST" });
 
   const response = await fetch(request);
+  console.log("here",response)
   const json = await response.json();
 
   return json;
@@ -237,6 +238,7 @@ function drawOnMap()
     removeAllControl.remove();
     drawControl = null;
     w2ui.layout.get('bottom').toolbar.disable('bn_fdPt')
+
   }
   else{
     var drawPluginOptions = {
@@ -248,12 +250,12 @@ function drawOnMap()
           shapeOptions: {
           color: 'blue',
           clickable: false,
-          draggable: false
+          draggable: true
           }
         }, 
         rectangle: {
           shapeOptions: {
-            draggable: false,
+            draggable: true,
             color: 'red',
             clickable: false
           }
@@ -521,10 +523,10 @@ function showMap(){
 
 function autoZoom(){
   $(map).ready(function () {
+    console.log("This is map:",map)
     osMap.invalidateSize()
-    var mapSize = osMap.getSize()
     mapZoom = osMap.getBoundsZoom(bounds)
-    osMap.fitBounds(bounds)  
+    osMap.fitBounds(bounds)
   });
 }
 
