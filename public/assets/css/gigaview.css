@@ -1,0 +1,58 @@
+body
+{
+    background-color: rgb(155, 0, 31);
+    overflow: hidden;
+    color: #656164
+}
+
+#main-container
+{
+    overflow: hidden!important;
+}
+
+
+.w2ui-grid-records
+{
+    overflow: hidden!important;
+    touch-action: auto;
+} 
+
+#treemap {
+  font: 11px sans-serif;
+  font-weight: bold;
+  width: 80%;
+  margin: 0 auto;
+}
+.node-label {
+  font: 11px sans-serif;
+  padding: 4px;
+  line-height: 1em;
+  white-space: pre;
+  font-weight: bold;
+  color: #212529;
+}
+
+.node-value {
+  color: rgba(0,0,0,0.8);
+  font-size: 9px;
+  font-weight: bold;
+  margin-top: 1px;
+}
+
+tspan:last-child {
+  font-size: 9px;
+  fill-opacity: 0.8;
+}
+
+.node rect {
+  shape-rendering: crispEdges;
+}
+
+.node--hover rect {
+  stroke: #000;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}

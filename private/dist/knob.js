@@ -10,13 +10,13 @@ Knob = function(input, ui) {
   var settings = this.settings = this._getSettings(input);
 
 
-  this.value = input.value = settings.min + settings.range / 2;
+  this.value = input.value==null? settings.min:input.value /*+ settings.range / 2*/;
   this.input = input;
   this.min = settings.min;
 
   this.ui = ui;
 
-  var events = {
+  this.events = {
     keydown: this._handleKeyEvents.bind(this),
     mousewheel: this._handleWheelEvents.bind(this),
     DOMMouseScroll: this._handleWheelEvents.bind(this),
@@ -24,8 +24,8 @@ Knob = function(input, ui) {
     mousedown: this._handleMove.bind(this, 'mousemove', 'mouseup')
   };
 
-  for (var event in events) {
-    container.addEventListener(event, events[event], false);
+  for (var event in this.events) {
+    container.addEventListener(event, this.events[event], false);
   }
 
   container.style.cssText = 'position: relative; width:' + settings.width + 'px;' + 'height:' + settings.height + 'px;';
@@ -54,6 +54,13 @@ Knob.prototype = {
     this.changed(val);
   },
 
+  removeEventListeners: function ()
+  {
+    for (var event in this.events) {
+      this.container.removeEventListener(event, this.events[event], false);
+    }
+  },
+
   _handleMove: function(onMove, onEnd) {
     this.centerX = Math.floor(this.container.getBoundingClientRect().left)+ document.body.scrollLeft + this.settings.width / 2;
     this.centerY = Math.floor(this.container.getBoundingClientRect().top)+ document.body.scrollTop + this.settings.height / 2;
@@ -62,6 +69,7 @@ Knob.prototype = {
     var body = document.body;
     body.addEventListener(onMove, fnc, false);
     body.addEventListener(onEnd, function() {
+
       body.removeEventListener(onMove, fnc, false);
     }, false);
   },
@@ -87,13 +95,35 @@ Knob.prototype = {
     var value = this.min + range * percent;
 
     var step = (this.settings.max - this.min) / range;
-    this.value = this.input.value = Math.round(value / step) * step;
-    this.ui.update(percent, this.value);
-    this.triggerChange();
+    value = this.input.value = Math.round(value / step) * step;
+    value = Math.round(value)
+    if(value == this.value)
+      return
+    console.log('old value: '+ this.value)
+    console.log('new value: '+ value)
+    console.log(percent)
+    this.value = value
+    this.changed(0)
+    // this.ui.update(percent, value);
+    // this.triggerChange();
+  },
+
+
+  // make sure val is between min and max values
+  // if it isn't map it into the range cyclically
+  // compare with the limit method that does the mapping
+  // by clipping at the min and max values 
+  cyclic: function(val)
+  {
+    let min_val = 0 || this.settings.min
+    let max_val = 0 || this.settings.max
+    let num_vals = max_val - min_val + 1
+    let new_val = ((val - min_val) % num_vals) + min_val
+    return new_val < min_val ? new_val + num_vals : new_val
   },
 
   changed: function(direction) {
-    this.input.value = this.limit(parseFloat(this.input.value) + direction * (this.input.step || 1));
+    this.input.value = this.cyclic(parseFloat(this.input.value) + direction * (this.input.step || 1));
     this.value = this.input.value;
     this.ui.update(this._valueToPercent(), this.value);
     this.triggerChange();
@@ -298,7 +328,7 @@ Ui.Scale.prototype.dial = function() {
   this.dials = [];
   if(!this.options.labels){
     for (var i = 0; i < end; i++) {
-      var text = new Ui.El.Text(Math.abs(min + dialStep * i), this.width / 2 - 2.5,
+      var text = new Ui.El.Text(Math.abs(min + dialStep * i), this.width / 2 /*- 2.5*/,
         this.height / 2 - this.options.radius, 5, 5);
       this.el.append(text);
       text.rotate(this.startAngle + i * step, this.width / 2, this.height / 2);
@@ -308,7 +338,7 @@ Ui.Scale.prototype.dial = function() {
     step = this.options.anglerange / (this.options.labels.length-1);
     for(var i=0; i<this.options.labels.length; i++){
       var label = this.options.labels[i];
-      var text = new Ui.El.Text(label, this.width / 2 - 2.5,
+      var text = new Ui.El.Text(label, this.width / 2 /*- 2.5*/,
         this.height / 2 - this.options.radius, 5, 5);
       this.el.append(text);
       text.rotate(this.startAngle + i * step, this.width / 2, this.height / 2);
