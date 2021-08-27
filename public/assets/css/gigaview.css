@@ -17,11 +17,44 @@ body
     touch-action: auto;
 } 
 
-#treemap {
-  font: 11px sans-serif;
+.navbar-expand-sm .navbar-nav .nav-link:hover {
+  text-shadow: 0px 3px 5px rgba(255, 255, 0, 1);
+}
+
+.navbar-expand-sm .navbar-nav .nav-link {
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
+}
+
+#logo-text {
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
+  /* text-shadow: 1px 1px 2px rgb(182, 182, 182); */
+  text-shadow: 1px 1px 3px gold;
   font-weight: bold;
-  width: 80%;
-  margin: 0 auto;
+  font-size: 1.5rem;
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+.navbar-toggler {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.node {
+  box-sizing: border-box;
+  position: absolute;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.node:hover
+{
+	border: ridge  4px;
+	opacity: 0.7;
 }
 .node-label {
   font: 11px sans-serif;
