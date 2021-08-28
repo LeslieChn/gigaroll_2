@@ -1,6 +1,7 @@
 //Dependencies
 const express = require ("express");
 const session = require ("express-session")
+const bodyParser = require ("body-parser")
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -74,6 +75,7 @@ app.use(express.static('public'))
 // logging, parsing, and session handling.
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require('body-parser').text({ type: 'text/html' }))
 app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: false,  cookie: { sameSite: 'strict' }}));
 
 // Initialize Passport and restore authentication state, if any, from the
@@ -139,6 +141,20 @@ app.post('/gserver/:query', async (request, response) => {
   const server_json = await server_response.json();
 
   response.json(server_json);
+  console.timeEnd(request.params.query)
+});
+
+app.post('/getimage/:query', async (request, response) => {
+    
+  console.time(request.params.query);
+  const queryURL = `https://www.zillow.com/homes/`
+
+  //only comment in the following to simulate a delay
+  //await new Promise(r => setTimeout(r, 1000));
+  const server_url = queryURL + request.params.query;
+  const server_response = await fetch(server_url);
+
+  response.send(server_response.body)
   console.timeEnd(request.params.query)
 });
 

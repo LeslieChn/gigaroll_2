@@ -99,11 +99,11 @@ async function serverRequest(params)
 {
     p = reqParamsToString(params)
 
-  // const api_url = `gserver/${p}`;
+    const api_url = `gserver/${p}`;
 
-  // var request = new Request(api_url, { method: "POST" });
+    var request = new Request(api_url, { method: "POST" });
 
-    var request = new Request(`http://127.0.0.1:55555/req?${p}`, { method: "GET" });
+    // var request = new Request(`http://127.0.0.1:55555/req?${p}`, { method: "GET" });
 
     const response = await fetch(request);
     const json = await response.json();
@@ -577,12 +577,17 @@ class View_State
          .addTo(markers)
          .bindPopup("Loading element data, please wait...")
          .on('click', onMapClick);
-         function onMapClick(e)
+         async function onMapClick(e)
          {
           let node = server_js.data[coord[2]]
           let address, img_url = "";
           // console.log(`${node[13]},${node[12]}`)
-            $.get(`https://www.zillow.com/homes/${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}_rb`, function(data, status){
+          let p = `${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}_rb`
+          const api_url = `getimage/${p}`;
+          var request = new Request(api_url, { method: "POST" });
+          const response = await fetch(request);
+          console.log(response)
+          let data = await response.text()
               let str = 'property="og:image" content="'
               let start = data.indexOf(str) + str.length
               let end = data.indexOf('"' , start)
@@ -610,7 +615,7 @@ class View_State
               </div>
               `
               e.target.bindPopup(address).openPopup();
-            });
+            
          }
        }
        markers.addTo(osMap);
