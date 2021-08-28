@@ -492,7 +492,7 @@ class View_State
  
      let server_js=this.server_js
      let coords = []
-     let lat, lng, markers, bounds, mapZoom;
+     let lat, lng, markers;
      let markerColor = "red"
      var boostType = "balloon"
      let max_lat = -999, max_lng = -999
