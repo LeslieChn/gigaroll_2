@@ -472,7 +472,7 @@ async function InitPage() {
   //will not be added in the call back
   onclick_addGbyRow();
   onclick_addMeasureRow();
-  $('#ddgroupby1').val("prop_type");
+  $('#ddgroupby0').val("prop_type");
   $('#grid').w2grid({
     name : 'grid',  
     show: {
@@ -1479,14 +1479,15 @@ function drillDownOk() {
   selected_gbys=[groupby]
   //make the state of gby's on the page
   //consistent with the new drilldown gby
-  $('#ddgroupby1').val(groupby);
+  $('#ddgroupby0').val(groupby);
+
   for (let idx of used_gby_indices)
   {
-    if (idx != 1)
-      $("#gbytablerow" + idx).remove(); //don't remove row 1
+    if (idx != 0)
+      $("#gbytablerow" + idx).remove(); //don't remove first row
   }
   used_gby_indices.clear();
-  used_gby_indices.add(1);//clear everything except row 1
+  used_gby_indices.add(0);//clear everything except row 0
 
   serverRequest(params).then((server_result) => {
     server_meta=server_result["meta"]

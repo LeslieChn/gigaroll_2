@@ -1,0 +1,101 @@
+body
+{
+    background-color: rgb(155, 0, 31);
+    overflow: hidden;
+    color: #656164
+}
+
+#main-container
+{
+    overflow: hidden!important;
+}
+
+
+.w2ui-grid-records
+{
+    overflow: hidden!important;
+    touch-action: auto;
+} 
+
+.navbar-expand-sm .navbar-nav .nav-link:hover {
+  text-shadow: 0px 3px 5px rgba(255, 255, 0, 1);
+}
+
+.navbar-expand-sm .navbar-nav .nav-link {
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
+}
+
+#logo-text {
+  font-family: 'Fira Sans', sans-serif;
+  color: white;
+  /* text-shadow: 1px 1px 2px rgb(182, 182, 182); */
+  text-shadow: 1px 1px 3px gold;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+}
+
+.navbar-toggler {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.node {
+  box-sizing: border-box;
+  position: absolute;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.node:hover
+{
+	border: ridge  4px;
+	opacity: 0.7;
+}
+.node-label {
+  font: 11px sans-serif;
+  padding: 4px;
+  line-height: 1em;
+  white-space: pre;
+  font-weight: bold;
+  color: #212529;
+}
+
+.node-value {
+  color: rgba(0,0,0,0.8);
+  font-size: 9px;
+  font-weight: bold;
+  margin-top: 1px;
+}
+
+tspan:last-child {
+  font-size: 9px;
+  fill-opacity: 0.8;
+}
+
+.node rect {
+  shape-rendering: crispEdges;
+}
+
+.node--hover rect {
+  stroke: #000;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0px;
+  padding: 0px;
+}
+
+.leaflet-popup-content {
+  width: 300px;
+  margin: 0px;
+}
