@@ -1267,7 +1267,7 @@ class View_State
       
       g = svg.append("g");
     }
-    d3.json("./assets/data/map_us_counties.json", function (error, us)
+    d3.json("./map_us_counties.json", function (error, us)
     {
         if (error) throw error;
         let states = topojson.feature(us, us.objects.states).features;
