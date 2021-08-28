@@ -89,3 +89,13 @@ ul {
   list-style: none;
   padding: 0;
 }
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0px;
+  padding: 0px;
+}
+
+.leaflet-popup-content {
+  width: 300px;
+  margin: 0px;
+}
