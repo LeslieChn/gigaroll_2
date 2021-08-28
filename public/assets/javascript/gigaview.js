@@ -240,9 +240,9 @@ function createVsKnob(labels)
 
   $('#vs-knob-column').html(`<input id='view-knob' class='p2' type="range" min="0" max="10" data-dropdown='view-select' 
     data-width="${knob_width}" data-height="${knob_height}" data-angleOffset="220" data-angleRange="280"></div>
-    <div class="dropdown float-end p-2">
-    <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fa fa-ellipsis-v fa-2x text-secondary" aria-hidden="true"></i>
+    <div class="dropdown float-end ps-3 pt-1">
+    <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.5rem;">
+      <i class="fa fa-ellipsis-v fa-2x" aria-hidden="true" style="color:orange;"></i>
     </a>
     <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable" style="">
       <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>

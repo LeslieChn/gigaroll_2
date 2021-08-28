@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Gigaroll</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.1/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="./w2ui/w2ui-1.5.min.css"/>
+  <script type="text/javascript" src="./w2ui/w2ui-1.5.min.js"></script>
+  <script src="https://unpkg.com/d3-regression@1.3.9/dist/d3-regression.min.js"></script>
+  <script src="https://d3js.org/d3-color.v1.min.js"></script>
+  <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="//d3js.org/d3.v4.min.js"></script>
+  <script src="https://kit.fontawesome.com/6c97ff330a.js" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@500&display=swap" rel="stylesheet"> 
+  <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/style.css" />
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-sm" aria-label="gigaNav">
+      <div class="container-fluid"> 
+        <div class="mx-auto">
+          <a id="logotext" class="navbar-brand abs" href="/">
+            <img id="logo" src="./assets/images/logo_sun.svg" class="" width="60" height="40"><span id="logo-text" class="align-middle">GigaRoll</span>
+          </a> 
+        </div>      
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gigarollNav"
+          aria-controls="gigarollMenu" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse text-start" id="gigarollNav">
+          <ul class="navbar-nav mb-2 mb-sm-0 me-auto" id="gigarollMenu">
+            <li class="nav-item">
+              <a class="nav-link" href="./index.html">Gigaview</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="./home.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="./explore.html">Explore</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav mb-2 mb-sm-0 ms-auto" id="profileMenu">
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <div class="row justify-content-start">
+    <div class="col-12 col-md-9 mt-3">
+      <div class="accordion-flush" id="accordionExample">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+              aria-expanded="true" aria-controls="collapseOne">
+              Explore
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+            data-bs-parent="#accordionExample">
+            <div class="accordion-body p-0 p-sm-2">
+              <div class="card">
+                <div class="card-header">
+                  <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                      <button class="nav-link active" id="query1-tab" data-bs-toggle="tab" data-bs-target="#query1"
+                        type="button" role="tab" aria-controls="query1" aria-selected="true">Groupby & Measure</a>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link" id="query2-tab" data-bs-toggle="tab" data-bs-target="#query2" type="button"
+                        role="tab" aria-controls="query2" aria-selected="false">Range</button>
+                    </li>
+                    <li class="nav-item">
+                      <button class="nav-link" id="query3-tab" data-bs-toggle="tab" data-bs-target="#query3" type="button"
+                        role="tab" aria-controls="query3" aria-selected="false">Filter2</button>
+                    </li>
+                  </ul>
+                </div>
+                <div class="tab-content" id="myTabContent">
+                  <div class="card-body tab-pane fade show active" id="query1" role="tabpanel"
+                    aria-labelledby="query1-tab">
+                    <div class="row g-1 g-md-4">
+                      <div class="col-5">
+                        <div class="table-responsive">
+                          <table class="table align-middle">
+                            <thead>
+                              <tr>
+                                <th scope="col">Groupby</th>
+                                <th class="button-cell" scope="col"></th>
+                                <th class="button-cell" scope="col"></th>
+                              </tr>
+                            </thead>
+                            <tbody id="gbytable">
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="col-7">
+                        <div class="table-responsive">
+                          <table class="table align-middle">
+                            <thead>
+                              <tr>
+                                <th scope="col">Measure</th>
+                                <th scope="col">Function</th>
+                                <th class="button-cell" scope="col"></th>
+                                <th class="button-cell" scope="col"></th>
+                              </tr>
+                            </thead>
+                            <tbody id="measuretable">
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body tab-pane fade" id="query2" role="tabpanel" aria-labelledby="query2-tab">
+                    <div class="dropdown">
+                      <div class="row">
+                        <div class="col">
+                          <div class="form-floating form-floating-sm">
+                            <select class="form-select form-select-sm" id="rangedimdd" aria-label="Floating label select example">
+                            </select>
+                            <label for="floatingSelect">Dimension</label>
+                          </div>
+                        </div>
+                        <div class="col">
+                          <div class="form-floating form-floating-sm">
+                            <select class="form-select form-select-sm" id="rangemeasuredd" aria-label="Floating label select example">
+                            </select>
+                            <label for="floatingSelect">Measure</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="form-floating form-floating-sm">
+                          <input type="text" class="float-input form-control form-control-sm" id="rangeStart" placeholder="Range Start"
+                            data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                          <label for="floatingPassword">Range Start</label>
+                        </div>
+                        <div class="form-floating form-floating-sm">
+                          <input type="text" class="float-input form-control form-control-sm" id="rangeSize" placeholder="Range Size"
+                            data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                          <label for="floatingPassword">Bucket Size</label>
+                        </div>
+                        <div class="form-floating form-floating-sm">
+                          <input type="text" class="positive-integer-input form-control form-control-sm" id="numBuckets"
+                            placeholder="Buckets" data-toggle="tooltip" data-placement="top" title="Numerical Input Only">
+                          <label for="floatingPassword">Buckets</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body tab-pane fade" id="query3" role="tabpanel" aria-labelledby="query3-tab">
+                    <p>Dummy 2</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-md-start m-2">
+    <div class="col-12 col-sm-9 d-flex justify-content-center">
+      <button type="submit" class="btn btn-sm btn-outline-success" id="submitButton">Submit</button>
+    </div>
+  </div>
+
+<nav class="d-flex justify-content-start" aria-label="breadcrumb">
+  <div class="gby-breadcrumb">
+
+  </div>
+  <div class="val-breadcrumb">
+  
+  </div>
+  <div class="dim-breadcrumb">
+    
+  </div>
+    <div class="val-filter-breadcrumb">
+ 
+  </div>
+</nav>
+
+
+  <div class="container-fluid" id="results">
+    <div id="layout" style="width: 100%; height: 1250px;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" src="assets/javascript/app.js"></script>
+</body>
+
+</html>
