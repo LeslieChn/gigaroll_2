@@ -99,11 +99,11 @@ async function serverRequest(params)
 {
     p = reqParamsToString(params)
 
-  // const api_url = `gserver/${p}`;
+    const api_url = `gserver/${p}`;
 
-  // var request = new Request(api_url, { method: "POST" });
+    var request = new Request(api_url, { method: "POST" });
 
-    var request = new Request(`http://127.0.0.1:55555/req?${p}`, { method: "GET" });
+    // var request = new Request(`http://127.0.0.1:55555/req?${p}`, { method: "GET" });
 
     const response = await fetch(request);
     const json = await response.json();
