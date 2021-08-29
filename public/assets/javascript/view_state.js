@@ -595,7 +595,7 @@ class View_State
               console.log(img_url)
               if (!img_url.startsWith('https://'))
               {
-                img_url = "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg"
+                img_url = "https://www.zillowstatic.com/static/images/nophoto_p_d.png"
               }
               address = `
               <div class="row"><div class="col-12" id="mly"><img class="img-fluid" alt="..." src="${img_url}"></div></div>
