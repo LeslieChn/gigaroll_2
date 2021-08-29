@@ -582,7 +582,7 @@ class View_State
           let node = server_js.data[coord[2]]
           let address, img_url = "";
           // console.log(`${node[13]},${node[12]}`)
-          let p = `${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}_rb`
+          let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
           const api_url = `getimage/${p}`;
           var request = new Request(api_url, { method: "POST" });
           const response = await fetch(request);
