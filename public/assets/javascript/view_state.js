@@ -588,14 +588,14 @@ class View_State
           const response = await fetch(request);
           console.log(response)
           let data = await response.text()
+              console.log("the returning data is:",data)
               let str = 'property="og:image" content="'
               let start = data.indexOf(str) + str.length
               let end = data.indexOf('"' , start)
               img_url = data.substring(start,end)
-              console.log(img_url)
               if (!img_url.startsWith('https://'))
               {
-                img_url = "https://www.zillowstatic.com/static/images/nophoto_p_d.png"
+                img_url = "assets/img/logo_sun.png"
               }
               address = `
               <div class="row"><div class="col-12" id="mly"><img class="img-fluid" alt="..." src="${img_url}"></div></div>

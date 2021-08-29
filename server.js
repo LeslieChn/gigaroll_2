@@ -150,14 +150,15 @@ app.post('/getimage/:query', async (request, response) => {
     
   console.time(request.params.query);
   const queryURL = `https://www.zillow.com/homes/`
-  
-
-  //only comment in the following to simulate a delay
+    //only comment in the following to simulate a delay
   //await new Promise(r => setTimeout(r, 1000));
   const server_url = queryURL + request.params.query;
-  const server_response = await got(server_url);
+  const server_response = await got(server_url,{
+    headers: {
+      "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0"
 
-
+    }
+  });
   response.send(server_response.body)
   console.timeEnd(request.params.query)
 });
