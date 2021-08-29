@@ -575,7 +575,7 @@ class View_State
              radius: 6
          })
          .addTo(markers)
-         .bindPopup("Loading element data, please wait...")
+        //  .bindPopup("Loading element data, please wait...")
          .on('click', onMapClick);
          async function onMapClick(e)
          {
@@ -586,38 +586,35 @@ class View_State
           const api_url = `getimage/${p}`;
           var request = new Request(api_url, { method: "POST" });
           const response = await fetch(request);
-          console.log(response)
           let data = await response.text()
-              console.log("the returning data is:",data)
-              let str = 'property="og:image" content="'
-              let start = data.indexOf(str) + str.length
-              let end = data.indexOf('"' , start)
-              img_url = data.substring(start,end)
-              if (!img_url.startsWith('https://'))
-              {
-                img_url = "assets/images/logo_sun.png"
-              }
-              address = `
-              <div class="row"><div class="col-12" id="mly"><img class="img-fluid" alt="..." src="${img_url}"></div></div>
-              <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
-              <div class="row px-4 d-flex">
-              <p><b>Property type:</b> ${node[5]}<br>
-              <b>Number of Bedrooms:</b> ${node[7]}<br>
-              <b>Number of Bathrooms:</b> ${node[8]}<br>
-              <b>Size:</b> ${node[9]} sqft<br>
-              <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-              <b>Year built:</b> ${node[11]}<br>
-              <b>Elevation:</b> ${node[14]}</p>
-              </div>
-              <div class="row px-4  align-items-center justify-content-center">
-              <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 " href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-              <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 " href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
-              </div>
-              `
-              e.target.bindPopup(address).openPopup();
-            
-         }
-       }
+          let str = 'property="og:image" content="'
+          let start = data.indexOf(str) + str.length
+          let end = data.indexOf('"' , start)
+          img_url = data.substring(start,end)
+          if (!img_url.startsWith('https://'))
+          {
+            img_url = "assets/images/logo_sun.png"
+          }
+          address = `
+          <div class="row"><div class="col-12" id="mly"><img height="300" class="img-fluid" alt="..." src="${img_url}"></div></div>
+          <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
+          <div class="row px-4 d-flex">
+          <p><b>Property type:</b> ${node[5]}<br>
+          <b>Number of Bedrooms:</b> ${node[7]}<br>
+          <b>Number of Bathrooms:</b> ${node[8]}<br>
+          <b>Size:</b> ${node[9]} sqft<br>
+          <b>Price:</b> $${node[10].toLocaleString("en")}<br>
+          <b>Year built:</b> ${node[11]}<br>
+          <b>Elevation:</b> ${node[14]}</p>
+          </div>
+          <div class="row px-4  align-items-center justify-content-center">
+          <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+          <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+          </div>
+          `
+          e.target.bindPopup(address).openPopup();
+        }
+      }
        markers.addTo(osMap);
      }
  
@@ -1508,7 +1505,6 @@ class View_State
                       .attr("x2", left_margin + width)
                       .attr("y2", rectPos(i-1)); 
               }
-                
           }
 
           function hovered(d)

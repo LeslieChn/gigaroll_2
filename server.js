@@ -156,7 +156,6 @@ app.post('/getimage/:query', async (request, response) => {
   const server_response = await got(server_url,{
     headers: {
       "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0"
-
     }
   });
   response.send(server_response.body)
