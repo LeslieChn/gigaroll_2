@@ -595,7 +595,7 @@ class View_State
               img_url = data.substring(start,end)
               if (!img_url.startsWith('https://'))
               {
-                img_url = "assets/img/logo_sun.png"
+                img_url = "assets/images/logo_sun.png"
               }
               address = `
               <div class="row"><div class="col-12" id="mly"><img class="img-fluid" alt="..." src="${img_url}"></div></div>
