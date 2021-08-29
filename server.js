@@ -15,6 +15,8 @@ const db = require('./db');
 const md5 = require('md5');
 const salt = 'cardamom'
 const flash = require ('connect-flash')
+const got = require('got');
+
 
 function hashPassword (pass){
   return md5(salt+pass)
@@ -148,11 +150,13 @@ app.post('/getimage/:query', async (request, response) => {
     
   console.time(request.params.query);
   const queryURL = `https://www.zillow.com/homes/`
+  
 
   //only comment in the following to simulate a delay
   //await new Promise(r => setTimeout(r, 1000));
   const server_url = queryURL + request.params.query;
-  const server_response = await fetch(server_url);
+  const server_response = await got(server_url);
+
 
   response.send(server_response.body)
   console.timeEnd(request.params.query)
