@@ -250,12 +250,12 @@ function drawOnMap()
           shapeOptions: {
           color: 'blue',
           clickable: false,
-          draggable: true
+          draggable: false
           }
         }, 
         rectangle: {
           shapeOptions: {
-            draggable: true,
+            draggable: false,
             color: 'red',
             clickable: false
           }

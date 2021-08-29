@@ -58,7 +58,7 @@
 					ctx.lineTo(p.x - r, p.y-2*r);
 					ctx.lineTo(p.x + r, p.y-2*r);
 					ctx.lineTo(p.x, p.y);
-					ctx.arc(p.x, p.y - 2*r,  r, 0, Math.PI * 2, false);
+					ctx.arc(p.x, p.y - 2*r, r, 0, Math.PI * 2, false);
 					ctx.closePath();
 					ctx.fill(options.fillRule = 'nonzero');
 				}
@@ -67,10 +67,11 @@
 					ctx.beginPath();
 					ctx.strokeStyle = options.fillColor;
 					ctx.lineWidth = 1;
+					// ctx.fillStyle =  "orange";
 					ctx.arc(p.x, p.y, r + options.weight * 0.25 * scale, 0, Math.PI * 2, false);
+					ctx.arc(p.x, p.y, r/2 + options.weight * 0.25 * scale, 0, Math.PI * 2, false);
 					ctx.moveTo(p.x, p.y);
 					ctx.stroke();
-					ctx.fillStyle =  "orange";
 					ctx.closePath();
 				break;
 			default:
