@@ -522,13 +522,7 @@ class View_State
       let maxPoint = L.latLng(max_lat,max_lng)
       this.bounds = L.latLngBounds(minPoint,maxPoint)
      }     
-     var center_lat = (max_lat + min_lat)/2
-     var center_lng = (max_lng + min_lng)/2
- 
-     var map_center = [center_lat, center_lng]
-     let minPoint = L.latLng(min_lat,min_lng)
-     let maxPoint = L.latLng(max_lat,max_lng)
-     this.bounds = L.latLngBounds(minPoint,maxPoint)
+
  
      try
      { 
