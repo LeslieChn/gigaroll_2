@@ -580,22 +580,9 @@ class View_State
          {
           let node = server_js.data[coord[2]]
           let address, img_url = "";
-          // console.log(`${node[13]},${node[12]}`)
-          let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
-          const api_url = `getimage/${p}`;
-          var request = new Request(api_url, { method: "POST" });
-          const response = await fetch(request);
-          let data = await response.text()
-          let str = 'property="og:image" content="'
-          let start = data.indexOf(str) + str.length
-          let end = data.indexOf('"' , start)
-          img_url = data.substring(start,end)
-          if (!img_url.startsWith('https://'))
-          {
-            img_url = "assets/images/logo_sun.png"
-          }
+
           address = `
-          <div class="row"><div class="col-12" id="mly"><img height="300" class="img-fluid" alt="..." src="${img_url}"></div></div>
+          <div class="row"><div class="col-12" id="mly"><img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/logo_sun.png"></div></div>
           <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
           <div class="row px-4 d-flex">
           <p><b>Property type:</b> ${node[5]}<br>
@@ -612,6 +599,23 @@ class View_State
           </div>
           `
           e.target.bindPopup(address).openPopup();
+          let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
+          const api_url = `getimage/${p}`;
+          var request = new Request(api_url, { method: "POST" });
+          const response = await fetch(request);
+          let data = await response.text()
+          let str = 'property="og:image" content="'
+          let start = data.indexOf(str) + str.length
+          let end = data.indexOf('"' , start)
+          img_url = data.substring(start,end)
+          if (img_url.startsWith('https://'))
+          {
+            $(document).ready(function() {
+              $("#pop_img").attr('src',img_url);
+
+            });
+          }
+          
         }
       }
        markers.addTo(osMap);
