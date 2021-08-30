@@ -99,3 +99,21 @@ ul {
   width: 300px;
   margin: 0px;
 }
+
+#map-info {   
+  position: absolute;         
+  /* text-align: center;     */
+  /*     
+  width: 80px;                    
+  height: 28px;
+  */        
+  z-index:1000;           
+  padding: 8px;               
+  font-weight: bold;     
+  background: #f0f8ff; 
+  border: 0px;        
+  border-radius: 8px;      
+  box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
+}
+
+

@@ -474,6 +474,14 @@ class View_State
 
    async geomap()
    {
+    if(!this.toolTipDiv)
+    {
+      this.toolTipDiv = d3.select(".card-body").append("div")
+      .attr("class", "container")
+      .attr("id", "map-info")
+      .style("opacity", 0)
+      .style("width", "300px")
+    }
      await this.serverRequest()
 
          
@@ -576,16 +584,25 @@ class View_State
          .addTo(markers)
         //  .bindPopup("Loading element data, please wait...")
          .on('click', onMapClick);
+         markers.addTo(osMap);
+
          async function onMapClick(e)
          {
           let node = server_js.data[coord[2]]
           let address, img_url = "";
 
           address = `
-          <div class="row"><div class="col-12" id="mly"><img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif"></div></div>
+          <div class="row">
+            <div class="col-11" id="mly">
+              <img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif">
+            </div>
+            <div class="col-1">
+              <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
+              </div>
+            </div>
           <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
           <div class="row px-4 d-flex">
-          <p><b>Property type:</b> ${node[5]}<br>
+          <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
           <b>Number of Bedrooms:</b> ${node[7]}<br>
           <b>Number of Bathrooms:</b> ${node[8]}<br>
           <b>Size:</b> ${node[9]} sqft<br>
@@ -598,16 +615,15 @@ class View_State
           <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
           </div>
           `
-          e.target.bindPopup(address).openPopup();
           let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
           const api_url = `getimage/${p}`;
           var request = new Request(api_url, { method: "POST" });
           const response = await fetch(request);
-          let data = await response.text()
-          let str = 'property="og:image" content="'
-          let start = data.indexOf(str) + str.length
-          let end = data.indexOf('"' , start)
-          img_url = data.substring(start,end)
+          img_url = await response.text()
+          // let str = 'property="og:image" content="'
+          // let start = data.indexOf(str) + str.length
+          // let end = data.indexOf('"' , start)
+          // img_url = data.substring(start,end)
           if (img_url.startsWith('https://'))
           {
             $(document).ready(function() {
@@ -622,10 +638,15 @@ class View_State
 
             });
           }
-          
+          // e.target.bindPopup(address).openPopup();
+          d3.select("#map-info").style("opacity", 1)
+          .html(address)
+          .style("left", (20) + "px")
+          .style("top", (20) + "px")
+          .style("z-index",1000);
         }
       }
-       markers.addTo(osMap);
+     
      }
  
    }

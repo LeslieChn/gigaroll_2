@@ -155,10 +155,17 @@ app.post('/getimage/:query', async (request, response) => {
   const server_url = queryURL + request.params.query;
   const server_response = await got(server_url,{
     headers: {
-      "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0"
+      // "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0"
+      "Cache-Control": "public, max-age=600"
     }
   });
-  response.send(server_response.body)
+  let data = server_response.body
+  let str = 'property="og:image" content="'
+  let start = data.indexOf(str) + str.length
+  let end = data.indexOf('"' , start)
+  img_url = data.substring(start,end)
+  console.log(img_url)
+  response.send(img_url)
   console.timeEnd(request.params.query)
 });
 

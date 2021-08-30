@@ -304,6 +304,11 @@ function controlsKnobChangeCallback ()
   selected_vs.createContent()
 }
 
+function hideMapTooltip ()
+{
+  d3.select("#map-info").style("opacity", 0).style("z-index",-1000)
+}
+
 $(".p1").on("change", controlsKnobChangeCallback)
 $(".p2").on("change", viewKnobChangeCallback)
 $(".controls-select").on("change", controlsDropdownCallBack)
