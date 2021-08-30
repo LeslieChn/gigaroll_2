@@ -522,7 +522,6 @@ class View_State
       let maxPoint = L.latLng(max_lat,max_lng)
       this.bounds = L.latLngBounds(minPoint,maxPoint)
      }     
-
  
      try
      { 
@@ -552,6 +551,12 @@ class View_State
       osMap.fitBounds(bounds);
       }).addTo(osMap);
 
+    osMap.on('popupopen', function(e) {
+        var px = osMap.project(e.target._popup._latlng); 
+        px.y -= e.target._popup._container.clientHeight/2; 
+        osMap.panTo(osMap.unproject(px),{animate: true});
+    });
+    
      function setMarkers() {
        if (markers)
          osMap.removeLayer(markers)
