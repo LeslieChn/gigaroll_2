@@ -582,7 +582,7 @@ class View_State
           let address, img_url = "";
 
           address = `
-          <div class="row"><div class="col-12" id="mly"><img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/logo_sun.png"></div></div>
+          <div class="row"><div class="col-12" id="mly"><img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif"></div></div>
           <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
           <div class="row px-4 d-flex">
           <p><b>Property type:</b> ${node[5]}<br>
@@ -612,6 +612,13 @@ class View_State
           {
             $(document).ready(function() {
               $("#pop_img").attr('src',img_url);
+
+            });
+          }
+          else
+          {
+            $(document).ready(function() {
+              $("#pop_img").attr('src',"assets/images/logo_sun.png");
 
             });
           }
