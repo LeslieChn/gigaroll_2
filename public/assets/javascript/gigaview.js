@@ -246,7 +246,7 @@ function createVsKnob(labels)
     </a>
     <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable" style="">
       <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>
-      <li><a class="dropdown-item border-radius-md" href="./index.html">Explore</a></li>
+      <li><a class="dropdown-item border-radius-md" href="./explore.html">Explore</a></li>
     </ul>
     </div>`)
   let input=document.getElementById(`view-knob`)
