@@ -5,8 +5,7 @@ var records = [
   { id: 3, "username":"lzhang","password":"3aeb9fe54b40f02090795bc1ecedb956", "displayName":"Leslie"},
   { id: 4, "username":"bkaur","password":"30f4d1c4dd708b30a8ab3ce53eeab13e","displayName":"Balpreet"},
   { id: 5, "username":"apascarella","password":"816c725694a63793932d24e58b0b7784","displayName":"Aldo"},
-  { id: 6, "username":"pennyoh","password":"2067a5b4e1f7292f493b52759c8dd4db","displayName":"Penelope"},
-  { id: 7, "username":"yneo","password":"bee6a0e77898989222c07ea328c84fee","displayName":"Nelson"}
+  { id: 6,"username":"rlau","password":"773803507eff16125ab83b0a2ff01023","displayName":"Rhea"},
 ];
 
 exports.findById = function(id, cb) {
