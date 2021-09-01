@@ -257,6 +257,7 @@ function createVsKnob(labels)
 
 function refreshTiles(){
   createVsKnob(this.labels)
+  selected_vs.createControls()
   resizeContent()
   console.log('resizing knobs')
   selected_vs.refresh()

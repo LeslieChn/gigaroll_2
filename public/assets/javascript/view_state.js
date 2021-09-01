@@ -291,7 +291,6 @@ class View_State
   {
     let type=this.state.view_type
     let vs_id=this.getId()
-    this.createControls()
     switch(type)
     {
       case 'grid':
@@ -396,7 +395,7 @@ class View_State
         bottom_controls.append(br_controls)
       }
       let input=document.getElementById(`${id}-${this.getId()}-knob`)
-      input.dataset.labels=(def.contents).map(()=>'.')
+      input.dataset.labels = (def.contents).map(()=>'.')
       input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
       console.log('input value:'+ input.value)
       knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
@@ -472,19 +471,80 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
+   async propertyPopup (node)
+   {
+
+    let address, img_url = "";
+
+      address = `
+      <div class="row">
+        <div class="col-11" id="mly">
+          <img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif">
+        </div>
+        <div class="col-1">
+          <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
+          </div>
+        </div>
+      <div class="row">
+        <div class="col-12 px-2 d-flex align-items-center justify-content-center">
+        <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+        </div>
+      </div>
+      <div class="row px-4 d-flex">
+      <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
+      <b>Number of Bedrooms:</b> ${node[7]}<br>
+      <b>Number of Bathrooms:</b> ${node[8]}<br>
+      <b>Size:</b> ${node[9]} sqft<br>
+      <b>Price:</b> $${node[10].toLocaleString("en")}<br>
+      <b>Year built:</b> ${node[11]}<br>
+      <b>Elevation:</b> ${node[14]}</p>
+      </div>
+      <div class="row px-4  align-items-center justify-content-center">
+      <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+      <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+      </div>
+      `
+      let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
+      const api_url = `getimage/${p}`;
+      var request = new Request(api_url, { method: "POST" });
+      const response = await fetch(request);
+      img_url = await response.text()
+      // let str = 'property="og:image" content="'
+      // let start = data.indexOf(str) + str.length
+      // let end = data.indexOf('"' , start)
+      // img_url = data.substring(start,end)
+      if (img_url.startsWith('https://'))
+      {
+        $(document).ready(function() {
+          $("#pop_img").attr('src',img_url);
+
+        });
+      }
+      else
+      {
+        $(document).ready(function() {
+          $("#pop_img").attr('src',"assets/images/logo_sun.png");
+
+        });
+      }
+      // e.target.bindPopup(address).openPopup();
+      d3.select("#map-info").style("opacity", 1)
+      .html(address)
+      .style("left", (20) + "px")
+      .style("top", (20) + "px")
+      .style("z-index",1000);
+   }
+
    async geomap()
    {
-    if(!this.toolTipDiv)
-    {
       this.toolTipDiv = d3.select(".card-body").append("div")
       .attr("class", "container")
       .attr("id", "map-info")
       .style("opacity", 0)
       .style("width", "300px")
-    }
+
      await this.serverRequest()
 
-         
      if (selected_vs && this!==selected_vs)
      {
       return 
@@ -551,7 +611,7 @@ class View_State
      {
        console.log(e)
      }
-     setMarkers()
+     setMarkers(this)
      this.autoZoom()
      var bounds = this.bounds
      L.control.layers(baseMaps).addTo(osMap);
@@ -565,7 +625,8 @@ class View_State
         osMap.panTo(osMap.unproject(px),{animate: true});
     });
     
-     function setMarkers() {
+     function setMarkers(instance) 
+     {
        if (markers)
          osMap.removeLayer(markers)
        markers = L.featureGroup()
@@ -583,67 +644,13 @@ class View_State
          })
          .addTo(markers)
         //  .bindPopup("Loading element data, please wait...")
-         .on('click', onMapClick);
+         .on('click', onMapClick.bind(null, instance));
          markers.addTo(osMap);
 
-         async function onMapClick(e)
+         async function onMapClick(instance,e)
          {
-          let node = server_js.data[coord[2]]
-          let address, img_url = "";
-
-          address = `
-          <div class="row">
-            <div class="col-11" id="mly">
-              <img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif">
-            </div>
-            <div class="col-1">
-              <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
-              </div>
-            </div>
-          <div class="row"><div class="col-12 px-2 d-flex align-items-center justify-content-center"><p>${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p></div></div>
-          <div class="row px-4 d-flex">
-          <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-          <b>Number of Bedrooms:</b> ${node[7]}<br>
-          <b>Number of Bathrooms:</b> ${node[8]}<br>
-          <b>Size:</b> ${node[9]} sqft<br>
-          <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-          <b>Year built:</b> ${node[11]}<br>
-          <b>Elevation:</b> ${node[14]}</p>
-          </div>
-          <div class="row px-4  align-items-center justify-content-center">
-          <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-          <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
-          </div>
-          `
-          let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
-          const api_url = `getimage/${p}`;
-          var request = new Request(api_url, { method: "POST" });
-          const response = await fetch(request);
-          img_url = await response.text()
-          // let str = 'property="og:image" content="'
-          // let start = data.indexOf(str) + str.length
-          // let end = data.indexOf('"' , start)
-          // img_url = data.substring(start,end)
-          if (img_url.startsWith('https://'))
-          {
-            $(document).ready(function() {
-              $("#pop_img").attr('src',img_url);
-
-            });
-          }
-          else
-          {
-            $(document).ready(function() {
-              $("#pop_img").attr('src',"assets/images/logo_sun.png");
-
-            });
-          }
-          // e.target.bindPopup(address).openPopup();
-          d3.select("#map-info").style("opacity", 1)
-          .html(address)
-          .style("left", (20) + "px")
-          .style("top", (20) + "px")
-          .style("z-index",1000);
+          let node = instance.server_js.data[coord[2]]
+          instance.propertyPopup(node)
         }
       }
      
@@ -891,6 +898,12 @@ class View_State
   }
   async scatterChart()
   {
+    this.toolTipDiv = d3.select(".card-body").append("div")
+    .attr("class", "container")
+    .attr("id", "map-info")
+    .style("opacity", 0)
+    .style("width", "300px")
+
     await this.serverRequest()
 
     if (this.object_instance)
@@ -964,6 +977,7 @@ class View_State
       type:  'scatter',
       data: data,
       options: {
+        onClick : clickHandler.bind(null, this),
         responsive: true,
         maintainAspectRatio: false,
         scales: {
@@ -1048,6 +1062,24 @@ class View_State
       else
         return 'red';
 
+    }
+
+    function clickHandler(instance, evt) 
+    {
+      let myChart=instance.object_instance
+      const points = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+  
+      if (points.length) {
+          const firstPoint = points[0];
+          // var label = myChart.data.labels[firstPoint.index];
+          // var value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+          instance.propertyPopup(instance.server_js.data[firstPoint.index])
+      }
+      
+    }
+    function hoverHandler(evt) 
+    {
+      console.log('hovered')
     }
 
   }
