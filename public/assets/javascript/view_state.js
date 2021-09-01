@@ -977,6 +977,8 @@ class View_State
       type:  'scatter',
       data: data,
       options: {
+        parsing: false,
+        normalized: true,
         onClick : clickHandler.bind(null, this),
         responsive: true,
         maintainAspectRatio: false,

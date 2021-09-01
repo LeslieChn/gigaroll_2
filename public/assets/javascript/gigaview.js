@@ -162,7 +162,7 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ'],
+    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', ''],
     position:'top-left',
     // knob_position:'right'
   }
