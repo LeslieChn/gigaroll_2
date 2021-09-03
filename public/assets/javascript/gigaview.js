@@ -307,7 +307,7 @@ function controlsKnobChangeCallback ()
 
 function hideMapTooltip ()
 {
-  d3.select("#map-info").style("opacity", 0).style("z-index",-1000)
+  d3.select("#prop-popup").style("opacity", 0).style("z-index",-1000)
 }
 
 $(".p1").on("change", controlsKnobChangeCallback)

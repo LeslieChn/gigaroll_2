@@ -55,6 +55,7 @@ const html_sub = {
   '<': "&lt",
   '>': "&gt",
 };
+const popup_width = 300
 /*******************************************************************************/
 
 function Comma_Sep(a,vs_id) {
@@ -471,15 +472,20 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
-   async propertyPopup (node)
+   async propertyPopup (node, x, y)
    {
-
+    if(x==null||x==undefined)
+      x=20
+    if(x==null||x==undefined)
+      y=20
     let address, img_url = "";
 
       address = `
       <div class="row">
         <div class="col-11" id="mly">
-          <img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif">
+          <div id="pop-img-box" style="width:250px; height:200px;">
+            <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
+          </div>
         </div>
         <div class="col-1">
           <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
@@ -516,8 +522,7 @@ class View_State
       if (img_url.startsWith('https://'))
       {
         $(document).ready(function() {
-          $("#pop_img").attr('src',img_url);
-
+          $("#pop_img").attr('src',img_url)
         });
       }
       else
@@ -528,20 +533,41 @@ class View_State
         });
       }
       // e.target.bindPopup(address).openPopup();
-      d3.select("#map-info").style("opacity", 1)
+      d3.select("#prop-popup").style("opacity", 0)
       .html(address)
-      .style("left", (20) + "px")
-      .style("top", (20) + "px")
+      .style("left", x + "px")
+      .style("top", y + "px")
       .style("z-index",1000);
-   }
+
+      let position = $(`#${this.getId()}`).offset()
+      let screen_width = window.innerWidth
+      let screen_height = window.innerHeight
+      let popup_width = $('#prop-popup').outerWidth()
+      let popup_height = $('#prop-popup').outerHeight()
+      const offset = 20
+      x += offset
+      let right_edge = x + popup_width + position.left
+      let bottom_edge = y + popup_height + position.top 
+      console.log(y)
+      console.log(bottom_edge + '= bottom_edge')
+      if (right_edge >= screen_width)
+        x = Math.max(x - popup_width - 2 * offset, 0)
+      if (bottom_edge >= screen_height)
+        y = Math.max(y - popup_height, -position.top/2)
+      
+      d3.select("#prop-popup").style("opacity", 1)
+      .style("left", x + "px")
+      .style("top", y + "px")
+      
+  }
 
    async geomap()
    {
-      this.toolTipDiv = d3.select(".card-body").append("div")
+      this.toolTipDiv = d3.select('.card-body').append("div")
       .attr("class", "container")
-      .attr("id", "map-info")
+      .attr("id", "prop-popup")
       .style("opacity", 0)
-      .style("width", "300px")
+      .style("width", `${popup_width}px`)
 
      await this.serverRequest()
 
@@ -649,8 +675,11 @@ class View_State
 
          async function onMapClick(instance,e)
          {
+          let position = $(`#${instance.getId()}`).offset()
+          let x = e.originalEvent.x - position.left
+          let y = e.originalEvent.y - position.top
           let node = instance.server_js.data[coord[2]]
-          instance.propertyPopup(node)
+          instance.propertyPopup(node, x, y)
         }
       }
      
@@ -900,7 +929,7 @@ class View_State
   {
     this.toolTipDiv = d3.select(".card-body").append("div")
     .attr("class", "container")
-    .attr("id", "map-info")
+    .attr("id", "prop-popup")
     .style("opacity", 0)
     .style("width", "300px")
 
@@ -1073,9 +1102,11 @@ class View_State
   
       if (points.length) {
           const firstPoint = points[0];
-          // var label = myChart.data.labels[firstPoint.index];
-          // var value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-          instance.propertyPopup(instance.server_js.data[firstPoint.index])
+          let position = $(`#${instance.getId()}`).offset()
+          let x = evt.originalEvent.x - position.left
+          let y = evt.originalEvent.y - position.top
+          let node = instance.server_js.data[firstPoint.index]
+          instance.propertyPopup(node, x, y)
       }
       
     }
