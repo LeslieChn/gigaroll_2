@@ -472,6 +472,14 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
+   dummyDataSort(headers, data) 
+   {
+    let html = ''
+    for (let i=0; i<headers.length; i++) {
+      html += `<b>${headers[i]}</b>:${data[i]}<br>`
+    }
+    return html
+   }
    async propertyPopup (node, x, y)
    {
     if(x==null||x==undefined)
@@ -479,6 +487,9 @@ class View_State
     if(x==null||x==undefined)
       y=20
     let address, img_url = "";
+
+    let dummy_js = await serverRequest ({'qid':'MD_RETR', 'dim':'state_code'}) 
+    console.log(dummy_js)
 
       address = `
       <div class="row">
@@ -496,7 +507,7 @@ class View_State
         <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
-      <div class="row px-4 d-flex">
+      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel">
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
@@ -509,7 +520,9 @@ class View_State
               <b>Elevation:</b> ${node[14]}</p>
             </div>
             <div class="carousel-item">
-              <img src="..." class="d-block w-100" alt="...">
+              <p style="font-size:0.75em;">
+                ${this.dummyDataSort(dummy_js.headers, dummy_js.data[0])}
+              </p>
             </div>
             <div class="carousel-item">
               <img src="..." class="d-block w-100" alt="...">
@@ -558,6 +571,14 @@ class View_State
       .style("left", x + "px")
       .style("top", y + "px")
       .style("z-index",1000);
+
+      const popup_ps = new PerfectScrollbar(`#popup-info`, {
+        wheelSpeed: 2,
+        wheelPropagation: false,
+        minScrollbarLength: 20
+      })
+
+      ps_object['popup-info']=popup_ps
 
       let position = $(`#${this.getId()}`).offset()
       let screen_width = window.innerWidth
