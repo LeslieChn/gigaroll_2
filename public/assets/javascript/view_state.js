@@ -965,6 +965,7 @@ class View_State
       return [d.x, d.y]; }),
     all = dim.group();
     var chart = dc.scatterPlot(`#${this.getId()}`);
+    
     chart.width(chart_width )
     .height(chart_height )
     .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1})
@@ -981,94 +982,7 @@ class View_State
     .mouseZoomable(true)
     .group(all);
     chart.render();
-    // ############old code##########
-    // const config ={
-    //   type:  'scatter',
-    //   data: data,
-    //   options: {
-    //     parsing: false,
-    //     normalized: true,
-    //     onClick : clickHandler.bind(null, this),
-    //     responsive: true,
-    //     maintainAspectRatio: false,
-    //     scales: {
-    //       x: {
-    //         type: 'linear',
-    //         position: 'bottom',
-    //         title: {
-    //           display:true,
-    //           text: meas1
-    //         }
-    //       },
-    //       y: {
-    //         type: 'linear',
-    //         position: 'left',
-    //         title: {
-    //           display:true,
-    //           text: meas2
-    //         }
-    //       }
-    //     },
-
-        // plugins: {
-
-          // tooltip: {
-          //     callbacks: {
-          //         label: function(ctx) {
-          //             // console.log(ctx);
-          //             //let label = server_js.data[ctx.dataIndex][0][0] //ctx.dataset.labels[ctx.dataIndex];
-                      
-          //             let label = `${meas1} = ${ctx.parsed.x}; ${meas2} = ${ctx.parsed.y}`
-          //             if (n_vals >= 3 && (meas3 != meas1 && meas3 != meas2))
-          //             {
-          //               let val = server_js.data[ctx.dataIndex][i3]
-          //               label += `; ${meas3} = ${val}`
-          //             }
-          //             return label;
-          //         }
-          //     }
-          // },
-
-          // legend: {
-          //   display: false
-          // },
-
-          // zoom: {
-          //   pan: {
-          //     enabled: true,
-          //     mode: 'xy',
-          //   },
-          //   zoom: {
-          //     wheel: {
-          //       enabled: true,
-          //     },
-          //     pinch: {
-          //       enabled: true
-          //     },
-          //     mode: 'xy',
-          //   }
-          // },
-          // #######regression line######
-          // annotation: {
-          //   annotations: {
-          //     line1: {
-          //       type: 'line',
-          //       xMin: reg[0][0],
-          //       yMin: reg[0][1],
-          //       xMax: reg[1][0],
-          //       yMax: reg[1][1],
-          //       borderColor: 'rgb(99, 99, 99)',
-          //       borderWidth: 1,
-          //     }
-          //   }
-          // }
-        // }
-    //   }
-    // }
-    
-    // object!!!
-    // this.object_instance = new Chart(ctx2, config);
-
+  
     function colorCallback(instance, context) 
     {
       if (n_vals >= 3)
