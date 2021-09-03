@@ -896,6 +896,8 @@ class View_State
         .domain(domain)
        .range(colors);
   }
+
+
   async scatterChart()
   {
     this.toolTipDiv = d3.select(".card-body").append("div")
@@ -916,53 +918,59 @@ class View_State
       return 
     } 
 
-    let cfg=this.state.tile_config
+    // let cfg=this.state.tile_config
     
-    $(`#${this.getId()}`).html(`<canvas id="${this.getId()}-canvas" style="width:100%; height:${cfg.height};">
-    </canvas>`)
+    // $(`#${this.getId()}`).html(`<canvas id="${this.getId()}-canvas" style="width:100%; height:${cfg.height};">
+    // </canvas>`)
 
-    let req=this.state.request
+    // let req=this.state.request
     let vs_id=this.getId()
 
     let server_js=this.server_js
 
-    let canvas = document.getElementById(`${vs_id}-canvas`);
+    // let canvas = document.getElementById(`${vs_id}-canvas`);
 
-    let ctx2 = canvas.getContext("2d");
+    // let ctx2 = canvas.getContext("2d");
 
     let n_vals = 2
-    let meas1 = Comma_Sep([this.state.x_axis], vs_id)
-    let meas2 = Comma_Sep([this.state.y_axis], vs_id)
-    let meas3 = Comma_Sep([this.state.z_axis], vs_id)
+    let meas1 = Comma_Sep([this.state.x_axis], vs_id),
+        meas2 = Comma_Sep([this.state.y_axis], vs_id),
+        meas3 = Comma_Sep([this.state.z_axis], vs_id);
     if (meas3 != '')
       n_vals = 3
-    let i1 = server_js.headers.indexOf(meas1)
-    let i2 = server_js.headers.indexOf(meas2)
-    let i3 = server_js.headers.indexOf(meas3)
-    let max_val = -Infinity, min_val = Infinity
-    let points=[]
+    let i1 = server_js.headers.indexOf(meas1),
+        i2 = server_js.headers.indexOf(meas2),
+        i3 = server_js.headers.indexOf(meas3),
+        max_val = -Infinity, min_val = Infinity,
+        max_x = -Infinity, min_x = Infinity,
+        max_y = -Infinity, min_y = Infinity,
+    points=[]
     for (let row of server_js.data)
     {
       let x=row[i1]
       let y=row[i2]
       points.push({x:x,y:y})
+      if (max_x < x) max_x = x
+      if (min_x > x) min_x = x
+      if (max_y < y) max_y = y
+      if (min_y > y) min_y = y
       if (n_vals >= 3)
       {
         let val = row[i3]
-        max_val = Math.max(max_val, val)
-        min_val = Math.min(min_val, val)
+        if (max_val < val) max_val = val
+        if (min_val > val) min_val = val
       }
-    }
+    };
 
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
 
-    const regression = d3.regressionLinear()
-    .x(d => d.x)
-    .y(d => d.y)
+    // const regression = d3.regressionLinear()
+    // .x(d => d.x)
+    // .y(d => d.y)
 
-    let reg = regression(points)
-    let r2 = Math.round(reg.rSquared*100)/100
+    // let reg = regression(points)
+    // let r2 = Math.round(reg.rSquared*100)/100
 
     const data = {
       datasets: [{
@@ -973,86 +981,109 @@ class View_State
       }],
     };
 
-    const config ={
-      type:  'scatter',
-      data: data,
-      options: {
-        parsing: false,
-        normalized: true,
-        onClick : clickHandler.bind(null, this),
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-            title: {
-              display:true,
-              text: meas1
-            }
-          },
-          y: {
-            type: 'linear',
-            position: 'left',
-            title: {
-              display:true,
-              text: meas2
-            }
-          }
-        },
-        plugins: {
-          tooltip: {
-              callbacks: {
-                  label: function(ctx) {
-                      // console.log(ctx);
-                      //let label = server_js.data[ctx.dataIndex][0][0] //ctx.dataset.labels[ctx.dataIndex];
-                      
-                      let label = `${meas1} = ${ctx.parsed.x}; ${meas2} = ${ctx.parsed.y}`
-                      if (n_vals >= 3 && (meas3 != meas1 && meas3 != meas2))
-                      {
-                        let val = server_js.data[ctx.dataIndex][i3]
-                        label += `; ${meas3} = ${val}`
-                      }
-                      return label;
-                  }
-              }
-          },
-          legend: {
-            display: false
-          },
-          zoom: {
-            pan: {
-              enabled: true,
-              mode: 'xy',
-            },
-            zoom: {
-              wheel: {
-                enabled: true,
-              },
-              pinch: {
-                enabled: true
-              },
-              mode: 'xy',
-            }
-          },
-          annotation: {
-            annotations: {
-              line1: {
-                type: 'line',
-                xMin: reg[0][0],
-                yMin: reg[0][1],
-                xMax: reg[1][0],
-                yMax: reg[1][1],
-                borderColor: 'rgb(99, 99, 99)',
-                borderWidth: 1,
-              }
-            }
-          }
-        }
-      }
-    }
+    const ndx = crossfilter(data)
+    const all = ndx.groupAll()
+    var chart = dc.scatterPlot(`#${this.getId()}`);
+    chart.width(300)
+    .height(300)
+    .x(d3.scale.linear().domain([0, max_x]))
+    .y(d3.scale.linear().domain([0, max_y]))
+    .yAxisLabel(meas2)
+    .xAxisLabel(meas1)
+    .clipPadding(10)
+    // .dimension(dim)
+    .excludedOpacity(0.5)
+    .group(remove_empty_bins(all))
+    .yAxisPadding('5%')
+    .elasticY(true);
 
-    this.object_instance = new Chart(ctx2, config);
+    // ############old code##########
+    // const config ={
+    //   type:  'scatter',
+    //   data: data,
+    //   options: {
+    //     parsing: false,
+    //     normalized: true,
+    //     onClick : clickHandler.bind(null, this),
+    //     responsive: true,
+    //     maintainAspectRatio: false,
+    //     scales: {
+    //       x: {
+    //         type: 'linear',
+    //         position: 'bottom',
+    //         title: {
+    //           display:true,
+    //           text: meas1
+    //         }
+    //       },
+    //       y: {
+    //         type: 'linear',
+    //         position: 'left',
+    //         title: {
+    //           display:true,
+    //           text: meas2
+    //         }
+    //       }
+    //     },
+
+        // plugins: {
+
+          // tooltip: {
+          //     callbacks: {
+          //         label: function(ctx) {
+          //             // console.log(ctx);
+          //             //let label = server_js.data[ctx.dataIndex][0][0] //ctx.dataset.labels[ctx.dataIndex];
+                      
+          //             let label = `${meas1} = ${ctx.parsed.x}; ${meas2} = ${ctx.parsed.y}`
+          //             if (n_vals >= 3 && (meas3 != meas1 && meas3 != meas2))
+          //             {
+          //               let val = server_js.data[ctx.dataIndex][i3]
+          //               label += `; ${meas3} = ${val}`
+          //             }
+          //             return label;
+          //         }
+          //     }
+          // },
+
+          // legend: {
+          //   display: false
+          // },
+
+          // zoom: {
+          //   pan: {
+          //     enabled: true,
+          //     mode: 'xy',
+          //   },
+          //   zoom: {
+          //     wheel: {
+          //       enabled: true,
+          //     },
+          //     pinch: {
+          //       enabled: true
+          //     },
+          //     mode: 'xy',
+          //   }
+          // },
+          // #######regression line######
+          // annotation: {
+          //   annotations: {
+          //     line1: {
+          //       type: 'line',
+          //       xMin: reg[0][0],
+          //       yMin: reg[0][1],
+          //       xMax: reg[1][0],
+          //       yMax: reg[1][1],
+          //       borderColor: 'rgb(99, 99, 99)',
+          //       borderWidth: 1,
+          //     }
+          //   }
+          // }
+        // }
+    //   }
+    // }
+    
+    // object!!!
+    // this.object_instance = new Chart(ctx2, config);
 
     function colorCallback(instance, context) 
     {
@@ -1063,7 +1094,6 @@ class View_State
       }
       else
         return 'red';
-
     }
 
     function clickHandler(instance, evt) 
@@ -1079,12 +1109,15 @@ class View_State
       }
       
     }
+
     function hoverHandler(evt) 
     {
       console.log('hovered')
     }
 
   }
+
+  
   async getTreeMapData()
   {
     await this.serverRequest()
