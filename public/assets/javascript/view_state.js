@@ -1548,16 +1548,18 @@ class View_State
               g.append("rect")
               .attr("stroke", "black")
               .attr("height", rect_height / 2)
-              .attr("x", left_margin * 0.7)
+              .attr("x", left_margin)
               .attr("y", rectPos(-2))
               .attr("width", rect_width)
               .attr("fill", `${null_color}`)
               .attr("id", "no_data")
 
               g.append("text")
-              .attr("x", left_margin * 0.7 + rect_width * 2)
+              .attr("x", left_margin + rect_width * 2)
               .attr("y", rectPos(-2) + rect_height / 2 )
               .text("– No Data")
+              .attr("style", "font-size: 75%")
+              .attr("id", "no-data")
           
               // let toolbar = w2ui.layout.get('top').toolbarv
               // let id = toolbar.get("values").selected
@@ -1571,7 +1573,7 @@ class View_State
                   .attr("fill", "#000")
                   .attr("text-anchor", "start")
                   .attr("font-weight", "bold")
-                  .attr("style", "font-size:  1.20vw")
+                  .attr("style", "font-size: 75%")
                   .text(text);
 
 

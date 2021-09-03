@@ -116,4 +116,13 @@ ul {
   box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
 }
 
+@media only screen and (max-width: 812px) {
+  #caption {
+    display: none;
+  }
+  #no-data {
+    display: none;
+  }
+}
+
 
