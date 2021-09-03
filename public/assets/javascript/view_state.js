@@ -497,13 +497,33 @@ class View_State
         </div>
       </div>
       <div class="row px-4 d-flex">
-      <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-      <b>Number of Bedrooms:</b> ${node[7]}<br>
-      <b>Number of Bathrooms:</b> ${node[8]}<br>
-      <b>Size:</b> ${node[9]} sqft<br>
-      <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-      <b>Year built:</b> ${node[11]}<br>
-      <b>Elevation:</b> ${node[14]}</p>
+        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel">
+          <div class="carousel-inner px-3">
+            <div class="carousel-item active">
+              <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
+              <b>Number of Bedrooms:</b> ${node[7]}<br>
+              <b>Number of Bathrooms:</b> ${node[8]}<br>
+              <b>Size:</b> ${node[9]} sqft<br>
+              <b>Price:</b> $${node[10].toLocaleString("en")}<br>
+              <b>Year built:</b> ${node[11]}<br>
+              <b>Elevation:</b> ${node[14]}</p>
+            </div>
+            <div class="carousel-item">
+              <img src="..." class="d-block w-100" alt="...">
+            </div>
+            <div class="carousel-item">
+              <img src="..." class="d-block w-100" alt="...">
+            </div>
+          </div>
+          <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next me-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
       </div>
       <div class="row px-4  align-items-center justify-content-center">
       <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
