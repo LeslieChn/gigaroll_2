@@ -317,9 +317,8 @@ class View_State
         this.autoZoom()
         break
       case 'treemap':
-        this.createContent()
-        break
       case 'countymap':
+      case 'scatterChart':
         this.createContent()
         break
     }
@@ -918,19 +917,9 @@ class View_State
       return 
     } 
 
-    // let cfg=this.state.tile_config
-    
-    // $(`#${this.getId()}`).html(`<canvas id="${this.getId()}-canvas" style="width:100%; height:${cfg.height};">
-    // </canvas>`)
-
-    // let req=this.state.request
     let vs_id=this.getId()
 
     let server_js=this.server_js
-
-    // let canvas = document.getElementById(`${vs_id}-canvas`);
-
-    // let ctx2 = canvas.getContext("2d");
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
@@ -944,6 +933,8 @@ class View_State
         max_val = -Infinity, min_val = Infinity,
         max_x = -Infinity, min_x = Infinity,
         max_y = -Infinity, min_y = Infinity,
+        chart_width = $(`#${this.getId()}`).width(),
+        chart_height = $(`#${this.getId()}`).height(),
     points=[]
     for (let row of server_js.data)
     {
@@ -965,38 +956,27 @@ class View_State
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
 
-    // const regression = d3.regressionLinear()
-    // .x(d => d.x)
-    // .y(d => d.y)
 
-    // let reg = regression(points)
-    // let r2 = Math.round(reg.rSquared*100)/100
-
-    const data = {
-      datasets: [{
-        label: null,
-        data: points,
-        //backgroundColor: 'rgb(255, 99, 132)'
-        pointBackgroundColor: colorCallback.bind(null, this)
-      }],
-    };
-
-    const ndx = crossfilter(data)
-    const all = ndx.groupAll()
+    const ndx = crossfilter(points),
+    dim = ndx.dimension(function(d) {
+      return [d.x, d.y]; }),
+    all = dim.group();
+    
     var chart = dc.scatterPlot(`#${this.getId()}`);
-    chart.width(300)
-    .height(300)
-    .x(d3.scale.linear().domain([0, max_x]))
-    .y(d3.scale.linear().domain([0, max_y]))
-    .yAxisLabel(meas2)
-    .xAxisLabel(meas1)
-    .clipPadding(10)
-    // .dimension(dim)
+    chart.width(chart_width * 0.9)
+    .height(chart_height * 0.9)
+    .useCanvas(true)
+    .x(d3.scaleLinear().domain([0, max_x]))
+    .y(d3.scaleLinear().domain([0, max_y]))
+    .brushOn(false)
+    .yAxisLabel(meas2,30)
+    .xAxisLabel(meas1, 30)
+    .clipPadding(30)
+    .dimension(dim)
     .excludedOpacity(0.5)
-    .group(remove_empty_bins(all))
-    .yAxisPadding('5%')
-    .elasticY(true);
-
+    .colors("red")
+    .group(all);
+    chart.render();
     // ############old code##########
     // const config ={
     //   type:  'scatter',
