@@ -1102,9 +1102,8 @@ class View_State
   
       if (points.length) {
           const firstPoint = points[0];
-          let position = $(`#${instance.getId()}`).offset()
-          let x = evt.originalEvent.x - position.left
-          let y = evt.originalEvent.y - position.top
+          let x = evt.x 
+          let y = evt.y
           let node = instance.server_js.data[firstPoint.index]
           instance.propertyPopup(node, x, y)
       }
