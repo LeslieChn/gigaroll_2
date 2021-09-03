@@ -955,26 +955,30 @@ class View_State
 
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
-
-
+    var bubbleLocator = function (d) {
+        return 'translate(' + (bubbleX(d)+20) + ',' + (bubbleY(d)) + ')';
+        };
+        
+    $(`#${this.getId()}`).style
     const ndx = crossfilter(points),
     dim = ndx.dimension(function(d) {
       return [d.x, d.y]; }),
     all = dim.group();
-    
     var chart = dc.scatterPlot(`#${this.getId()}`);
-    chart.width(chart_width * 0.9)
-    .height(chart_height * 0.9)
+    chart.width(chart_width )
+    .height(chart_height )
+    .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1})
     .useCanvas(true)
     .x(d3.scaleLinear().domain([0, max_x]))
     .y(d3.scaleLinear().domain([0, max_y]))
     .brushOn(false)
-    .yAxisLabel(meas2,30)
+    .yAxisLabel(meas2, 30)
     .xAxisLabel(meas1, 30)
     .clipPadding(30)
     .dimension(dim)
     .excludedOpacity(0.5)
     .colors("red")
+    .mouseZoomable(true)
     .group(all);
     chart.render();
     // ############old code##########
