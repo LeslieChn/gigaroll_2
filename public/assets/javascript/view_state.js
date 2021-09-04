@@ -968,7 +968,7 @@ class View_State
     
     chart.width(chart_width)
     .height(chart_height )
-    .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1})
+    .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.05, left: chart_width*0.05})
     .useCanvas(true)
     .dimension(dim)
     .brushOn(false)
