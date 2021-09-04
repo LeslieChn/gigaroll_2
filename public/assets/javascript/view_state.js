@@ -983,6 +983,20 @@ class View_State
     .group(all)
     .x(d3.scaleLinear().domain([0, max_x*1.1]))
     .y(d3.scaleLinear().domain([0, max_y*1.1]));
+
+    var r = regression.linear(chart.group().all().map(kv => [kv.key[0], kv.key[1]])),
+        m = r.equation[0], b = r.equation[1],
+        [x1,x2] = chart.x().domain();
+    var reg_p = [[x1,m * x1 + b], [x2,m * x2 + b]];
+    var xScale = chart.x(), yScale = chart.y(), margins = chart.margins();
+    var line = chart.g().selectAll('line.regression').data([reg_p]);
+    function do_points(line) {
+      line
+          .attr('x1', d => xScale(d[0][0]) + margins.left)
+          .attr('y1', d => yScale(d[0][1]) + margins.top)
+          .attr('x2', d => xScale(d[1][0]) + margins.left)
+          .attr('y2', d => yScale(d[1][1]) + margins.top);
+  }
     chart.render();
   
     function colorCallback(instance, context) 
