@@ -246,6 +246,7 @@ class View_State
     {
       aliased_name=this.state.aliases[name]
     }
+    console.log(aliased_name)
     return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
   }
 
@@ -472,12 +473,17 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
-   dummyDataSort(headers, data) 
+   propInfoFormat(data) 
    {
-    let html = ''
-    for (let i=0; i<headers.length; i++) {
-      html += `<b>${headers[i]}</b>:${data[i]}<br>`
+    let html = `<u><h6 style="text-align: center;">${data.title}</h6></u>`
+    html += '<p style="font-size:0.75em;">'
+    for (let i=0; i < data.headers.length; i++)
+    {
+      let header = data.headers[i].replaceAll('_', ' ')
+      if (header.includes('2019'))
+        html += `<b>${this.alias(header)}</b>: ${data.data[0][i].toLocaleString("en")}<br>`
     }
+    html += '</p>'
     return html
    }
    async propertyPopup (node, x, y)
@@ -488,8 +494,20 @@ class View_State
       y=20
     let address, img_url = "";
 
-    let dummy_js = await serverRequest ({'qid':'MD_RETR', 'dim':'state_code'}) 
-    console.log(dummy_js)
+    let prop_info_params = 
+    {
+      state_code : node[4], 
+      county : node[3],
+      postal_code : node[2]
+    }
+
+    let prop_info_data = {}
+
+    for (let [key, value] of Object.entries(prop_info_params)) 
+    {
+      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
+    }
 
       address = `
       <div class="row">
@@ -508,7 +526,7 @@ class View_State
         </div>
       </div>
       <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
-        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel">
+        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
               <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
@@ -520,12 +538,13 @@ class View_State
               <b>Elevation:</b> ${node[14]}</p>
             </div>
             <div class="carousel-item">
-              <p style="font-size:0.75em;">
-                ${this.dummyDataSort(dummy_js.headers, dummy_js.data[0])}
-              </p>
+              ${this.propInfoFormat(prop_info_data.state_code)}
             </div>
             <div class="carousel-item">
-              <img src="..." class="d-block w-100" alt="...">
+              ${this.propInfoFormat(prop_info_data.county)}
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.postal_code)}
             </div>
           </div>
           <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
@@ -571,6 +590,8 @@ class View_State
       .style("left", x + "px")
       .style("top", y + "px")
       .style("z-index",1000);
+
+      $('#carouselExampleControls').carousel({pause: true, interval: false });
 
       const popup_ps = new PerfectScrollbar(`#popup-info`, {
         wheelSpeed: 2,
