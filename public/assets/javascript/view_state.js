@@ -966,21 +966,23 @@ class View_State
     all = dim.group();
     var chart = dc.scatterPlot(`#${this.getId()}`);
     
-    chart.width(chart_width )
+    chart.width(chart_width)
     .height(chart_height )
     .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1})
     .useCanvas(true)
-    .x(d3.scaleLinear().domain([0, max_x]))
-    .y(d3.scaleLinear().domain([0, max_y]))
+    .dimension(dim)
     .brushOn(false)
+    .renderHorizontalGridLines(true)
+    .renderVerticalGridLines(true)
     .yAxisLabel(meas2, 30)
     .xAxisLabel(meas1, 30)
     .clipPadding(30)
-    .dimension(dim)
     .excludedOpacity(0.5)
     .colors("red")
     .mouseZoomable(true)
-    .group(all);
+    .group(all)
+    .x(d3.scaleLinear().domain([0, max_x*1.1]))
+    .y(d3.scaleLinear().domain([0, max_y*1.1]));
     chart.render();
   
     function colorCallback(instance, context) 
