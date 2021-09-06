@@ -396,7 +396,7 @@ class View_State
       let input=document.getElementById(`${id}-${this.getId()}-knob`)
       input.dataset.labels = (def.contents).map(()=>'.')
       input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
-      console.log('input value:'+ input.value)
+      // console.log('input value:'+ input.value)
       knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
     }
   }
@@ -490,13 +490,13 @@ class View_State
         </div>
       </div>
       <div class="row px-4 d-flex">
-      <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-      <b>Number of Bedrooms:</b> ${node[7]}<br>
-      <b>Number of Bathrooms:</b> ${node[8]}<br>
-      <b>Size:</b> ${node[9]} sqft<br>
-      <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-      <b>Year built:</b> ${node[11]}<br>
-      <b>Elevation:</b> ${node[14]}</p>
+      <p style="font-size:0.75em;">Property type: <b>${node[5]}</b><br>
+      Bedrooms: <b>${node[7]}</b><br>
+      Bathrooms: <b>${node[8]}</b><br>
+      Size: <b>${node[9]}</b> sqft<br>
+      Price: <b>$${node[10].toLocaleString("en")}</b><br>
+      Year built: <b>${node[11]}</b><br>
+      Elevation: <b>${node[14]}</b></p>
       </div>
       <div class="row px-4  align-items-center justify-content-center">
       <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
@@ -960,44 +960,7 @@ class View_State
         };
         
     $(`#${this.getId()}`).style
-    const ndx = crossfilter(points),
-    dim = ndx.dimension(function(d) {
-      return [d.x, d.y]; }),
-    all = dim.group();
-    var chart = dc.scatterPlot(`#${this.getId()}`);
-    
-    chart.width(chart_width)
-    .height(chart_height )
-    .margins({top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.05, left: chart_width*0.05})
-    .useCanvas(true)
-    .dimension(dim)
-    .brushOn(false)
-    .renderHorizontalGridLines(true)
-    .renderVerticalGridLines(true)
-    .yAxisLabel(meas2, 30)
-    .xAxisLabel(meas1, 30)
-    .clipPadding(30)
-    .excludedOpacity(0.5)
-    .colors("red")
-    .mouseZoomable(true)
-    .group(all)
-    .x(d3.scaleLinear().domain([0, max_x*1.1]))
-    .y(d3.scaleLinear().domain([0, max_y*1.1]));
 
-    var r = regression.linear(chart.group().all().map(kv => [kv.key[0], kv.key[1]])),
-        m = r.equation[0], b = r.equation[1],
-        [x1,x2] = chart.x().domain();
-    var reg_p = [[x1,m * x1 + b], [x2,m * x2 + b]];
-    var xScale = chart.x(), yScale = chart.y(), margins = chart.margins();
-    var line = chart.g().selectAll('line.regression').data([reg_p]);
-    function do_points(line) {
-      line
-          .attr('x1', d => xScale(d[0][0]) + margins.left)
-          .attr('y1', d => yScale(d[0][1]) + margins.top)
-          .attr('x2', d => xScale(d[1][0]) + margins.left)
-          .attr('y2', d => yScale(d[1][1]) + margins.top);
-  }
-    chart.render();
   
     function colorCallback(instance, context) 
     {
