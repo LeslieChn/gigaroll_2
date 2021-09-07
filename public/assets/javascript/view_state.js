@@ -935,12 +935,21 @@ class View_State
         max_y = -Infinity, min_y = Infinity,
         chart_width = $(`#${this.getId()}`).width(),
         chart_height = $(`#${this.getId()}`).height(),
-    points=[]
+        margin = {top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1},
+        width = chart_width - margin.left - margin.right,
+        height = chart_height - margin.top - margin.bottom,
+        points=[],
+        pointRadius = chart_width * 0.003,
+        point_index = 0;
+
     for (let row of server_js.data)
     {
       let x=row[i1]
       let y=row[i2]
-      points.push({x:x,y:y})
+      points.push({ x:x,
+                    y:y,
+                    i:point_index++,
+                    selected: false})
       if (max_x < x) max_x = x
       if (min_x > x) min_x = x
       if (max_y < y) max_y = y
@@ -953,15 +962,187 @@ class View_State
       }
     };
 
+    var quadTree = d3.quadtree(points);
+    var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
+
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
     var bubbleLocator = function (d) {
         return 'translate(' + (bubbleX(d)+20) + ',' + (bubbleY(d)) + ')';
         };
         
-    $(`#${this.getId()}`).style
+    $(`#${this.getId()}`).html(`<svg id="${this.getId()}-svg" class="plot"></svg>
+    <canvas id="${this.getId()}-canvas" class="plot"></canvas>`)
+    
+    var svg = d3.select(`#${this.getId()}-svg`)
+        .attr("width", chart_width)
+        .attr("height", chart_height)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," +
+            margin.top + ")");
 
-  
+    var canvas = d3.select(`#${this.getId()}-canvas`)
+        .attr("width", width - 1)
+        .attr("height", height - 1)
+        .style("transform", "translate(" + (margin.left + 1) +
+            "px" + "," + (margin.top + 1) + "px" + ")");
+
+    var xRange = d3.extent(points, function(d) { return d.x });
+    var yRange = d3.extent(points, function(d) { return d.y });
+
+    var xScale = d3.scaleLinear()
+      .domain([xRange[0] * 0.95, xRange[1] *1.05])
+      .range([0, width]);
+
+    var yScale = d3.scaleLinear()
+      .domain([yRange[0] * 0.95, yRange[1] *1.05])
+      .range([height, 0]);
+
+    var xAxis = d3.axisBottom(xScale)
+      .tickPadding(20);
+
+    var yAxis = d3.axisLeft(yScale)
+      .tickPadding(10);
+
+    var zoomBehaviour = d3.zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", onZoom)
+      .on("end", onZoomEnd);
+
+    var xAxisSvg = svg.append('g')
+      .attr('class', 'x axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(xAxis);
+
+    var yAxisSvg = svg.append('g')
+      .attr('class', 'y axis')
+      .call(yAxis);
+
+    // canvas.on("click", onClick);
+
+    canvas.call(zoomBehaviour);
+    
+    var context = canvas.node().getContext('2d');
+
+    draw();
+
+    function onClick() {
+      var mouse = d3.mouse(this);
+
+      // map the clicked point to the data space
+      var xClicked = xScale.invert(mouse[0]);
+      var yClicked = yScale.invert(mouse[1]);
+
+      // find the closest point in the dataset to the clicked point
+      var closest = quadTree.find([xClicked, yClicked]);
+
+      // map the co-ordinates of the closest point to the canvas space
+      var dX = xScale(closest.x);
+      var dY = yScale(closest.y);
+
+      // register the click if the clicked point is in the radius of the point
+      var distance = euclideanDistance(mouse[0], mouse[1], dX, dY);
+
+      if(distance < pointRadius) {
+          if(selectedPoint) {
+              data[selectedPoint].selected = false;
+          }
+          closest.selected = true;
+          selectedPoint = closest.i;
+
+          // redraw the points
+          draw();
+      }
+  }
+
+  var zoomEndTimeout;
+  var currentTransform = d3.zoomIdentity;
+  function onZoom() {
+    currentTransform = d3.event.transform;
+    var new_xScale = d3.event.transform.rescaleX(xScale)
+    var new_yScale = d3.event.transform.rescaleY(yScale)
+    xAxisSvg.call(xAxis.scale(new_xScale));
+    yAxisSvg.call(yAxis.scale(new_yScale));
+    clearTimeout(zoomEndTimeout);
+    context.save();
+    context.clearRect(0, 0, width, height);
+    context.translate(currentTransform.x, currentTransform.y);
+    context.scale(currentTransform.k, currentTransform.k);
+    // draw();
+    draw(randomIndex);
+    context.restore();    
+  }
+
+  function onZoomEnd() {
+      // when zooming is stopped, create a delay before
+      // // redrawing the full plot
+      zoomEndTimeout = setTimeout(function() {
+        context.save();
+        context.clearRect(0, 0, chart_width, chart_height);
+        context.translate(currentTransform.x, currentTransform.y);
+        context.scale(currentTransform.k, currentTransform.k);
+          draw();
+          context.restore();
+      }, 250);
+  }
+
+  function draw(index) {
+    var active;
+    context.clearRect(0, 0, chart_width, chart_height);
+    context.fillStyle = 'steelblue';
+    context.strokeWidth = 1;
+    context.strokeStyle = 'white';
+
+    // if an index parameter is supplied, we only want to draw points
+    // with indices in that array
+    if(index) {
+        index.forEach(function(i) {
+            var point = points[i];
+            if(!point.selected) {
+                drawPoint(point, pointRadius);
+            }
+            else {
+                active = point;
+            }
+        });
+    }
+    // draw the full dataset otherwise
+    else {
+        points.forEach(function(point) {
+            if(!point.selected) {
+                drawPoint(point, pointRadius);
+            }
+            else {
+                active = point;
+            }
+        });
+    }
+
+    // ensure that the actively selected point is drawn last
+    // so it appears at the top of the draw order
+    if(active) {
+        context.fillStyle = 'red';
+        drawPoint(active, pointRadius);
+        context.fillStyle = 'steelblue';
+    }
+  }
+
+  function drawPoint(point, r) {
+    var cx = xScale(point.x);
+    var cy = yScale(point.y);
+    context.lineWidth = chart_width * 0.0001
+    context.beginPath();
+    context.arc(cx, cy, r, 0, 2 * Math.PI);
+    context.closePath();
+    context.fill();
+    context.stroke();
+}
+
+function euclideanDistance(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+}
+
+
     function colorCallback(instance, context) 
     {
       if (n_vals >= 3)
