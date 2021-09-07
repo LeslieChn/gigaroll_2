@@ -939,7 +939,7 @@ class View_State
         width = chart_width - margin.left - margin.right,
         height = chart_height - margin.top - margin.bottom,
         points=[],
-        pointRadius = chart_width * 0.003,
+        pointRadius = Math.min(width,height) * 0.01,
         point_index = 0;
 
     for (let row of server_js.data)
@@ -962,7 +962,8 @@ class View_State
       }
     };
 
-    var quadTree = d3.quadtree(points);
+    
+    var quadTree = d3.quadtree(points.map(i=>([i.x,i.y])));
     var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
 
     if (n_vals >= 3)
@@ -986,43 +987,61 @@ class View_State
         .attr("height", height - 1)
         .style("transform", "translate(" + (margin.left + 1) +
             "px" + "," + (margin.top + 1) + "px" + ")");
-
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
-
     var xScale = d3.scaleLinear()
-      .domain([xRange[0] * 0.95, xRange[1] *1.05])
+      .domain([xRange[0] * 0.9, xRange[1] *1.05])
       .range([0, width]);
-
     var yScale = d3.scaleLinear()
-      .domain([yRange[0] * 0.95, yRange[1] *1.05])
+      .domain([yRange[0] * 0.9, yRange[1] *1.05])
       .range([height, 0]);
-
     var xAxis = d3.axisBottom(xScale)
+      .tickSizeInner(-height)
+      .tickSizeOuter(0)
       .tickPadding(20);
-
     var yAxis = d3.axisLeft(yScale)
+      .tickSizeInner(-width)
+      .tickSizeOuter(0)
       .tickPadding(10);
-
     var zoomBehaviour = d3.zoom()
       .scaleExtent([1, 10])
       .on("zoom", onZoom)
       .on("end", onZoomEnd);
-
     var xAxisSvg = svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', 'translate(0,' + height + ')')
       .call(xAxis);
-
     var yAxisSvg = svg.append('g')
       .attr('class', 'y axis')
       .call(yAxis);
-
-    // canvas.on("click", onClick);
-
+    canvas.on("click", onClick);
     canvas.call(zoomBehaviour);
-    
     var context = canvas.node().getContext('2d');
+    var r = regression.linear(points.map((i)=>([i.x,i.y]))),
+    m = r.equation[0], b = r.equation[1],
+    rp = [[
+      xScale(min_x),
+        yScale(m * min_x + b)
+    ], [
+      xScale(max_x),
+      yScale(m * max_x + b)
+    ]];
+
+    svg.append("text")
+    .attr("class", "x label")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height - 6)
+    .text(meas1);
+
+    svg.append("text")
+    .attr("class", "y label")
+    .attr("text-anchor", "end")
+    .attr("y", 6)
+    .attr("dy", ".75em")
+    .attr("transform", "rotate(-90)")
+    .text(meas2);
+
 
     draw();
 
@@ -1053,7 +1072,7 @@ class View_State
           // redraw the points
           draw();
       }
-  }
+    }
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
@@ -1068,14 +1087,12 @@ class View_State
     context.clearRect(0, 0, width, height);
     context.translate(currentTransform.x, currentTransform.y);
     context.scale(currentTransform.k, currentTransform.k);
-    // draw();
     draw(randomIndex);
     context.restore();    
   }
 
   function onZoomEnd() {
-      // when zooming is stopped, create a delay before
-      // // redrawing the full plot
+
       zoomEndTimeout = setTimeout(function() {
         context.save();
         context.clearRect(0, 0, chart_width, chart_height);
@@ -1083,7 +1100,7 @@ class View_State
         context.scale(currentTransform.k, currentTransform.k);
           draw();
           context.restore();
-      }, 250);
+      }, 5);
   }
 
   function draw(index) {
@@ -1093,8 +1110,6 @@ class View_State
     context.strokeWidth = 1;
     context.strokeStyle = 'white';
 
-    // if an index parameter is supplied, we only want to draw points
-    // with indices in that array
     if(index) {
         index.forEach(function(i) {
             var point = points[i];
@@ -1106,7 +1121,6 @@ class View_State
             }
         });
     }
-    // draw the full dataset otherwise
     else {
         points.forEach(function(point) {
             if(!point.selected) {
@@ -1125,12 +1139,22 @@ class View_State
         drawPoint(active, pointRadius);
         context.fillStyle = 'steelblue';
     }
+
+    
+    var lineGenerator = d3.line()
+    .context(context);
+   context.strokeStyle = 'red';
+   context.lineWidth = 1 
+  context.beginPath();
+  lineGenerator(rp);
+  context.stroke();
+
   }
 
   function drawPoint(point, r) {
     var cx = xScale(point.x);
     var cy = yScale(point.y);
-    context.lineWidth = chart_width * 0.0001
+    context.lineWidth = 0.09
     context.beginPath();
     context.arc(cx, cy, r, 0, 2 * Math.PI);
     context.closePath();
