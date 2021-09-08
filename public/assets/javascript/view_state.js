@@ -969,7 +969,7 @@ class View_State
     .y(function(d) {
         return d.y
     }).addAll(points);
-
+    console.log("quadtree", quadTree)
     var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
 
     if (n_vals >= 3)
@@ -1060,7 +1060,6 @@ class View_State
       // map the clicked point to the data space
       var xClicked = new_xScale ? new_xScale.invert(mouse[0]) : xScale.invert(mouse[0]);
       var yClicked = new_yScale ? new_yScale.invert(mouse[1]) :  yScale.invert(mouse[1]);
-
       var closest = quadTree.find(xClicked, yClicked);
       console.log("Clicked after invert scale ", [xClicked,yClicked])
       console.log("closest point ",closest)
@@ -1156,13 +1155,12 @@ class View_State
 
     
     var lineGenerator = d3.line()
-    .context(context);
-   context.strokeStyle = 'red';
-   context.lineWidth = 1 
-  context.beginPath();
-  lineGenerator(rp);
-  context.stroke();
-
+      .context(context);
+    context.strokeStyle = 'red';
+    context.lineWidth = 1 
+    context.beginPath();
+    lineGenerator(rp);
+    context.stroke();
   }
 
   function drawPoint(point, r) {
