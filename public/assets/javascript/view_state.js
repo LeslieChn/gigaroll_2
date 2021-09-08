@@ -1051,25 +1051,24 @@ class View_State
 
 
     draw();
-    var selectedPoint;
+
+    var selectedPoint, new_xScale , new_yScale;
+
     function onClick() {
       var mouse = d3.mouse(this);
       console.log("I am the mouse ",mouse)
       // map the clicked point to the data space
-      var xClicked = new_xScale.invert(mouse[0]);
-      var yClicked = new_yScale.invert(mouse[1]);
-      console.log("xScale ", xScale)
-      // find the closest point in the dataset to the clicked point
+      var xClicked = new_xScale ? new_xScale.invert(mouse[0]) : xScale.invert(mouse[0]);
+      var yClicked = new_yScale ? new_yScale.invert(mouse[1]) :  yScale.invert(mouse[1]);
+
       var closest = quadTree.find(xClicked, yClicked);
-      console.log("xclicked after invert scale ",xClicked)
-      console.log("yclicked after invert scale ",yClicked)
+      console.log("Clicked after invert scale ", [xClicked,yClicked])
       console.log("closest point ",closest)
 
       // map the co-ordinates of the closest point to the canvas space
-      var dX = new_xScale(closest.x);
-      var dY = new_yScale(closest.y);
-      console.log("dX after invert scale ",dX)
-      console.log("dY after invert scale ",dY)
+      var dX = new_xScale ? new_xScale(closest.x) : xScale(closest.x);
+      var dY = new_yScale ? new_yScale(closest.y) : yScale(closest.y);
+
 
       // register the click if the clicked point is in the radius of the point
       var distance = euclideanDistance(mouse[0], mouse[1], dX, dY);
@@ -1086,7 +1085,7 @@ class View_State
       }
     }
 
-  var zoomEndTimeout, new_xScale , new_yScale;
+  var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
   function onZoom() {
     currentTransform = d3.event.transform;
