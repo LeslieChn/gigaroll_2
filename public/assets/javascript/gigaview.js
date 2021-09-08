@@ -44,7 +44,7 @@ let req4 =
 {
   qid: "MD_AGG",
   base_dim: 'property',
-  groupbys: ['?gby_option'],
+  groupbys: ['?gby_option','?gby_option_2'],
   measures: ['?val_option'],
   filters: []
 }
@@ -92,7 +92,13 @@ let chart_def = [
 
 let dropdowns = {
   gby_option:{
-    name:'Groupby',
+    name:'Groupby 1',
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
+    position:'bottom-left',
+    // knob_position:'left'
+  },
+  gby_option_2:{
+    name:'Groupby 2',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
     position:'bottom-left',
     // knob_position:'left'
@@ -163,7 +169,7 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', ''],
+    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', '', 'city:Stamford-CT,New Canaan-CT', 'city:Greenwich-CT,New Canaan-CT'],
     position:'top-left',
     // knob_position:'right'
   }

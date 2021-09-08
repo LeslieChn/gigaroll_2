@@ -1143,17 +1143,32 @@ class View_State
       }
     }
 
+    this.color_lookup = {} ;
     this.object_instance = new Chart(ctx2, config);
 
     function colorCallback(instance, context) 
     {
       if (n_vals >= 3)
       {
-          let val = server_js.data[context.dataIndex][i3]
-          return instance.point_colors(val)
+        let val = server_js.data[context.dataIndex][i3]
+        return instance.point_colors(val)
       }
       else
-        return 'red';
+      {
+        let city = server_js.data[context.dataIndex][1]
+
+        if (city in instance.color_lookup)
+          return instance.color_lookup[city];
+        else
+        {
+          var colors = ['green', 'red', 'blue']
+          let n = Object.keys(instance.color_lookup).length
+          let color = colors[(n+1)%colors.length]
+          instance.color_lookup[city] = color
+          return color
+        }
+      }
+        
 
     }
 
@@ -1192,8 +1207,11 @@ class View_State
     let root = gby_headers[0]
     let data = [{id:root, value:0}]
     let nodes = new Set()
-
+    let n_gbys = gby_headers.length
     
+    if (n_gbys>=2 && gby_headers[0]==gby_headers[1])
+      n_gbys = 1
+
     let n_rows = server_js.length
 
     let ng = server_js[0][0].length - 1
@@ -1204,7 +1222,7 @@ class View_State
       let gby = row[0]
       let val = row[1][0]
       let str = root
-      for (let i = 0; i< gby.length; ++i)
+      for (let i = 0; i< n_gbys; ++i)
       {
         let g2 = gby[i].replace(/\./g, '')
         str += '.' + g2
