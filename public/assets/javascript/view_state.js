@@ -1157,10 +1157,11 @@ class View_State
     var lineGenerator = d3.line()
       .context(context);
     context.strokeStyle = 'red';
-    context.lineWidth = 1 
-    context.beginPath();
-    lineGenerator(rp);
-    context.stroke();
+   context.lineWidth = 1 
+  context.beginPath();
+  lineGenerator(rp);
+  context.stroke();
+
   }
 
   function drawPoint(point, r) {
