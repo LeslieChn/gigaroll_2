@@ -100,7 +100,7 @@ ul {
   margin: 0px;
 }
 
-#map-info {   
+#prop-popup{   
   position: absolute;         
   /* text-align: center;     */
   /*     
@@ -138,4 +138,18 @@ ul {
 .tick line{
   opacity: 0.2;
 }
+
+#popup-info{
+  overflow: hidden !important;
+}
+
+@media only screen and (max-width: 812px) {
+  #caption {
+    display: none;
+  }
+  #no-data {
+    display: none;
+  }
+}
+
 

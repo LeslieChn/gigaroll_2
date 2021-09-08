@@ -55,6 +55,7 @@ const html_sub = {
   '<': "&lt",
   '>': "&gt",
 };
+const popup_width = 300
 /*******************************************************************************/
 
 function Comma_Sep(a,vs_id) {
@@ -245,6 +246,7 @@ class View_State
     {
       aliased_name=this.state.aliases[name]
     }
+    console.log(aliased_name)
     return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
   }
 
@@ -470,15 +472,48 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
-   async propertyPopup (node)
+   propInfoFormat(data) 
    {
-
+    let html = `<u><h6 style="text-align: center;">${data.title}</h6></u>`
+    html += '<p style="font-size:0.75em;">'
+    for (let i=0; i < data.headers.length; i++)
+    {
+      let header = data.headers[i].replaceAll('_', ' ')
+      if (header.includes('2019'))
+        html += `<b>${this.alias(header)}</b>: ${data.data[0][i].toLocaleString("en")}<br>`
+    }
+    html += '</p>'
+    return html
+   }
+   async propertyPopup (node, x, y)
+   {
+    if(x==null||x==undefined)
+      x=20
+    if(x==null||x==undefined)
+      y=20
     let address, img_url = "";
+
+    let prop_info_params = 
+    {
+      state_code : node[4], 
+      county : node[3],
+      postal_code : node[2]
+    }
+
+    let prop_info_data = {}
+
+    for (let [key, value] of Object.entries(prop_info_params)) 
+    {
+      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
+    }
 
       address = `
       <div class="row">
         <div class="col-11" id="mly">
-          <img id="pop_img" height="300" class="img-fluid" alt="..." src="assets/images/loading.gif">
+          <div id="pop-img-box" style="width:250px; height:200px;">
+            <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
+          </div>
         </div>
         <div class="col-1">
           <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
@@ -489,15 +524,42 @@ class View_State
         <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
-      <div class="row px-4 d-flex">
-      <p style="font-size:0.75em;">Property type: <b>${node[5]}</b><br>
-      Bedrooms: <b>${node[7]}</b><br>
-      Bathrooms: <b>${node[8]}</b><br>
-      Size: <b>${node[9]}</b> sqft<br>
-      Price: <b>$${node[10].toLocaleString("en")}</b><br>
-      Year built: <b>${node[11]}</b><br>
-      Elevation: <b>${node[14]}</b></p>
+
+      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
+          <div class="carousel-inner px-3">
+            <div class="carousel-item active">
+              <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
+              <b>Number of 
+              
+              :</b> ${node[7]}<br>
+              <b>Number of Bathrooms:</b> ${node[8]}<br>
+              <b>Size:</b> ${node[9]} sqft<br>
+              <b>Price:</b> $${node[10].toLocaleString("en")}<br>
+              <b>Year built:</b> ${node[11]}<br>
+              <b>Elevation:</b> ${node[14]}</p>
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.state_code)}
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.county)}
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.postal_code)}
+            </div>
+          </div>
+          <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next me-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
       </div>
+      
       <div class="row px-4  align-items-center justify-content-center">
       <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
       <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
@@ -515,8 +577,7 @@ class View_State
       if (img_url.startsWith('https://'))
       {
         $(document).ready(function() {
-          $("#pop_img").attr('src',img_url);
-
+          $("#pop_img").attr('src',img_url)
         });
       }
       else
@@ -527,20 +588,51 @@ class View_State
         });
       }
       // e.target.bindPopup(address).openPopup();
-      d3.select("#map-info").style("opacity", 1)
+      d3.select("#prop-popup").style("opacity", 0)
       .html(address)
-      .style("left", (20) + "px")
-      .style("top", (20) + "px")
+      .style("left", x + "px")
+      .style("top", y + "px")
       .style("z-index",1000);
-   }
+
+      $('#carouselExampleControls').carousel({pause: true, interval: false });
+
+      const popup_ps = new PerfectScrollbar(`#popup-info`, {
+        wheelSpeed: 2,
+        wheelPropagation: false,
+        minScrollbarLength: 20
+      })
+
+      ps_object['popup-info']=popup_ps
+
+      let position = $(`#${this.getId()}`).offset()
+      let screen_width = window.innerWidth
+      let screen_height = window.innerHeight
+      let popup_width = $('#prop-popup').outerWidth()
+      let popup_height = $('#prop-popup').outerHeight()
+      const offset = 20
+      x += offset
+      let right_edge = x + popup_width + position.left
+      let bottom_edge = y + popup_height + position.top 
+      console.log(y)
+      console.log(bottom_edge + '= bottom_edge')
+      if (right_edge >= screen_width)
+        x = Math.max(x - popup_width - 2 * offset, 0)
+      if (bottom_edge >= screen_height)
+        y = Math.max(y - popup_height, -position.top/2)
+      
+      d3.select("#prop-popup").style("opacity", 1)
+      .style("left", x + "px")
+      .style("top", y + "px")
+      
+  }
 
    async geomap()
    {
-      this.toolTipDiv = d3.select(".card-body").append("div")
+      this.toolTipDiv = d3.select('.card-body').append("div")
       .attr("class", "container")
-      .attr("id", "map-info")
+      .attr("id", "prop-popup")
       .style("opacity", 0)
-      .style("width", "300px")
+      .style("width", `${popup_width}px`)
 
      await this.serverRequest()
 
@@ -648,8 +740,11 @@ class View_State
 
          async function onMapClick(instance,e)
          {
+          let position = $(`#${instance.getId()}`).offset()
+          let x = e.originalEvent.x - position.left
+          let y = e.originalEvent.y - position.top
           let node = instance.server_js.data[coord[2]]
-          instance.propertyPopup(node)
+          instance.propertyPopup(node, x, y)
         }
       }
      
@@ -901,7 +996,7 @@ class View_State
   {
     this.toolTipDiv = d3.select(".card-body").append("div")
     .attr("class", "container")
-    .attr("id", "map-info")
+    .attr("id", "prop-popup")
     .style("opacity", 0)
     .style("width", "300px")
 
@@ -1179,16 +1274,33 @@ function euclideanDistance(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
+    this.color_lookup = {} ;
 
     function colorCallback(instance, context) 
     {
       if (n_vals >= 3)
       {
-          let val = server_js.data[context.dataIndex][i3]
-          return instance.point_colors(val)
+        let val = server_js.data[context.dataIndex][i3]
+        return instance.point_colors(val)
       }
       else
         return 'red';
+
+      {
+        let city = server_js.data[context.dataIndex][1]
+
+        if (city in instance.color_lookup)
+          return instance.color_lookup[city];
+        else
+        {
+          var colors = ['green', 'red', 'blue']
+          let n = Object.keys(instance.color_lookup).length
+          let color = colors[(n+1)%colors.length]
+          instance.color_lookup[city] = color
+          return color
+        }
+      }
+       
     }
 
     function clickHandler(instance, evt) 
@@ -1198,9 +1310,10 @@ function euclideanDistance(x1, y1, x2, y2) {
   
       if (points.length) {
           const firstPoint = points[0];
-          // var label = myChart.data.labels[firstPoint.index];
-          // var value = myChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-          instance.propertyPopup(instance.server_js.data[firstPoint.index])
+          let x = evt.x 
+          let y = evt.y
+          let node = instance.server_js.data[firstPoint.index]
+          instance.propertyPopup(node, x, y)
       }
       
     }
@@ -1228,8 +1341,11 @@ function euclideanDistance(x1, y1, x2, y2) {
     let root = gby_headers[0]
     let data = [{id:root, value:0}]
     let nodes = new Set()
-
+    let n_gbys = gby_headers.length
     
+    if (n_gbys>=2 && gby_headers[0]==gby_headers[1])
+      n_gbys = 1
+
     let n_rows = server_js.length
 
     let ng = server_js[0][0].length - 1
@@ -1240,7 +1356,7 @@ function euclideanDistance(x1, y1, x2, y2) {
       let gby = row[0]
       let val = row[1][0]
       let str = root
-      for (let i = 0; i< gby.length; ++i)
+      for (let i = 0; i< n_gbys; ++i)
       {
         let g2 = gby[i].replace(/\./g, '')
         str += '.' + g2
@@ -1626,16 +1742,18 @@ function euclideanDistance(x1, y1, x2, y2) {
               g.append("rect")
               .attr("stroke", "black")
               .attr("height", rect_height / 2)
-              .attr("x", left_margin * 0.7)
+              .attr("x", left_margin)
               .attr("y", rectPos(-2))
               .attr("width", rect_width)
               .attr("fill", `${null_color}`)
               .attr("id", "no_data")
 
               g.append("text")
-              .attr("x", left_margin * 0.7 + rect_width * 2)
+              .attr("x", left_margin + rect_width * 2)
               .attr("y", rectPos(-2) + rect_height / 2 )
               .text("– No Data")
+              .attr("style", "font-size: 75%")
+              .attr("id", "no-data")
           
               // let toolbar = w2ui.layout.get('top').toolbarv
               // let id = toolbar.get("values").selected
@@ -1649,7 +1767,7 @@ function euclideanDistance(x1, y1, x2, y2) {
                   .attr("fill", "#000")
                   .attr("text-anchor", "start")
                   .attr("font-weight", "bold")
-                  .attr("style", "font-size:  1.20vw")
+                  .attr("style", "font-size: 75%")
                   .text(text);
 
 
