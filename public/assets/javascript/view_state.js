@@ -530,10 +530,8 @@ class View_State
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
               <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-              <b>Number of 
-              
-              :</b> ${node[7]}<br>
-              <b>Number of Bathrooms:</b> ${node[8]}<br>
+              <b>Bedrooms:</b> ${node[7]}<br>
+              <b>Bathrooms:</b> ${node[8]}<br>
               <b>Size:</b> ${node[9]} sqft<br>
               <b>Price:</b> $${node[10].toLocaleString("en")}<br>
               <b>Year built:</b> ${node[11]}<br>
