@@ -1063,7 +1063,7 @@ class View_State
         return d.y
     }).addAll(points);
 
-    var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
+    var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,2000));
 
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
@@ -1116,6 +1116,7 @@ class View_State
 
     canvas.on("click", onClick);
     canvas.call(zoomBehaviour);
+
     var context = canvas.node().getContext('2d');
     var r = regression.linear(points.map((i)=>([i.x,i.y]))),
     m = r.equation[0], b = r.equation[1],
@@ -1187,7 +1188,8 @@ class View_State
     {
       return new_yScale ? new_yScale.invert(j) :  yScale.invert(j);
     }
-    
+    var zoomed = false
+
     function onClick() 
     {
       var mouse = d3.mouse(this);
@@ -1196,10 +1198,10 @@ class View_State
       var xClicked = ItoX(mouse[0]);
       var yClicked = JtoY(mouse[1]);
 
-      var xLeft = ItoX(mouse[0] - 5*pointRadius)
-      var xRight = ItoX(mouse[0] + 5*pointRadius)
-      var yTop = JtoY(mouse[1] - 5*pointRadius)
-      var yBottom = JtoY(mouse[1] + 5*pointRadius)
+      var xLeft = ItoX(mouse[0] - pointRadius)
+      var xRight = ItoX(mouse[0] + pointRadius)
+      var yTop = JtoY(mouse[1] - pointRadius)
+      var yBottom = JtoY(mouse[1] + pointRadius)
       
       var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
       console.log("Clicked after invert scale ", [xClicked,yClicked])
@@ -1213,6 +1215,7 @@ class View_State
             //drawPoint(points[selectedPoint], pointRadius)
             selectedPoint = null
         }
+        drawZoom()
         return
       }
       // map the co-ordinates of the closest point to the canvas space
@@ -1236,11 +1239,17 @@ class View_State
           // redraw the points
           //drawPoint(points[selectedPoint], pointRadius)
       }
+      drawZoom()
+      let x = d3.event.x
+      let y = d3.event.y
+      selected_vs.propertyPopup(selected_vs.server_js.data[closest.i], x, y)
     }
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
-  function onZoom() {
+  function onZoom() 
+  {
+    zoomed = true
     currentTransform = d3.event.transform;
      new_xScale = d3.event.transform.rescaleX(xScale)
      new_yScale = d3.event.transform.rescaleY(yScale)
@@ -1257,18 +1266,26 @@ class View_State
     // console.log("this is the range",xScale.range())
     // console.log("this is the domain",xScale.domain())
   }
+  function drawZoom() 
+  {
+    context.save();
+    context.clearRect(0, 0, chart_width, chart_height);
+    context.translate(currentTransform.x, currentTransform.y);
+    context.scale(currentTransform.k, currentTransform.k);
+      draw();
+    context.restore();
+  }
 
   function onZoomEnd() 
   {
-      zoomEndTimeout = setTimeout(function() 
+      if (!zoomed)
       {
-        context.save();
-        context.clearRect(0, 0, chart_width, chart_height);
-        context.translate(currentTransform.x, currentTransform.y);
-        context.scale(currentTransform.k, currentTransform.k);
-          draw();
-          context.restore();
-      }, 5);
+        return;
+      }
+
+      zoomed = false
+
+      zoomEndTimeout = setTimeout(drawZoom, 5);
   }
 
   function draw(index) 
