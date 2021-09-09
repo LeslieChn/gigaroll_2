@@ -1064,7 +1064,7 @@ class View_State
     .y(function(d) {
         return d.y
     }).addAll(points);
-    console.log("quadtree", quadTree)
+
     var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
 
     if (n_vals >= 3)
@@ -1149,16 +1149,74 @@ class View_State
 
     var selectedPoint, new_xScale , new_yScale;
 
-    function onClick() {
+  // Find the closest node within the specified rectangle.
+  function findClosest(quadtree, base_point, x0, y0, x3, y3) 
+  {
+    let point = undefined, dist = Infinity;
+
+    quadtree.visit(function(node, x1, y1, x2, y2) 
+    {
+      if (!node.length) 
+      {
+        do 
+        {
+          var d = node.data;
+          let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
+          if (inside)
+          {
+            let new_dist = euclideanDistance(d.x, d.y, base_point[0], base_point[1])
+            if (new_dist < dist)
+            {
+              dist = new_dist;
+              point = d;
+            }
+          }
+        } 
+        while (node = node.next);
+      }
+      return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  });
+
+    return point;
+  }
+
+    function ItoX(i) 
+    {
+      return new_xScale ? new_xScale.invert(i) : xScale.invert(i);
+    }
+    
+    function JtoY(j)
+    {
+      return new_yScale ? new_yScale.invert(j) :  yScale.invert(j);
+    }
+    
+    function onClick() 
+    {
       var mouse = d3.mouse(this);
       console.log("I am the mouse ",mouse)
       // map the clicked point to the data space
-      var xClicked = new_xScale ? new_xScale.invert(mouse[0]) : xScale.invert(mouse[0]);
-      var yClicked = new_yScale ? new_yScale.invert(mouse[1]) :  yScale.invert(mouse[1]);
-      var closest = quadTree.find(xClicked, yClicked);
+      var xClicked = ItoX(mouse[0]);
+      var yClicked = JtoY(mouse[1]);
+
+      var xLeft = ItoX(mouse[0] - 5*pointRadius)
+      var xRight = ItoX(mouse[0] + 5*pointRadius)
+      var yTop = JtoY(mouse[1] - 5*pointRadius)
+      var yBottom = JtoY(mouse[1] + 5*pointRadius)
+      
+      var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
       console.log("Clicked after invert scale ", [xClicked,yClicked])
       console.log("closest point ",closest)
 
+      if (!closest)
+      {
+        if(selectedPoint) 
+        {
+            points[selectedPoint].selected = false;
+            //drawPoint(points[selectedPoint], pointRadius)
+            selectedPoint = null
+        }
+        return
+      }
       // map the co-ordinates of the closest point to the canvas space
       var dX = new_xScale ? new_xScale(closest.x) : xScale(closest.x);
       var dY = new_yScale ? new_yScale(closest.y) : yScale(closest.y);
@@ -1167,15 +1225,18 @@ class View_State
       // register the click if the clicked point is in the radius of the point
       var distance = euclideanDistance(mouse[0], mouse[1], dX, dY);
       console.log("distance:", distance)
-      if(distance <= pointRadius) {
-          if(selectedPoint) {
+      //if(distance <= pointRadius) 
+      {
+          if(selectedPoint) 
+          {
               points[selectedPoint].selected = false;
+              //drawPoint(points[selectedPoint], pointRadius)
           }
           closest.selected = true;
           selectedPoint = closest.i;
 
           // redraw the points
-          draw();
+          //drawPoint(points[selectedPoint], pointRadius)
       }
     }
 
@@ -1195,13 +1256,14 @@ class View_State
     context.scale(currentTransform.k, currentTransform.k);
     draw(randomIndex);
     context.restore();
-    console.log("this is the range",xScale.range())
-    console.log("this is the domain",xScale.domain())
+    // console.log("this is the range",xScale.range())
+    // console.log("this is the domain",xScale.domain())
   }
 
-  function onZoomEnd() {
-
-      zoomEndTimeout = setTimeout(function() {
+  function onZoomEnd() 
+  {
+      zoomEndTimeout = setTimeout(function() 
+      {
         context.save();
         context.clearRect(0, 0, chart_width, chart_height);
         context.translate(currentTransform.x, currentTransform.y);
@@ -1211,30 +1273,39 @@ class View_State
       }, 5);
   }
 
-  function draw(index) {
+  function draw(index) 
+  {
     var active;
     context.clearRect(0, 0, chart_width, chart_height);
     context.fillStyle = 'steelblue';
     context.strokeWidth = 1;
     context.strokeStyle = 'white';
 
-    if(index) {
-        index.forEach(function(i) {
+    if(index) 
+    {
+        index.forEach(function(i) 
+        {
             var point = points[i];
-            if(!point.selected) {
+            if(!point.selected) 
+            {
                 drawPoint(point, pointRadius);
             }
-            else {
+            else 
+            {
                 active = point;
             }
         });
     }
-    else {
-        points.forEach(function(point) {
-            if(!point.selected) {
+    else 
+    {
+        points.forEach(function(point) 
+        {
+            if(!point.selected) 
+            {
                 drawPoint(point, pointRadius);
             }
-            else {
+            else 
+            {
                 active = point;
             }
         });
@@ -1242,7 +1313,8 @@ class View_State
 
     // ensure that the actively selected point is drawn last
     // so it appears at the top of the draw order
-    if(active) {
+    if(active) 
+    {
         context.fillStyle = 'red';
         drawPoint(active, pointRadius);
         context.fillStyle = 'steelblue';
@@ -1259,7 +1331,8 @@ class View_State
 
   }
 
-  function drawPoint(point, r) {
+  function drawPoint(point, r) 
+  {
     var cx = xScale(point.x);
     var cy = yScale(point.y);
     context.lineWidth = 0.09
