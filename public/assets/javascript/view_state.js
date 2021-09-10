@@ -1156,7 +1156,7 @@ class View_State
     }
     else
       canvas.call(zoomBehaviour.transform, d3.zoomIdentity);
-      
+
     new_xScale = xScale;
     new_yScale = yScale;
     xAxisSvg.call(xAxis.scale(new_xScale));
@@ -1168,7 +1168,7 @@ class View_State
     $("#reset-button-div").remove()
   }
 
-  this.resetDiv = $('.card-body').prepend(`<div id="reset-button-div" class="m-1" style="width:25px">
+  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1" style="width:25px; position:absolute; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
