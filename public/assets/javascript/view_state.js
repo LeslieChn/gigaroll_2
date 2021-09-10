@@ -1183,10 +1183,10 @@ class View_State
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
 
-    var xLeft = ItoX(mouse[0] - pointRadius)
-    var xRight = ItoX(mouse[0] + pointRadius)
-    var yTop = JtoY(mouse[1] - pointRadius)
-    var yBottom = JtoY(mouse[1] + pointRadius)
+    var xLeft = new_xScale.invert(mouse[0] - pointRadius)
+    var xRight = new_xScale.invert(mouse[0] + pointRadius)
+    var yTop = new_yScale.invert(mouse[1] - pointRadius)
+    var yBottom = new_yScale.invert(mouse[1] + pointRadius)
     
     var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
 
