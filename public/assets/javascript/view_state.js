@@ -1268,9 +1268,9 @@ class View_State
     var active;
     context.clearRect(0, 0, chart_width, chart_height);
     context.fillStyle = 'steelblue';
-    context.strokeWidth = 1;
+    context.strokeWidth = 0.5;
     context.strokeStyle = 'white';
-    context.lineWidth = 1
+    context.lineWidth = 0.5
     const c2PI = 2*Math.PI
 
     if(index) 
@@ -1292,13 +1292,13 @@ class View_State
     {
         for (let point of points)
         {
+            
             context.beginPath()
-            //drawPoint(point, pointRadius);
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
             context.fill();
-            //context.stroke();
+            context.stroke();
             //context.closePath();
         }
         
