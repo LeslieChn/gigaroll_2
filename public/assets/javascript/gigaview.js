@@ -215,9 +215,7 @@ resizeContent()
 function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
-  console.log('client height =' + client_height)
   let row_height = $('#vs-knob-column').height()
-  console.log(row_height)
   return client_height - 2.25 * row_height 
 }
 

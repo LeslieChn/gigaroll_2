@@ -246,7 +246,6 @@ class View_State
     {
       aliased_name=this.state.aliases[name]
     }
-    console.log(aliased_name)
     return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
   }
 
@@ -1124,7 +1123,6 @@ class View_State
     var r = regression.linear(points.map((i)=>([i.x,i.y]))),
     m = r.equation[0], b = r.equation[1];
 
-
     svg.append("text")
     .attr("class", "x label")
     .attr("text-anchor", "end")
@@ -1140,10 +1138,9 @@ class View_State
     .attr("transform", "rotate(-90)")
     .text(meas2);
 
+  draw();
 
-    draw();
-
-    var selectedPoint = null;
+  var selectedPoint = null;
 
   // Find the closest node within the specified rectangle.
   function findClosest(quadtree, base_point, x0, y0, x3, y3) 
@@ -1176,55 +1173,45 @@ class View_State
     return point;
   }
 
-  function ItoX(i) 
-  {
-    return new_xScale.invert(i) ;
-  }
-  
-  function JtoY(j)
-  {
-    return new_yScale.invert(j) ;
-  }
   var zoomed = false
 
-    function onClick() 
+  function onClick() 
+  {
+    var mouse = d3.mouse(this);
+    console.log("I am the mouse ", mouse)
+    // map the clicked point to the data space
+    var xClicked = new_xScale.invert(mouse[0]);
+    var yClicked = new_yScale.invert(mouse[1]);
+
+    var xLeft = ItoX(mouse[0] - pointRadius)
+    var xRight = ItoX(mouse[0] + pointRadius)
+    var yTop = JtoY(mouse[1] - pointRadius)
+    var yBottom = JtoY(mouse[1] + pointRadius)
+    
+    var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
+
+    if(selectedPoint != null) 
     {
-      var mouse = d3.mouse(this);
-      console.log("I am the mouse ",mouse)
-      // map the clicked point to the data space
-      var xClicked = ItoX(mouse[0]);
-      var yClicked = JtoY(mouse[1]);
-
-      var xLeft = ItoX(mouse[0] - pointRadius)
-      var xRight = ItoX(mouse[0] + pointRadius)
-      var yTop = JtoY(mouse[1] - pointRadius)
-      var yBottom = JtoY(mouse[1] + pointRadius)
-      
-      var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
-      console.log("Clicked after invert scale ", [xClicked,yClicked])
-      console.log("closest point ",closest)
-      if(selectedPoint != null) 
-      {
-          points[selectedPoint].selected = false;
-          selectedPoint = null
-      }
-
-      if (!closest)
-      {
-        draw()
-        return
-      }
-     
-      closest.selected = true;
-      selectedPoint = closest.i;
-  
-      draw()
-
-      let position = $(`#${selected_vs.getId()}`).offset()
-      let x = d3.event.x- position.left
-      let y = d3.event.y- position.top
-      selected_vs.propertyPopup(selected_vs.server_js.data[closest.i], x, y)
+        points[selectedPoint].selected = false;
+        selectedPoint = null
     }
+
+    if (!closest)
+    {
+      draw()
+      return
+    }
+    
+    closest.selected = true;
+    selectedPoint = closest.i;
+
+    draw()
+
+    let position = $(`#${selected_vs.getId()}`).offset()
+    let x = d3.event.x- position.left
+    let y = d3.event.y- position.top
+    selected_vs.propertyPopup(selected_vs.server_js.data[closest.i], x, y)
+  }
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
@@ -1233,22 +1220,14 @@ class View_State
   {
     zoomed = true
     currentTransform = d3.event.transform;
-    new_xScale = d3.event.transform.rescaleX(xScale)
-    new_yScale = d3.event.transform.rescaleY(yScale)
+    new_xScale = currentTransform.rescaleX(xScale)
+    new_yScale = currentTransform.rescaleY(yScale)
     xAxisSvg.call(xAxis.scale(new_xScale));
     yAxisSvg.call(yAxis.scale(new_yScale));
     if (++counter % 2)
       draw(randomIndex);
     
     clearTimeout(zoomEndTimeout);
-    // context.save();
-    // context.clearRect(0, 0, width, height);
-    // context.translate(currentTransform.x, currentTransform.y);
-    // context.scale(currentTransform.k, currentTransform.k);
-    // draw(randomIndex);
-    // context.restore();
-    // console.log("this is the range",xScale.range())
-    // console.log("this is the domain",xScale.domain())
   }
 
   function onZoomEnd() 
@@ -1279,7 +1258,6 @@ class View_State
         {
             let point = points[i];
             context.beginPath()
-            //drawPoint(point, pointRadius);
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
@@ -1301,7 +1279,6 @@ class View_State
             context.stroke();
             //context.closePath();
         }
-        
     }
 
     // ensure that the actively selected point is drawn last
@@ -1329,7 +1306,6 @@ class View_State
     context.beginPath();
     lineGenerator(rp);
     context.stroke();
-
   }
 
   function drawPoint(point, r) 
@@ -1344,7 +1320,8 @@ class View_State
     context.stroke();
 }
 
-function euclideanDistance(x1, y1, x2, y2) {
+function euclideanDistance(x1, y1, x2, y2) 
+{
     return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
@@ -1376,27 +1353,6 @@ function euclideanDistance(x1, y1, x2, y2) {
       }
        
     }
-
-    function clickHandler(instance, evt) 
-    {
-      let myChart=instance.object_instance
-      const points = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-  
-      if (points.length) {
-          const firstPoint = points[0];
-          let x = evt.x 
-          let y = evt.y
-          let node = instance.server_js.data[firstPoint.index]
-          instance.propertyPopup(node, x, y)
-      }
-      
-    }
-
-    function hoverHandler(evt) 
-    {
-      console.log('hovered')
-    }
-
   }
 
   
