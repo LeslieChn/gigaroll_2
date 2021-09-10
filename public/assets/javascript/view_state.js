@@ -991,11 +991,14 @@ class View_State
 
   async scatterChart()
   {
-    this.toolTipDiv = d3.select(".card-body").append("div")
-    .attr("class", "container")
-    .attr("id", "prop-popup")
-    .style("opacity", 0)
-    .style("width", "300px")
+    if(!this.toolTipDiv)
+    { 
+      this.toolTipDiv= d3.select(".card-body").append("div")
+      .attr("class", "container")
+      .attr("id", "prop-popup")
+      .style("opacity", 0)
+      .style("width", "300px")
+    }
 
     await this.serverRequest()
 
@@ -1141,6 +1144,36 @@ class View_State
   draw();
 
   var selectedPoint = null;
+  
+  function resetZoom()
+  {
+    if (points.length<2500)
+    {
+      canvas
+      .transition()
+      .duration(500)
+      .call(zoomBehaviour.transform, d3.zoomIdentity);
+    }
+    else
+      canvas.call(zoomBehaviour.transform, d3.zoomIdentity);
+      
+    new_xScale = xScale;
+    new_yScale = yScale;
+    xAxisSvg.call(xAxis.scale(new_xScale));
+    yAxisSvg.call(yAxis.scale(new_yScale));
+  }
+
+  if(this.resetDiv)
+  {
+    $("#reset-button-div").remove()
+  }
+
+  this.resetDiv = $('.card-body').prepend(`<div id="reset-button-div" class="m-1" style="width:25px">
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
+
+  $('#reset-button').on('click', resetZoom)
+
+
 
   // Find the closest node within the specified rectangle.
   function findClosest(quadtree, base_point, x0, y0, x3, y3) 
@@ -1215,7 +1248,8 @@ class View_State
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
-  var counter = 0
+  var counter = 0;
+
   function onZoom() 
   {
     zoomed = true
