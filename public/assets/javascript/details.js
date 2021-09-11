@@ -676,6 +676,14 @@ function changeGradient() {
 
 async function InitPage() 
 {
+  let type = sessionStorage.getItem('type')
+  if (type == 'data')
+  {
+    let server_data = JSON.parse(sessionStorage.getItem('server_data'))
+    processResp(server_data)
+    return
+  }
+
   let base_dim = sessionStorage.getItem('base_dim')
   let dim_filters = sessionStorage.getItem('dim_filters')
   let val_filters = sessionStorage.getItem('val_filters')

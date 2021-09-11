@@ -201,7 +201,7 @@ class View_State
     let server_result = await serverRequest(params);
     if (params.qid == "MD_RETR")
     {
-      this.server_js=server_result
+      this.server_js = server_result
       return
     }
     let server_meta=server_result["meta"];
@@ -210,7 +210,7 @@ class View_State
       alert("The data server returned "+ server_meta.status)
       return
     }
-    this.server_js=server_result["data"]
+    this.server_js = server_result["data"]
     // if (server_meta.is_range)
     //   server_range = server_result.range;
   }
@@ -1024,7 +1024,7 @@ class View_State
 
     let vs_id=this.getId()
 
-    let server_js=this.server_js
+    let server_js = this.server_js
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
@@ -1192,9 +1192,31 @@ class View_State
   {
     let self = selected_vs
     let req = self.state.request
-    sessionStorage.setItem("base_dim", 'property')
-    sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
-    sessionStorage.setItem("val_filters", '')
+    sessionStorage.setItem("type", 'data')
+    // sessionStorage.setItem("base_dim", 'property')
+    // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
+    // sessionStorage.setItem("val_filters", '')
+    let 
+      xLeft = new_xScale.invert(0),
+      xRight = new_xScale.invert(chart_width),
+      yTop = new_yScale.invert(0),
+      yBottom = new_yScale.invert(chart_height);
+
+      let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
+      if (indices.length == 0)
+        return;
+
+    let server_data = {}
+    server_data.headers = selected_vs.server_js.headers
+    server_data.data = []
+    
+    for (let i in indices)
+    {
+      server_data.data.push(selected_vs.server_js.data[i])
+    }
+
+    sessionStorage.setItem("server_data", JSON.stringify(server_data) )
+
     window.open('./details.html', '_blank');
   }
 
@@ -1247,6 +1269,33 @@ class View_State
   });
 
     return point;
+  }
+
+
+  // Find the closest node within the specified rectangle.
+  function search(quadtree, x0, y0, x3, y3) 
+  {
+    let indices = []
+
+    quadtree.visit(function(node, x1, y1, x2, y2) 
+    {
+      if (!node.length) 
+      {
+        do 
+        {
+          var d = node.data;
+          let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
+          if (inside)
+          {
+            indices.push(d.i)
+          }
+        } 
+        while (node = node.next);
+      }
+      return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  });
+
+    return indices;
   }
 
   var zoomed = false

@@ -1217,6 +1217,7 @@ function openDetailsPage()
   dim_filters=getDimFilterStr(local_dim_filters)
   val_filters=getValFilterStr(local_val_filters)
 
+  sessionStorage.setItem("type", 'request')
   sessionStorage.setItem("base_dim", base_dim)
   sessionStorage.setItem("dim_filters", dim_filters)
   sessionStorage.setItem("val_filters", val_filters)
