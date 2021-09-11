@@ -473,15 +473,14 @@ class View_State
 
    propInfoFormat(data) 
    {
-    let html = `<u><h6 style="text-align: center;">${data.title}</h6></u>`
-    html += '<p style="font-size:0.75em;">'
+    let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
     for (let i=0; i < data.headers.length; i++)
     {
       let header = data.headers[i].replaceAll('_', ' ')
       if (header.includes('2019'))
-        html += `<b>${this.alias(header)}</b>: ${data.data[0][i].toLocaleString("en")}<br>`
+        html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data.data[0][i].toLocaleString("en")}</b></td></tr>`
     }
-    html += '</p>'
+    html += '</table>'
     return html
    }
    async propertyPopup (node, x, y)
@@ -528,13 +527,15 @@ class View_State
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
-              <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-              <b>Bedrooms:</b> ${node[7]}<br>
-              <b>Bathrooms:</b> ${node[8]}<br>
-              <b>Size:</b> ${node[9]} sqft<br>
-              <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-              <b>Year built:</b> ${node[11]}<br>
-              <b>Elevation:</b> ${node[14]}</p>
+              <table class="popup-table">
+                <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
+                <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
+                <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
+                <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
+                <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
+                <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
+                <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+              </table>
             </div>
             <div class="carousel-item">
               ${this.propInfoFormat(prop_info_data.state_code)}
@@ -558,8 +559,8 @@ class View_State
       </div>
       
       <div class="row px-4  align-items-center justify-content-center">
-      <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -589,7 +590,6 @@ class View_State
       .html(address)
       .style("left", x + "px")
       .style("top", y + "px")
-      .style("z-index",1000);
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
@@ -620,12 +620,13 @@ class View_State
       d3.select("#prop-popup").style("opacity", 1)
       .style("left", x + "px")
       .style("top", y + "px")
+      .style("z-index", 999)
       
   }
 
    async geomap()
    {
-      this.toolTipDiv = d3.select('.card-body').append("div")
+      this.propDiv = d3.select('.card-body').append("div")
       .attr("class", "container")
       .attr("id", "prop-popup")
       .style("opacity", 0)
@@ -992,13 +993,22 @@ class View_State
   async scatterChart()
   {
     if(!this.toolTipDiv)
-    { 
-      this.toolTipDiv= d3.select(".card-body").append("div")
-      .attr("class", "container")
-      .attr("id", "prop-popup")
+    {
+      this.tooltipDiv = d3.select(`.card-body`).append("div")
+      .attr("class", "scatterTooltip")
       .style("opacity", 0)
-      .style("width", "300px")
     }
+
+    if(this.propDiv)
+    { 
+      d3.select('#prop-popup').remove()
+    }
+
+    this.propDiv = d3.select(".card-body").append("div")
+    .attr("class", "container")
+    .attr("id", "prop-popup")
+    .style("opacity", 0)
+    .style("width", "300px")
 
     await this.serverRequest()
 
@@ -1033,7 +1043,7 @@ class View_State
         width = chart_width - margin.left - margin.right,
         height = chart_height - margin.top - margin.bottom,
         points=[],
-        pointRadius = 6,
+        pointRadius = 4,
         point_index = 0;
 
     for (let row of server_js.data)
@@ -1079,7 +1089,6 @@ class View_State
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
         const g = svg.append("g")
-
     /*
     const brush = d3.brush()
                   .extent( [ [0, 0], [chart_width, chart_height] ] )
@@ -1309,6 +1318,7 @@ class View_State
 
   function onMouseMove() 
   {
+    
     var mouse = d3.mouse(this);
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
@@ -1322,6 +1332,23 @@ class View_State
     var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
 
     highlight(closest)
+
+    if(closest)
+    {
+      let position = $(`#${selected_vs.getId()}`).offset()
+      let x = d3.event.x- position.left
+      let y = d3.event.y- position.top
+      selected_vs.tooltipDiv
+      .style("opacity", 1)
+      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}`)
+      .style("left", (x + 10) + "px")
+      .style("top", (y + 10) + "px");
+    }
+    else
+    {
+      selected_vs.tooltipDiv
+      .style("opacity", 0)
+    }
 
   }
     
