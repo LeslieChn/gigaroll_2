@@ -1076,14 +1076,24 @@ class View_State
         .attr("width", chart_width)
         .attr("height", chart_height)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," +
-            margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+        const g = svg.append("g")
 
+    /*
+    const brush = d3.brush()
+                  .extent( [ [0, 0], [chart_width, chart_height] ] )
+  
+    // attach the brush to the chart
+    const gBrush = g.append('g')
+                    .attr('class', 'brush')
+                    .call(brush);
+    */
     var canvas = d3.select(`#${this.getId()}-canvas`)
-        .attr("width", width - 1)
-        .attr("height", height - 1)
-        .style("transform", "translate(" + (margin.left + 1) +
-            "px" + "," + (margin.top + 1) + "px" + ")");
+        .attr("width", width  )
+        .attr("height", height  )
+        .style("transform", "translate(" + (margin.left ) +
+            "px" + "," + (margin.top ) + "px" + ")");
 
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
@@ -1099,9 +1109,12 @@ class View_State
 
     var xAxis = d3.axisBottom(xScale)
       .tickSizeInner(-height)
+      //.ticks(Math.round(chart_width/20) )
       .tickSizeOuter(0)
       .tickPadding(20);
+
     var yAxis = d3.axisLeft(yScale)
+      //.ticks(Math.round(chart_height/10) )
       .tickSizeInner(-width)
       .tickSizeOuter(0)
       .tickPadding(10);
@@ -1119,7 +1132,9 @@ class View_State
       .attr('class', 'y axis')
       .call(yAxis);
 
-    canvas.on("click", onClick);
+    canvas.on("click", onClick)
+          .on('mousemove', onMouseMove)
+
     canvas.call(zoomBehaviour);
 
     var context = canvas.node().getContext('2d');
@@ -1161,6 +1176,17 @@ class View_State
     new_yScale = yScale;
     xAxisSvg.call(xAxis.scale(new_xScale));
     yAxisSvg.call(yAxis.scale(new_yScale));
+
+  }
+
+  function openDetails()
+  {
+    let self = selected_vs
+    let req = self.state.request
+    sessionStorage.setItem("base_dim", 'property')
+    sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
+    sessionStorage.setItem("val_filters", '')
+    window.open('./details.html', '_blank');
   }
 
   if(this.resetDiv)
@@ -1168,10 +1194,18 @@ class View_State
     $("#reset-button-div").remove()
   }
 
-  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1" style="width:25px; position:absolute; z-index:1000;">
+  if (this.detailDiv)
+    $("#detail-button-div").remove()
+
+
+  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div"  style="width:25px; position:absolute; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
 
+  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div"  style="width:25px; position:absolute; top:50px; z-index:1000;">
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details_icon.png"/></div>`)
+
   $('#reset-button').on('click', resetZoom)
+  $('#details-button').on('click', openDetails)
 
 
 
@@ -1211,7 +1245,7 @@ class View_State
   function onClick() 
   {
     var mouse = d3.mouse(this);
-    console.log("I am the mouse ", mouse)
+
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
@@ -1245,6 +1279,52 @@ class View_State
     let y = d3.event.y- position.top
     selected_vs.propertyPopup(selected_vs.server_js.data[closest.i], x, y)
   }
+
+// add a circle for indicating the highlighted point
+  var hcircle = g.append('circle')
+  .attr('class', 'highlight-circle')
+  .attr('r', pointRadius + 2) // slightly larger than our points
+  .style('fill', 'none')
+  .style('display', 'none')
+  .style('stroke', 'orange')
+  .style('stroke-width', 2)
+  
+  
+  function highlight(d) 
+  {
+    // no point to highlight - hide the circle
+    if (!d) 
+    {
+      hcircle.style('display', 'none');
+    }
+    // otherwise, show the highlight circle at the correct position
+    else 
+    {
+      hcircle
+        .style('display', '')
+        .attr('cx', new_xScale(d.x))
+        .attr('cy', new_yScale(d.y));
+    }
+  }
+
+  function onMouseMove() 
+  {
+    var mouse = d3.mouse(this);
+    // map the clicked point to the data space
+    var xClicked = new_xScale.invert(mouse[0]);
+    var yClicked = new_yScale.invert(mouse[1]);
+
+    var xLeft = new_xScale.invert(mouse[0] - pointRadius)
+    var xRight = new_xScale.invert(mouse[0] + pointRadius)
+    var yTop = new_yScale.invert(mouse[1] - pointRadius)
+    var yBottom = new_yScale.invert(mouse[1] + pointRadius)
+
+    var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
+
+    highlight(closest)
+
+  }
+    
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
