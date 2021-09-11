@@ -1229,11 +1229,11 @@ class View_State
     $("#detail-button-div").remove()
 
 
-  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div"  style="width:25px; position:absolute; z-index:1000;">
+  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
 
-  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div"  style="width:25px; position:absolute; top:50px; z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details_icon.png"/></div>`)
+  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', openDetails)
