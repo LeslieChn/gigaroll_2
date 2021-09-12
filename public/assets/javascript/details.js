@@ -813,7 +813,7 @@ async function propertyPopup(node, x, y)
     }
 
       address = `
-      <div class="row p-0">
+      <div class="row">
         <div class="col p-0" id="mly">
           <div class="p-0 sm-2" id="pop-img-box" style="width:250px; height:200px;">
             <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
