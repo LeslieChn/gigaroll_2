@@ -16,9 +16,45 @@ var layerGroup = null
 var mapZoom
 var markerColor = "red"
 
+let aliases = {
+  'beds:count'     : 'Number of Properties',
+  'price:avg'      : 'Average Price',
+  'size:avg'       : 'Average Size',
+  'prop_type'      : 'Property Type',
+  'county'         : 'County',
+  'state_code'     : 'State',
+  'city'           : 'City',
+  'postal_code'    : 'Zip Code',
+  'elevation:avg'  : 'Average Elevation',
+  'year_built:min' : 'Earliest Construction (Year)',
+  'pop 2019'       : 'Population 2019'
+}
 
-async function serverRequest(params) {
-  p = new URLSearchParams(params).toString();
+var propDiv = null;
+
+function alias(name)
+{
+  let aliased_name = name
+  if ( name in aliases)
+  {
+    aliased_name = aliases[name]
+  }
+  return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
+}
+
+function reqParamsToString(params)
+{
+    let s = ''
+    for (let [key,val] of Object.entries(params))
+    {
+      s += `${key}=${encodeURIComponent(val)}&`
+    }
+    return s
+}
+
+async function serverRequest(params) 
+{
+  p = reqParamsToString(params)
 
   const api_url = `gserver/${p}`;
 
@@ -311,7 +347,7 @@ function findPoints()
     for (let i=0; i<coords.length; ++i)
     {
       
-      let contains = rectangle.getBounds().contains(coords[i]);
+      let contains = rectangle.getBounds().contains(coords[i][0]);
 
       if (contains)
         w2ui.grid.last.searchIds.push(rec_ids[i]-1);
@@ -329,7 +365,7 @@ function findPoints()
  */    
     for (let i=0; i<coords.length; ++i)
     {
-      let contains = circle.getLatLng().distanceTo(coords[i]) < circle.getRadius();
+      let contains = circle.getLatLng().distanceTo(coords[i][0]) < circle.getRadius();
 
       if (contains)
         w2ui.grid.last.searchIds.push(rec_ids[i]-1);
@@ -445,9 +481,11 @@ function updateGrid(server_js) {
 }
 
 /*************************************************************** */
+var sever_js = null;
 
 function processResp(resp)
 {
+  server_js = resp;
   updateGrid(resp);
 }
 
@@ -465,7 +503,8 @@ function launchMap()
   let max_lat = -999, max_lng = -999
   let min_lat =  999, min_lng =  999
 
-  for (let rec_id of sel){
+  for (let rec_id of sel)
+  {
     rec_ids.push(rec_id)
     let rec=w2ui.grid.get(rec_id)
     let lat=rec.latitude/1e6
@@ -477,7 +516,7 @@ function launchMap()
     min_lat = (lat<min_lat)? lat : min_lat
     min_lng = (lng<min_lng)? lng : min_lng
   
-    coords.push([lat,lng])
+    coords.push([[lat,lng], rec_id-1])
   }
   center_lat = (max_lat + min_lat)/2
   center_lng = (max_lng + min_lng)/2
@@ -490,8 +529,10 @@ function launchMap()
   showMap()
 }
 
-function showMap(){
-  if (osMap==null) {
+function showMap()
+{
+  if (osMap==null) 
+  {
     osMap = L.map("map", {preferCanvas: true
     }).setView(map_center,6)
     tileLayer = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
@@ -521,8 +562,10 @@ function showMap(){
 }
 
 
-function autoZoom(){
-  $(map).ready(function () {
+function autoZoom()
+{
+  $(map).ready(function () 
+  {
     console.log("This is map:",map)
     osMap.invalidateSize()
     mapZoom = osMap.getBoundsZoom(bounds)
@@ -530,10 +573,12 @@ function autoZoom(){
   });
 }
 
-function setClusterMap(){
+function setClusterMap()
+{
   cluMarkers = L.markerClusterGroup();
-  for (let coord of coords) {
-    cluMarkers.addLayer(L.marker(coord));
+  for (let coord of coords) 
+  {
+    cluMarkers.addLayer(L.marker(coord[0]));
   }
   osMap.addLayer(cluMarkers);
   disableBn(["heat_gradient","heat_radius","heat_opacity","marker_type","marker_color"])
@@ -576,12 +621,14 @@ function clearMap(){
     osMap.removeLayer(cluMarkers);
 }
 
-function setMarkers() {
+function setMarkers() 
+{
   if (markers)
     osMap.removeLayer(markers)
   markers = L.featureGroup()
-  for (let coord of coords) {
-    L.circleMarker(coord, {
+  for (let coord of coords) 
+  {
+    L.circleMarker(coord[0], {
         fillColor: markerColor,
         fillOpacity: 1,
         stroke: true,
@@ -590,11 +637,23 @@ function setMarkers() {
         boostType: boostType,
         boostScale: 1,
         boostExp: 0,
-        radius: 6
-    }).addTo(markers);
+        radius: 6,
+    }).addTo(markers)
+    .on('click', onMapClick);
+    
+    function onMapClick(e)
+    {
+      let x = e.originalEvent.x 
+      let y = e.originalEvent.y 
+      let node = server_js.data[coord[1]]
+      propertyPopup(node, x, y)
+    }
   }
+
   markers.addTo(osMap);
 }
+
+
 
 function setRegMap(){
   setMarkers()
@@ -607,7 +666,7 @@ function setHeatMap()
 {
   let data = []
   for (let coord of coords)
-    data.push(coord);
+    data.push(coord[0]);
   heatmap = L.heatLayer(data,{radius: radiusVal, blur: 0, max: 1, minOpacity: opacity, gradient:{
     '0.00': 'rgb(255,0,255)',
     '0.25': 'rgb(0,0,255)',
@@ -676,6 +735,7 @@ function changeGradient() {
 
 async function InitPage() 
 {
+
   let type = sessionStorage.getItem('type')
   if (type == 'data')
   {
@@ -698,16 +758,180 @@ async function InitPage()
   };
 
   if (dim_filters.length > 0)
-    params.dim_filters = encodeURIComponent(dim_filters)
+    params.dim_filters = dim_filters
   
   if (val_filters.length > 0)
-    params.val_filters = encodeURIComponent(val_filters)
+    params.val_filters = val_filters
    
   serverRequest(params).then(processResp);
 
 } //initPage
 
+function propInfoFormat(data) 
+{
+  let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
+  for (let i=0; i < data.headers.length; i++)
+  {
+    let header = data.headers[i].replaceAll('_', ' ')
+    if (header.includes('2019'))
+      html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data.data[0][i].toLocaleString("en")}</b></td></tr>`
+  }
+  html += '</table>'
+  return html
+}
 
+async function propertyPopup(node, x, y)
+{
+    if (!propDiv)
+    {
+      propDiv = d3.select("#container").append("div")
+      .attr("class", "container")
+      .attr("id", "prop-popup")
+      .style("opacity", 0)
+      .style("width", "300px")
+    }
 
+    if(x==null||x==undefined)
+      x=20
+    if(x==null||x==undefined)
+      y=20
+    let address, img_url = "";
+
+    let prop_info_params = 
+    {
+      state_code : node[4], 
+      county : node[3],
+      postal_code : node[2]
+    }
+
+    let prop_info_data = {}
+
+    for (let [key, value] of Object.entries(prop_info_params)) 
+    {
+      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
+    }
+
+      address = `
+      <div class="row p-0">
+        <div class="col p-0" id="mly">
+          <div class="p-0 sm-2" id="pop-img-box" style="width:250px; height:200px;">
+            <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
+          </div>
+        </div>
+        <div class="col">
+          <button type="button" class="btn-close p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+          </div>
+        </div>
+      <div class="row">
+        <div class="col-12 px-2 d-flex align-items-center justify-content-center">
+        <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+        </div>
+      </div>
+
+      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
+          <div class="carousel-inner px-3">
+            <div class="carousel-item active">
+              <table class="popup-table">
+                <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
+                <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
+                <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
+                <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
+                <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
+                <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
+                <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+              </table>
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.state_code)}
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.county)}
+            </div>
+            <div class="carousel-item">
+              ${this.propInfoFormat(prop_info_data.postal_code)}
+            </div>
+          </div>
+          <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next me-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="row px-4  align-items-center justify-content-center">
+        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]*1e-6},${node[13]*1e-6}">Google</a>
+      </div>
+      `
+      let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
+      const api_url = `getimage/${p}`;
+      var request = new Request(api_url, { method: "POST" });
+      const response = await fetch(request);
+      img_url = await response.text()
+      // let str = 'property="og:image" content="'
+      // let start = data.indexOf(str) + str.length
+      // let end = data.indexOf('"' , start)
+      // img_url = data.substring(start,end)
+      if (img_url.startsWith('https://'))
+      {
+        $(document).ready(function() {
+          $("#pop_img").attr('src',img_url)
+        });
+      }
+      else
+      {
+        $(document).ready(function() {
+          $("#pop_img").attr('src',"assets/images/logo_sun.png");
+
+        });
+      }
+      // e.target.bindPopup(address).openPopup();
+      d3.select("#prop-popup").style("opacity", 0)
+      .html(address)
+      .style("left", x + "px")
+      .style("top", y + "px")
+
+      $('#carouselExampleControls').carousel({pause: true, interval: false });
+
+      // const popup_ps = new PerfectScrollbar(`#popup-info`, {
+      //   wheelSpeed: 2,
+      //   wheelPropagation: false,
+      //   minScrollbarLength: 20
+      // })
+
+      // ps_object['popup-info']=popup_ps
+
+      //let position = $(`#${this.getId()}`).offset()
+      let screen_width = window.innerWidth
+      let screen_height = window.innerHeight
+      let popup_width = $('#prop-popup').outerWidth()
+      let popup_height = $('#prop-popup').outerHeight()
+      const offset = 20
+      x += offset
+      let right_edge = x + popup_width // + position.left
+      let bottom_edge = y + popup_height // + position.top 
+      console.log(y)
+      console.log(bottom_edge + '= bottom_edge')
+      if (right_edge >= screen_width)
+        x = Math.max(x - popup_width - 2 * offset, 0)
+      if (bottom_edge >= screen_height)
+        y = Math.max(y - popup_height, 0)
+      
+      d3.select("#prop-popup").style("opacity", 1)
+      .style("left", x + "px")
+      .style("top", y + "px")
+      .style("z-index", 999)
+      
+  }
+  function hideMapTooltip ()
+  {
+    propDiv.style("opacity", 0).style("z-index",-1000)
+  }
 
 $(document).ready(InitPage);

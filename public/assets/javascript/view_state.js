@@ -560,7 +560,7 @@ class View_State
       
       <div class="row px-4  align-items-center justify-content-center">
         <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]*1e-6},${node[13]*1e-6}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -1197,10 +1197,10 @@ class View_State
     // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
     // sessionStorage.setItem("val_filters", '')
     let 
-      xLeft = new_xScale.invert(0),
-      xRight = new_xScale.invert(chart_width),
-      yTop = new_yScale.invert(0),
-      yBottom = new_yScale.invert(chart_height);
+      xLeft = new_xScale.domain()[0],
+      xRight = new_xScale.domain()[1],
+      yTop = new_yScale.domain()[1],
+      yBottom = new_yScale.domain()[0];
 
       let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
       if (indices.length == 0)
@@ -1210,7 +1210,7 @@ class View_State
     server_data.headers = selected_vs.server_js.headers
     server_data.data = []
     
-    for (let i in indices)
+    for (let i of indices)
     {
       server_data.data.push(selected_vs.server_js.data[i])
     }
@@ -1287,6 +1287,7 @@ class View_State
           let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
           if (inside)
           {
+            console.log(d)
             indices.push(d.i)
           }
         } 
