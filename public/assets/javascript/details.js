@@ -509,13 +509,29 @@ function showMap()
 {
   if (osMap==null) 
   {
-    osMap = L.map("map", {preferCanvas: true
-    }).setView(map_center,6)
-    tileLayer = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=vgYeUXLEg9nfjeVPRVwr', {
-    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-    });
-    tileLayer.addTo(osMap);
+    try
+     { 
+      var streets = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}@2x.png?key=vgYeUXLEg9nfjeVPRVwr', {id: 'simple_map', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'}),
+      satellite   = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}@2x.jpg?key=vgYeUXLEg9nfjeVPRVwr', {id: 'satellite', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'});
+      var baseMaps = {
+        "Streets": streets,
+        "Satellite": satellite
+      };
+      osMap = L.map("map", 
+       {preferCanvas: true,
+        minZoom: 1,
+        maxZoom: 16,
+        layers: [streets]
+       });
+       this.object_instance = osMap
+     }
+     catch(e)
+     {
+       console.log(e)
+     }
+     L.control.layers(baseMaps).addTo(osMap);
   }
+
   
   clearMap()
   var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
