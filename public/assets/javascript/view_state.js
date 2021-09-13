@@ -483,6 +483,7 @@ class View_State
     html += '</table>'
     return html
    }
+
    async propertyPopup (node, x, y)
    {
     if(x==null||x==undefined)
@@ -508,18 +509,19 @@ class View_State
 
       address = `
       <div class="row">
-        <div class="col-11" id="mly">
-          <div id="pop-img-box" style="width:250px; height:200px;">
+        <div class="col-11">
+        </div>
+          <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+      </div>
+      <div class="row">
+        <div class="col-12 align-content-center" style="height:200px;" id="bbq">
             <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
-          </div>
         </div>
-        <div class="col-1">
-          <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
-          </div>
-        </div>
+      </div>
+
       <div class="row">
         <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-        <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+          <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
 
@@ -528,6 +530,7 @@ class View_State
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
               <table class="popup-table">
+                <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
                 <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
                 <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
                 <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
@@ -559,8 +562,8 @@ class View_State
       </div>
       
       <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
