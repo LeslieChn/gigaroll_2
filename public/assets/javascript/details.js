@@ -634,9 +634,6 @@ function setMarkers()
         stroke: true,
         color: 'white',
         weight: 1,
-        boostType: boostType,
-        boostScale: 1,
-        boostExp: 0,
         radius: 6,
     }).addTo(markers)
     .on('click', onMapClick);
