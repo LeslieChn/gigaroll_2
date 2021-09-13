@@ -64,3 +64,16 @@ body { height: 100%;margin: 0;padding: 0;}
   font-size: 0.8rem;
   font-weight:normal;
 }
+
+.infobuttons{
+  letter-spacing: -0.025rem;
+  text-transform: uppercase;
+  background-size: 150%;
+  background-position-x: 25%;
+  font-family: "Open Sans";
+  font-weight: 700;
+  line-height: 1.4;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease-in;
+}
