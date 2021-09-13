@@ -514,7 +514,7 @@ class View_State
           <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
       </div>
       <div class="row">
-        <div class="col-12 align-content-center" style="height:200px;" id="bbq">
+        <div class="col-12 align-content-center" style="height:200px;">
             <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
         </div>
       </div>

@@ -806,63 +806,65 @@ async function propertyPopup(node, x, y)
       prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
     }
 
-      address = `
-      <div class="row">
-        <div class="col p-0" id="mly">
-          <div class="p-0 sm-2" id="pop-img-box" style="width:250px; height:200px;">
-            <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
-          </div>
-        </div>
-        <div class="col">
-          <button type="button" class="btn-close p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
-          </div>
-        </div>
-      <div class="row">
-        <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-        <p style="font-size:0.75em; color:black; font-weight:bold;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
-        </div>
+    address = `
+    <div class="row">
+      <div class="col-11">
       </div>
+        <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+    </div>
+    <div class="row">
+      <div class="col-12 align-content-center" style="height:200px;">
+          <img id="pop_img" style="width:100%; height:100%; object-fit: contain;" class="img" alt="..." src="assets/images/loading.gif">
+      </div>
+    </div>
 
-      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
-        <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-          <div class="carousel-inner px-3">
-            <div class="carousel-item active">
-              <table class="popup-table">
-                <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
-                <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
-                <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
-                <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
-                <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
-                <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
-                <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
-              </table>
-            </div>
-            <div class="carousel-item">
-              ${this.propInfoFormat(prop_info_data.state_code)}
-            </div>
-            <div class="carousel-item">
-              ${this.propInfoFormat(prop_info_data.county)}
-            </div>
-            <div class="carousel-item">
-              ${this.propInfoFormat(prop_info_data.postal_code)}
-            </div>
+    <div class="row">
+      <div class="col-12 px-2 d-flex align-items-center justify-content-center">
+        <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+      </div>
+    </div>
+
+    <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+      <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
+        <div class="carousel-inner px-3">
+          <div class="carousel-item active">
+            <table class="popup-table">
+              <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
+              <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
+              <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
+              <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
+              <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
+              <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
+              <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
+              <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+            </table>
           </div>
-          <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-          </button>
-          <button class="carousel-control-next me-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-          </button>
+          <div class="carousel-item" id="state_info">
+            ${this.propInfoFormat(prop_info_data.state_code)}
+          </div>
+          <div class="carousel-item" id="county_info">
+            ${this.propInfoFormat(prop_info_data.county)}
+          </div>
+          <div class="carousel-item" id="zip_info">
+            ${this.propInfoFormat(prop_info_data.postal_code)}
+          </div>
         </div>
+        <button class="carousel-control-prev ms-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next me-n4" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
       </div>
-      
-      <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]*1e-6},${node[13]*1e-6}">Google</a>
-      </div>
-      `
+    </div>
+    
+    <div class="row px-4  align-items-center justify-content-center">
+      <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+    </div>
+    `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
       const api_url = `getimage/${p}`;
       var request = new Request(api_url, { method: "POST" });
