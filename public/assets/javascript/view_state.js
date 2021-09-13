@@ -1075,8 +1075,13 @@ class View_State
     var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,10000));
 
     if (n_vals >= 3)
+    {
       this.setupColors(min_val, max_val)
-
+      for (let point of points)
+      {
+        point.color = this.point_colors(server_js.data[point.i][i3])
+      }
+    }
         
     $(`#${this.getId()}`).html(`<svg id="${this.getId()}-svg" class="plot"></svg>
     <canvas id="${this.getId()}-canvas" class="plot"></canvas>`)
@@ -1286,7 +1291,6 @@ class View_State
           let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
           if (inside)
           {
-            console.log(d)
             indices.push(d.i)
           }
         } 
@@ -1388,13 +1392,16 @@ class View_State
     if(closest)
     {
       let position = $(`#${selected_vs.getId()}`).offset()
-      let x = d3.event.x- position.left
-      let y = d3.event.y- position.top
+      let pos_x = d3.event.x- position.left
+      let pos_y = d3.event.y- position.top
+      let z = null
+      if (n_vals >= 3)
+        z = server_js.data[closest.i][i3]
       selected_vs.tooltipDiv
       .style("opacity", 1)
-      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}`)
-      .style("left", (x + 10) + "px")
-      .style("top", (y + 10) + "px");
+      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}${z? ',' + meas3 + ':' + z : ''} `)
+      .style("left", (pos_x + 10) + "px")
+      .style("top", (pos_y + 10) + "px");
     }
     else
     {
@@ -1454,6 +1461,7 @@ class View_State
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fillStyle = point.color;
             context.fill();
             //context.stroke();
             //context.closePath();
@@ -1468,6 +1476,7 @@ class View_State
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fillStyle = point.color;
             context.fill();
             context.stroke();
             //context.closePath();
@@ -1520,32 +1529,32 @@ function euclideanDistance(x1, y1, x2, y2)
 
     this.color_lookup = {} ;
 
-    function colorCallback(instance, context) 
-    {
-      if (n_vals >= 3)
-      {
-        let val = server_js.data[context.dataIndex][i3]
-        return instance.point_colors(val)
-      }
-      else
-        return 'red';
+    // function colorCallback(instance, context) 
+    // {
+    //   if (n_vals >= 3)
+    //   {
+    //     let val = server_js.data[context.dataIndex][i3]
+    //     return instance.point_colors(val)
+    //   }
+    //   else
+    //     return 'red';
 
-      {
-        let city = server_js.data[context.dataIndex][1]
+    //   {
+    //     let city = server_js.data[context.dataIndex][1]
 
-        if (city in instance.color_lookup)
-          return instance.color_lookup[city];
-        else
-        {
-          var colors = ['green', 'red', 'blue']
-          let n = Object.keys(instance.color_lookup).length
-          let color = colors[(n+1)%colors.length]
-          instance.color_lookup[city] = color
-          return color
-        }
-      }
+    //     if (city in instance.color_lookup)
+    //       return instance.color_lookup[city];
+    //     else
+    //     {
+    //       var colors = ['green', 'red', 'blue']
+    //       let n = Object.keys(instance.color_lookup).length
+    //       let color = colors[(n+1)%colors.length]
+    //       instance.color_lookup[city] = color
+    //       return color
+    //     }
+    //   }
        
-    }
+    // }
   }
 
   
