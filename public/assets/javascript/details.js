@@ -4,7 +4,6 @@ var map_center = {}
 var rec_ids = []
 var map = null
 var cluMarkers
-var boostType = "balloon"
 var markers
 var heatmap = L.heatLayer([],{radius: 30},{blur: 0},{0.4: 'blue', 0.65: 'lime', 1: 'red'});
 var radiusVal = 10
@@ -109,29 +108,6 @@ $(function () {
               }
             },
             { type: "break" },
-            {
-              type: "menu-radio",
-              id: "marker_type",
-              text: 
-              function (item) {
-                var el = this.get("marker_type:" + item.selected);
-                return el.text;
-              },
-              selected: "balloon",
-              items: [
-                { id: "balloon", text: "Balloon"},
-                { id: "ball", text: "Ball"},
-                { id: "circle", text: "Circle"},
-              ],
-              onRefresh: function(event){
-                if (boostType != event.item.selected)
-                {
-                  boostType = event.item.selected
-                  setMarkers()
-                }
-
-              }
-            },
             {
               type: "menu-radio",
               id: "marker_color",
