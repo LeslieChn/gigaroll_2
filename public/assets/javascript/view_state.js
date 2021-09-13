@@ -540,13 +540,13 @@ class View_State
                 <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
               </table>
             </div>
-            <div class="carousel-item">
+            <div class="carousel-item" id="state_info">
               ${this.propInfoFormat(prop_info_data.state_code)}
             </div>
-            <div class="carousel-item">
+            <div class="carousel-item" id="county_info">
               ${this.propInfoFormat(prop_info_data.county)}
             </div>
-            <div class="carousel-item">
+            <div class="carousel-item" id="zip_info">
               ${this.propInfoFormat(prop_info_data.postal_code)}
             </div>
           </div>
@@ -571,10 +571,6 @@ class View_State
       var request = new Request(api_url, { method: "POST" });
       const response = await fetch(request);
       img_url = await response.text()
-      // let str = 'property="og:image" content="'
-      // let start = data.indexOf(str) + str.length
-      // let end = data.indexOf('"' , start)
-      // img_url = data.substring(start,end)
       if (img_url.startsWith('https://'))
       {
         $(document).ready(function() {
