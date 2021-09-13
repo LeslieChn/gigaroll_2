@@ -37,3 +37,30 @@ body { height: 100%;margin: 0;padding: 0;}
 .w2ui-menu{
   overflow: hidden !important
 }
+
+#prop-popup{   
+  position: absolute;         
+  /* text-align: center;     */
+  /*     
+  width: 80px;                    
+  height: 28px;
+  */        
+  overflow: hidden;
+  z-index:10;           
+  padding: 8px !important;               
+  font-weight: bold;     
+  background: #f0f8ff; 
+  border: 0px;        
+  border-radius: 8px;      
+  box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
+}
+
+#popup-info{
+  overflow: hidden !important;
+}
+
+.popup-table{
+  line-height:1.25;
+  font-size: 0.8rem;
+  font-weight:normal;
+}

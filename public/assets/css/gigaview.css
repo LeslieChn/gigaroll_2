@@ -107,7 +107,7 @@ ul {
   width: 80px;                    
   height: 28px;
   */        
-  z-index:1000;           
+  z-index:999;           
   padding: 8px;               
   font-weight: bold;     
   background: #f0f8ff; 
@@ -141,6 +141,12 @@ ul {
 
 #popup-info{
   overflow: hidden !important;
+}
+
+.popup-table{
+  line-height:1.25;
+  font-size: 0.8rem;
+  font-weight:normal;
 }
 
 @media only screen and (max-width: 812px) {

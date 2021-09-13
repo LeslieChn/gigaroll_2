@@ -66,3 +66,22 @@ div.tooltip {
     pointer-events: none;   
     box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
 }
+
+div.scatterTooltip {   
+  position: absolute;         
+  text-align: center;    
+  /*     
+  width: 80px;                    
+  height: 28px;
+  */      
+  z-index:1000;    
+  color:white;             
+  padding: 8px;               
+  font: 10px sans-serif; 
+  font-weight: bold;     
+  background:  rgb(155, 0, 31);
+  border: 0px;        
+  border-radius: 4px;      
+  pointer-events: none;   
+  box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
+}

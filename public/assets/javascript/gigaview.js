@@ -142,7 +142,7 @@ let geodropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY','city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ'],
+    contents: ['city:New York-NY','city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', ''],
     position:'bottom-right',
     // knob_position:'right'
   }
@@ -215,9 +215,7 @@ resizeContent()
 function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
-  console.log('client height =' + client_height)
   let row_height = $('#vs-knob-column').height()
-  console.log(row_height)
   return client_height - 2.25 * row_height 
 }
 

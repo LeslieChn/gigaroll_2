@@ -201,7 +201,7 @@ class View_State
     let server_result = await serverRequest(params);
     if (params.qid == "MD_RETR")
     {
-      this.server_js=server_result
+      this.server_js = server_result
       return
     }
     let server_meta=server_result["meta"];
@@ -210,7 +210,7 @@ class View_State
       alert("The data server returned "+ server_meta.status)
       return
     }
-    this.server_js=server_result["data"]
+    this.server_js = server_result["data"]
     // if (server_meta.is_range)
     //   server_range = server_result.range;
   }
@@ -246,7 +246,6 @@ class View_State
     {
       aliased_name=this.state.aliases[name]
     }
-    console.log(aliased_name)
     return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
   }
 
@@ -474,15 +473,14 @@ class View_State
 
    propInfoFormat(data) 
    {
-    let html = `<u><h6 style="text-align: center;">${data.title}</h6></u>`
-    html += '<p style="font-size:0.75em;">'
+    let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
     for (let i=0; i < data.headers.length; i++)
     {
       let header = data.headers[i].replaceAll('_', ' ')
       if (header.includes('2019'))
-        html += `<b>${this.alias(header)}</b>: ${data.data[0][i].toLocaleString("en")}<br>`
+        html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data.data[0][i].toLocaleString("en")}</b></td></tr>`
     }
-    html += '</p>'
+    html += '</table>'
     return html
    }
    async propertyPopup (node, x, y)
@@ -529,15 +527,15 @@ class View_State
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
           <div class="carousel-inner px-3">
             <div class="carousel-item active">
-              <p style="font-size:0.75em;"><b>Property type:</b> ${node[5]}<br>
-              <b>Number of 
-              
-              :</b> ${node[7]}<br>
-              <b>Number of Bathrooms:</b> ${node[8]}<br>
-              <b>Size:</b> ${node[9]} sqft<br>
-              <b>Price:</b> $${node[10].toLocaleString("en")}<br>
-              <b>Year built:</b> ${node[11]}<br>
-              <b>Elevation:</b> ${node[14]}</p>
+              <table class="popup-table">
+                <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
+                <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
+                <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
+                <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
+                <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
+                <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
+                <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+              </table>
             </div>
             <div class="carousel-item">
               ${this.propInfoFormat(prop_info_data.state_code)}
@@ -561,8 +559,8 @@ class View_State
       </div>
       
       <div class="row px-4  align-items-center justify-content-center">
-      <a style="margin: 0px 6px 12px 0px;" target="_blank" class="btn btn-success col-5 text-nowrap text-dark" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px;" target="_blank" class="btn btn-info col-5 text-nowrap text-dark" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31);" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -592,7 +590,6 @@ class View_State
       .html(address)
       .style("left", x + "px")
       .style("top", y + "px")
-      .style("z-index",1000);
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
@@ -623,12 +620,13 @@ class View_State
       d3.select("#prop-popup").style("opacity", 1)
       .style("left", x + "px")
       .style("top", y + "px")
+      .style("z-index", 999)
       
   }
 
    async geomap()
    {
-      this.toolTipDiv = d3.select('.card-body').append("div")
+      this.propDiv = d3.select('.card-body').append("div")
       .attr("class", "container")
       .attr("id", "prop-popup")
       .style("opacity", 0)
@@ -994,7 +992,19 @@ class View_State
 
   async scatterChart()
   {
-    this.toolTipDiv = d3.select(".card-body").append("div")
+    if(!this.toolTipDiv)
+    {
+      this.tooltipDiv = d3.select(`.card-body`).append("div")
+      .attr("class", "scatterTooltip")
+      .style("opacity", 0)
+    }
+
+    if(this.propDiv)
+    { 
+      d3.select('#prop-popup').remove()
+    }
+
+    this.propDiv = d3.select(".card-body").append("div")
     .attr("class", "container")
     .attr("id", "prop-popup")
     .style("opacity", 0)
@@ -1014,7 +1024,7 @@ class View_State
 
     let vs_id=this.getId()
 
-    let server_js=this.server_js
+    let server_js = this.server_js
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
@@ -1026,15 +1036,14 @@ class View_State
         i2 = server_js.headers.indexOf(meas2),
         i3 = server_js.headers.indexOf(meas3),
         max_val = -Infinity, min_val = Infinity,
-        max_x = -Infinity, min_x = Infinity,
-        max_y = -Infinity, min_y = Infinity,
+
         chart_width = $(`#${this.getId()}`).width(),
         chart_height = $(`#${this.getId()}`).height(),
         margin = {top: chart_height*0.05, right: chart_width*0.05, bottom: chart_height*0.1, left: chart_width*0.1},
         width = chart_width - margin.left - margin.right,
         height = chart_height - margin.top - margin.bottom,
         points=[],
-        pointRadius = 6,
+        pointRadius = 4,
         point_index = 0;
 
     for (let row of server_js.data)
@@ -1045,10 +1054,7 @@ class View_State
                     y:y,
                     i:point_index++,
                     selected: false})
-      if (max_x < x) max_x = x
-      if (min_x > x) min_x = x
-      if (max_y < y) max_y = y
-      if (min_y > y) min_y = y
+
       if (n_vals >= 3)
       {
         let val = row[i3]
@@ -1064,8 +1070,8 @@ class View_State
     .y(function(d) {
         return d.y
     }).addAll(points);
-    console.log("quadtree", quadTree)
-    var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,1000));
+
+    var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,10000));
 
     if (n_vals >= 3)
       this.setupColors(min_val, max_val)
@@ -1080,34 +1086,53 @@ class View_State
         .attr("width", chart_width)
         .attr("height", chart_height)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," +
-            margin.top + ")");
-
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+        const g = svg.append("g")
+    /*
+    const brush = d3.brush()
+                  .extent( [ [0, 0], [chart_width, chart_height] ] )
+  
+    // attach the brush to the chart
+    const gBrush = g.append('g')
+                    .attr('class', 'brush')
+                    .call(brush);
+    */
     var canvas = d3.select(`#${this.getId()}-canvas`)
-        .attr("width", width - 1)
-        .attr("height", height - 1)
-        .style("transform", "translate(" + (margin.left + 1) +
-            "px" + "," + (margin.top + 1) + "px" + ")");
+        .attr("width", width  )
+        .attr("height", height  )
+        .style("transform", "translate(" + (margin.left ) +
+            "px" + "," + (margin.top ) + "px" + ")");
+
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
+
     var xScale = d3.scaleLinear()
       .domain([xRange[0] * 0.9, xRange[1] *1.05])
       .range([0, width]);
     var yScale = d3.scaleLinear()
       .domain([yRange[0] * 0.9, yRange[1] *1.05])
       .range([height, 0]);
+
+    var new_xScale = xScale, new_yScale = yScale;
+
     var xAxis = d3.axisBottom(xScale)
       .tickSizeInner(-height)
+      //.ticks(Math.round(chart_width/20) )
       .tickSizeOuter(0)
       .tickPadding(20);
+
     var yAxis = d3.axisLeft(yScale)
+      //.ticks(Math.round(chart_height/10) )
       .tickSizeInner(-width)
       .tickSizeOuter(0)
       .tickPadding(10);
+
     var zoomBehaviour = d3.zoom()
-      .scaleExtent([1, 10])
+      .scaleExtent([0.5, 200])
       .on("zoom", onZoom)
       .on("end", onZoomEnd);
+      
     var xAxisSvg = svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', 'translate(0,' + height + ')')
@@ -1116,18 +1141,14 @@ class View_State
       .attr('class', 'y axis')
       .call(yAxis);
 
-    canvas.on("click", onClick);
+    canvas.on("click", onClick)
+          .on('mousemove', onMouseMove)
+
     canvas.call(zoomBehaviour);
+
     var context = canvas.node().getContext('2d');
     var r = regression.linear(points.map((i)=>([i.x,i.y]))),
-    m = r.equation[0], b = r.equation[1],
-    rp = [[
-      xScale(min_x),
-        yScale(m * min_x + b)
-    ], [
-      xScale(max_x),
-      yScale(m * max_x + b)
-    ]];
+    m = r.equation[0], b = r.equation[1];
 
     svg.append("text")
     .attr("class", "x label")
@@ -1144,124 +1165,347 @@ class View_State
     .attr("transform", "rotate(-90)")
     .text(meas2);
 
+  draw();
 
-    draw();
-
-    var selectedPoint, new_xScale , new_yScale;
-
-    function onClick() {
-      var mouse = d3.mouse(this);
-      console.log("I am the mouse ",mouse)
-      // map the clicked point to the data space
-      var xClicked = new_xScale ? new_xScale.invert(mouse[0]) : xScale.invert(mouse[0]);
-      var yClicked = new_yScale ? new_yScale.invert(mouse[1]) :  yScale.invert(mouse[1]);
-      var closest = quadTree.find(xClicked, yClicked);
-      console.log("Clicked after invert scale ", [xClicked,yClicked])
-      console.log("closest point ",closest)
-
-      // map the co-ordinates of the closest point to the canvas space
-      var dX = new_xScale ? new_xScale(closest.x) : xScale(closest.x);
-      var dY = new_yScale ? new_yScale(closest.y) : yScale(closest.y);
-
-
-      // register the click if the clicked point is in the radius of the point
-      var distance = euclideanDistance(mouse[0], mouse[1], dX, dY);
-      console.log("distance:", distance)
-      if(distance <= pointRadius) {
-          if(selectedPoint) {
-              points[selectedPoint].selected = false;
-          }
-          closest.selected = true;
-          selectedPoint = closest.i;
-
-          // redraw the points
-          draw();
-      }
+  var selectedPoint = null;
+  
+  function resetZoom()
+  {
+    if (points.length<2500)
+    {
+      canvas
+      .transition()
+      .duration(500)
+      .call(zoomBehaviour.transform, d3.zoomIdentity);
     }
+    else
+      canvas.call(zoomBehaviour.transform, d3.zoomIdentity);
 
-  var zoomEndTimeout;
-  var currentTransform = d3.zoomIdentity;
-  function onZoom() {
-    currentTransform = d3.event.transform;
-     new_xScale = d3.event.transform.rescaleX(xScale)
-     new_yScale = d3.event.transform.rescaleY(yScale)
+    new_xScale = xScale;
+    new_yScale = yScale;
     xAxisSvg.call(xAxis.scale(new_xScale));
     yAxisSvg.call(yAxis.scale(new_yScale));
 
+  }
+
+  function openDetails()
+  {
+    let self = selected_vs
+    let req = self.state.request
+    sessionStorage.setItem("type", 'data')
+    // sessionStorage.setItem("base_dim", 'property')
+    // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
+    // sessionStorage.setItem("val_filters", '')
+    let 
+      xLeft = new_xScale.domain()[0],
+      xRight = new_xScale.domain()[1],
+      yTop = new_yScale.domain()[1],
+      yBottom = new_yScale.domain()[0];
+
+      let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
+      if (indices.length == 0)
+        return;
+
+    let server_data = {}
+    server_data.headers = selected_vs.server_js.headers
+    server_data.data = []
+    
+    for (let i of indices)
+    {
+      server_data.data.push(selected_vs.server_js.data[i])
+    }
+
+    sessionStorage.setItem("server_data", JSON.stringify(server_data) )
+
+    window.open('./details.html', '_blank');
+  }
+
+  if(this.resetDiv)
+  {
+    $("#reset-button-div").remove()
+  }
+
+  if (this.detailDiv)
+    $("#detail-button-div").remove()
+
+
+  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
+
+  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+
+  $('#reset-button').on('click', resetZoom)
+  $('#details-button').on('click', openDetails)
+
+
+
+  // Find the closest node within the specified rectangle.
+  function findClosest(quadtree, base_point, x0, y0, x3, y3) 
+  {
+    let point = undefined, dist = Infinity;
+
+    quadtree.visit(function(node, x1, y1, x2, y2) 
+    {
+      if (!node.length) 
+      {
+        do 
+        {
+          var d = node.data;
+          let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
+          if (inside)
+          {
+            let new_dist = euclideanDistance(d.x, d.y, base_point[0], base_point[1])
+            if (new_dist < dist)
+            {
+              dist = new_dist;
+              point = d;
+            }
+          }
+        } 
+        while (node = node.next);
+      }
+      return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  });
+
+    return point;
+  }
+
+
+  // Find the closest node within the specified rectangle.
+  function search(quadtree, x0, y0, x3, y3) 
+  {
+    let indices = []
+
+    quadtree.visit(function(node, x1, y1, x2, y2) 
+    {
+      if (!node.length) 
+      {
+        do 
+        {
+          var d = node.data;
+          let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
+          if (inside)
+          {
+            console.log(d)
+            indices.push(d.i)
+          }
+        } 
+        while (node = node.next);
+      }
+      return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+  });
+
+    return indices;
+  }
+
+  var zoomed = false
+
+  function onClick() 
+  {
+    var mouse = d3.mouse(this);
+
+    // map the clicked point to the data space
+    var xClicked = new_xScale.invert(mouse[0]);
+    var yClicked = new_yScale.invert(mouse[1]);
+
+    var xLeft = new_xScale.invert(mouse[0] - pointRadius)
+    var xRight = new_xScale.invert(mouse[0] + pointRadius)
+    var yTop = new_yScale.invert(mouse[1] - pointRadius)
+    var yBottom = new_yScale.invert(mouse[1] + pointRadius)
+    
+    var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
+
+    if(selectedPoint != null) 
+    {
+        points[selectedPoint].selected = false;
+        selectedPoint = null
+    }
+
+    if (!closest)
+    {
+      draw()
+      return
+    }
+    
+    closest.selected = true;
+    selectedPoint = closest.i;
+
+    draw()
+
+    let position = $(`#${selected_vs.getId()}`).offset()
+    let x = d3.event.x- position.left
+    let y = d3.event.y- position.top
+    let node = selected_vs.server_js.data[closest.i].slice()
+    node[12] *= 1e-6
+    node[13] *= 1e-6
+    selected_vs.propertyPopup(node, x, y)
+  }
+
+// add a circle for indicating the highlighted point
+  var hcircle = g.append('circle')
+  .attr('class', 'highlight-circle')
+  .attr('r', pointRadius + 2) // slightly larger than our points
+  .style('fill', 'none')
+  .style('display', 'none')
+  .style('stroke', 'orange')
+  .style('stroke-width', 2)
+  
+  
+  function highlight(d) 
+  {
+    // no point to highlight - hide the circle
+    if (!d) 
+    {
+      hcircle.style('display', 'none');
+    }
+    // otherwise, show the highlight circle at the correct position
+    else 
+    {
+      hcircle
+        .style('display', '')
+        .attr('cx', new_xScale(d.x))
+        .attr('cy', new_yScale(d.y));
+    }
+  }
+
+  function onMouseMove() 
+  {
+    
+    var mouse = d3.mouse(this);
+    // map the clicked point to the data space
+    var xClicked = new_xScale.invert(mouse[0]);
+    var yClicked = new_yScale.invert(mouse[1]);
+
+    var xLeft = new_xScale.invert(mouse[0] - pointRadius)
+    var xRight = new_xScale.invert(mouse[0] + pointRadius)
+    var yTop = new_yScale.invert(mouse[1] - pointRadius)
+    var yBottom = new_yScale.invert(mouse[1] + pointRadius)
+
+    var closest = findClosest(quadTree, [xClicked,yClicked], xLeft, yBottom, xRight, yTop)
+
+    highlight(closest)
+
+    if(closest)
+    {
+      let position = $(`#${selected_vs.getId()}`).offset()
+      let x = d3.event.x- position.left
+      let y = d3.event.y- position.top
+      selected_vs.tooltipDiv
+      .style("opacity", 1)
+      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}`)
+      .style("left", (x + 10) + "px")
+      .style("top", (y + 10) + "px");
+    }
+    else
+    {
+      selected_vs.tooltipDiv
+      .style("opacity", 0)
+    }
+
+  }
+    
+
+  var zoomEndTimeout;
+  var currentTransform = d3.zoomIdentity;
+  var counter = 0;
+
+  function onZoom() 
+  {
+    zoomed = true
+    currentTransform = d3.event.transform;
+    new_xScale = currentTransform.rescaleX(xScale)
+    new_yScale = currentTransform.rescaleY(yScale)
+    xAxisSvg.call(xAxis.scale(new_xScale));
+    yAxisSvg.call(yAxis.scale(new_yScale));
+    if (++counter % 2)
+      draw(randomIndex);
+    
     clearTimeout(zoomEndTimeout);
-    context.save();
-    context.clearRect(0, 0, width, height);
-    context.translate(currentTransform.x, currentTransform.y);
-    context.scale(currentTransform.k, currentTransform.k);
-    draw(randomIndex);
-    context.restore();
-    console.log("this is the range",xScale.range())
-    console.log("this is the domain",xScale.domain())
   }
 
-  function onZoomEnd() {
+  function onZoomEnd() 
+  {
+      if (!zoomed)
+      {
+        return;
+      }
 
-      zoomEndTimeout = setTimeout(function() {
-        context.save();
-        context.clearRect(0, 0, chart_width, chart_height);
-        context.translate(currentTransform.x, currentTransform.y);
-        context.scale(currentTransform.k, currentTransform.k);
-          draw();
-          context.restore();
-      }, 5);
+      zoomed = false
+
+      zoomEndTimeout = setTimeout(draw, 5);
   }
 
-  function draw(index) {
+  function draw(index) 
+  {
     var active;
     context.clearRect(0, 0, chart_width, chart_height);
     context.fillStyle = 'steelblue';
-    context.strokeWidth = 1;
+    context.strokeWidth = 0.5;
     context.strokeStyle = 'white';
+    context.lineWidth = 0.5
+    const c2PI = 2*Math.PI
 
-    if(index) {
-        index.forEach(function(i) {
-            var point = points[i];
-            if(!point.selected) {
-                drawPoint(point, pointRadius);
-            }
-            else {
-                active = point;
-            }
-        });
+    if(index) 
+    {
+        for (let i of index)
+        {
+            let point = points[i];
+            context.beginPath()
+            var cx = new_xScale(point.x);
+            var cy = new_yScale(point.y);
+            context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fill();
+            //context.stroke();
+            //context.closePath();
+        }
     }
-    else {
-        points.forEach(function(point) {
-            if(!point.selected) {
-                drawPoint(point, pointRadius);
-            }
-            else {
-                active = point;
-            }
-        });
+    else 
+    {
+        for (let point of points)
+        {
+            
+            context.beginPath()
+            var cx = new_xScale(point.x);
+            var cy = new_yScale(point.y);
+            context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fill();
+            context.stroke();
+            //context.closePath();
+        }
     }
 
     // ensure that the actively selected point is drawn last
     // so it appears at the top of the draw order
-    if(active) {
+    if(selectedPoint != null) 
+    {
         context.fillStyle = 'red';
-        drawPoint(active, pointRadius);
+        drawPoint(points[selectedPoint], pointRadius);
         context.fillStyle = 'steelblue';
     }
 
-    
+    let rp = [[
+      new_xScale(xRange[0]),
+        new_yScale(m * xRange[0] + b)
+    ], [
+      new_xScale(xRange[1]),
+      new_yScale(m * xRange[1] + b)
+    ]];
+
     var lineGenerator = d3.line()
       .context(context);
+    
     context.strokeStyle = 'red';
-   context.lineWidth = 1 
-  context.beginPath();
-  lineGenerator(rp);
-  context.stroke();
-
+    context.lineWidth = 1 
+    context.beginPath();
+    lineGenerator(rp);
+    context.stroke();
   }
 
-  function drawPoint(point, r) {
-    var cx = xScale(point.x);
-    var cy = yScale(point.y);
+  function drawPoint(point, r) 
+  {
+    var cx = new_xScale(point.x);
+    var cy = new_yScale(point.y);
     context.lineWidth = 0.09
     context.beginPath();
     context.arc(cx, cy, r, 0, 2 * Math.PI);
@@ -1270,7 +1514,8 @@ class View_State
     context.stroke();
 }
 
-function euclideanDistance(x1, y1, x2, y2) {
+function euclideanDistance(x1, y1, x2, y2) 
+{
     return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
@@ -1302,27 +1547,6 @@ function euclideanDistance(x1, y1, x2, y2) {
       }
        
     }
-
-    function clickHandler(instance, evt) 
-    {
-      let myChart=instance.object_instance
-      const points = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
-  
-      if (points.length) {
-          const firstPoint = points[0];
-          let x = evt.x 
-          let y = evt.y
-          let node = instance.server_js.data[firstPoint.index]
-          instance.propertyPopup(node, x, y)
-      }
-      
-    }
-
-    function hoverHandler(evt) 
-    {
-      console.log('hovered')
-    }
-
   }
 
   
