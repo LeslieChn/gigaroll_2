@@ -174,12 +174,14 @@ app.post('/getimage/:query', async (request, response) => {
 
 app.get('/login',
 function(req, res){
+  console.log(req)
   res.sendFile(path.join(__dirname, "/public/login.html"))
 });
 
 app.post('/login', 
 passport.authenticate('local', { failureRedirect: '/login'}),
 function(req, res) {
+  console.log(req)
   res.redirect('/');
 });
 
