@@ -1303,10 +1303,21 @@ class View_State
   }
 
   var zoomed = false
+  // add a circle for indicating the highlighted point
+  var rect_select = g.append('rect')
+  .attr('class', 'rect-select')
+  .style('fill', 'rgba(255,0,0,0.2)')
+  .style('display', 'none')
+  .style('stroke', 'red')
+  .style('stroke-width', 2)
+  
+  var rect_anchor = null
 
   function onClick() 
   {
     var mouse = d3.mouse(this);
+
+    rect_anchor = mouse;
 
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
@@ -1374,8 +1385,28 @@ class View_State
 
   function onMouseMove() 
   {
-    
     var mouse = d3.mouse(this);
+    if (rect_anchor)
+    { 
+      let x = rect_anchor[0], y = rect_anchor[1];
+      let width = mouse[0] - x, height = mouse[1] - y;
+      
+      if (width < 0)
+        x = mouse[0], width = -width;
+
+      if (height < 0)
+        y = mouse[1], height = - height;
+      
+        rect_select.attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height)
+        .style('display', '')
+      
+      return;
+    }
+      
+    
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
