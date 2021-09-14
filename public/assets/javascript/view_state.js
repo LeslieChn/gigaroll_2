@@ -993,6 +993,8 @@ class View_State
 
   async scatterChart()
   {
+    var interface_mode = ''
+
     if(!this.toolTipDiv)
     {
       this.tooltipDiv = d3.select(`.card-body`).append("div")
@@ -1145,7 +1147,7 @@ class View_State
       .attr('class', 'y axis')
       .call(yAxis);
 
-    canvas//.on("click", onClick)
+    canvas.on("click", onClick)
           .on('mousemove', onMouseMove)
           .on('mousedown', onMouseDown)
           .on('mouseup', onMouseUp)
@@ -1204,7 +1206,7 @@ class View_State
     // sessionStorage.setItem("val_filters", '')
     let  xLeft, xRight, yTop, yBottom;
 
-    if (rect_select.style('display') != 'none')
+    if (rect_anchor && rect_select.style('display') != 'none')
     {
       let x = parseFloat(rect_select.attr('x'))
       let y = parseFloat(rect_select.attr('y'))
@@ -1250,6 +1252,8 @@ class View_State
   if (this.detailDiv)
     $("#detail-button-div").remove()
 
+  if (this.selectDiv)
+  $("#detail-button-div").remove()
 
   this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
@@ -1257,10 +1261,26 @@ class View_State
   this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
+  this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.png"/></div>`)
+
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', openDetails)
+  $('#select-button').on('click', startSelect)
 
-
+  function startSelect(){
+    let selected = $('#select-button').attr('value');
+    if(selected == "Off")
+    {
+      $('#select-button').attr('value', "On" );
+      $('#select-button').attr('src','../assets/images/select_icon-colored.png');
+    }
+    else
+    {
+      $('#select-button').attr('value', "Off" )
+      $('#select-button').attr('src','../assets/images/select_icon.png');
+    }
+  }
 
   // Find the closest node within the specified rectangle.
   function findClosest(quadtree, base_point, x0, y0, x3, y3) 
@@ -1334,6 +1354,12 @@ class View_State
   function onClick() 
   {
     var mouse = d3.mouse(this);
+
+    if (rect_anchor)
+    {
+      rect_select.style('display', 'none')
+      rect_anchor = null
+    }
 
     rect_anchor = mouse;
 
