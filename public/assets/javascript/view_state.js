@@ -1145,8 +1145,10 @@ class View_State
       .attr('class', 'y axis')
       .call(yAxis);
 
-    canvas.on("click", onClick)
+    canvas//.on("click", onClick)
           .on('mousemove', onMouseMove)
+          .on('mousedown', onMouseDown)
+          .on('mouseup', onMouseUp)
 
     canvas.call(zoomBehaviour);
 
@@ -1200,15 +1202,31 @@ class View_State
     // sessionStorage.setItem("base_dim", 'property')
     // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
     // sessionStorage.setItem("val_filters", '')
-    let 
+    let  xLeft, xRight, yTop, yBottom;
+
+    if (rect_select.style('display') != 'none')
+    {
+      let x = parseFloat(rect_select.attr('x'))
+      let y = parseFloat(rect_select.attr('y'))
+      let width = parseFloat(rect_select.attr('width'))
+      let height = parseFloat(rect_select.attr('height'))
+
+      xLeft = new_xScale.invert(x)
+      xRight = new_xScale.invert (x + width)
+      yTop = new_yScale.invert (y)
+      yBottom = new_yScale.invert (y + height)
+    }
+    else
+    {
       xLeft = new_xScale.domain()[0],
       xRight = new_xScale.domain()[1],
       yTop = new_yScale.domain()[1],
       yBottom = new_yScale.domain()[0];
+    }
 
-      let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
-      if (indices.length == 0)
-        return;
+    let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
+    if (indices.length == 0)
+      return;
 
     let server_data = {}
     server_data.headers = selected_vs.server_js.headers
@@ -1383,30 +1401,19 @@ class View_State
     }
   }
 
+  function onMouseDown()
+  {
+    rect_anchor = d3.mouse(this);
+    rect_anchor = d3.mouse(this);
+  }
+  function onMouseUp()
+  {
+
+  }
+
   function onMouseMove() 
   {
-    var mouse = d3.mouse(this);
-    if (rect_anchor)
-    { 
-      let x = rect_anchor[0], y = rect_anchor[1];
-      let width = mouse[0] - x, height = mouse[1] - y;
-      
-      if (width < 0)
-        x = mouse[0], width = -width;
-
-      if (height < 0)
-        y = mouse[1], height = - height;
-      
-        rect_select.attr('x', x)
-        .attr('y', y)
-        .attr('width', width)
-        .attr('height', height)
-        .style('display', '')
-      
-      return;
-    }
-      
-    
+    let mouse = d3.mouse(this)
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
@@ -1449,6 +1456,29 @@ class View_State
 
   function onZoom() 
   {
+    if (!rect_anchor)
+      return;
+      
+    var mouse = d3.mouse(this);
+    let x = rect_anchor[0], y = rect_anchor[1];
+    let width = mouse[0] - x, height = mouse[1] - y;
+    
+    if (width < 0)
+      x = mouse[0], width = -width;
+
+    if (height < 0)
+      y = mouse[1], height = - height;
+    
+      rect_select.attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height)
+      .style('display', '')
+    
+    return;
+
+
+
     zoomed = true
     currentTransform = d3.event.transform;
     new_xScale = currentTransform.rescaleX(xScale)
