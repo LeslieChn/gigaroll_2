@@ -1150,7 +1150,6 @@ class View_State
     canvas.on("click", onClick)
           .on('mousemove', onMouseMove)
           .on('mousedown', onMouseDown)
-          .on('mouseup', onMouseUp)
 
     canvas.call(zoomBehaviour);
 
@@ -1179,6 +1178,9 @@ class View_State
   
   function resetZoom()
   {
+    if (interface_mode == 'select')
+      return 
+      
     if (points.length<2500)
     {
       canvas
@@ -1201,12 +1203,10 @@ class View_State
     let self = selected_vs
     let req = self.state.request
     sessionStorage.setItem("type", 'data')
-    // sessionStorage.setItem("base_dim", 'property')
-    // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
-    // sessionStorage.setItem("val_filters", '')
+
     let  xLeft, xRight, yTop, yBottom;
 
-    if (rect_anchor && rect_select.style('display') != 'none')
+    if (rect_select.style('display') != 'none')
     {
       let x = parseFloat(rect_select.attr('x'))
       let y = parseFloat(rect_select.attr('y'))
@@ -1364,8 +1364,13 @@ class View_State
 
     if (rect_anchor && !rectDrag)
     {
-      rect_select.style('display', 'none')
-      rect_anchor = null
+      let x = parseFloat(rect_select.attr('x'))
+      let y = parseFloat(rect_select.attr('y'))
+      let width = parseFloat(rect_select.attr('width'))
+      let height = parseFloat(rect_select.attr('height'))
+
+      if (mouse[0] < x || mouse[0] >= x + width || mouse[1] < y || mouse[1] >= y + height)
+        rect_select.style('display', 'none')
     }
    
     rectDrag = false;
@@ -1447,9 +1452,7 @@ class View_State
     console.log('mousedown')
   }
   
-  function onMouseUp()
-  {
-  }
+
 
   function onMouseMove() 
   {
