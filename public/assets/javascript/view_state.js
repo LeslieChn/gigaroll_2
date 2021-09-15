@@ -994,6 +994,7 @@ class View_State
   async scatterChart()
   {
     var interface_mode = ''
+    var self = this 
 
     if(!this.toolTipDiv)
     {
@@ -1150,6 +1151,7 @@ class View_State
     canvas.on("click", onClick)
           .on('mousemove', onMouseMove)
           .on('mousedown', onMouseDown)
+          .on('mouseout', onMouseOut)
 
     canvas.call(zoomBehaviour);
 
@@ -1180,7 +1182,7 @@ class View_State
   {
     if (interface_mode == 'select')
       return 
-      
+
     if (points.length<2500)
     {
       canvas
@@ -1479,7 +1481,6 @@ class View_State
       return;
     }
 
-
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
@@ -1515,6 +1516,12 @@ class View_State
 
   }
     
+  function onMouseOut()
+  {
+    highlight(null);
+    
+    self.tooltipDiv.style('opacity', '0')
+  }
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
