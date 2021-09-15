@@ -1268,17 +1268,24 @@ class View_State
   $('#details-button').on('click', openDetails)
   $('#select-button').on('click', startSelect)
 
-  function startSelect(){
+  function startSelect()
+  {
     let selected = $('#select-button').attr('value');
     if(selected == "Off")
     {
       $('#select-button').attr('value', "On" );
       $('#select-button').attr('src','../assets/images/select_icon-colored.png');
+      interface_mode = 'select'
+      canvas.on('.zoom', null)
     }
     else
     {
       $('#select-button').attr('value', "Off" )
       $('#select-button').attr('src','../assets/images/select_icon.png');
+      interface_mode = 'zoom'
+      rect_anchor = null
+      rect_select.style('display', 'none')
+      canvas.call(zoomBehaviour)
     }
   }
 
@@ -1355,13 +1362,16 @@ class View_State
   {
     var mouse = d3.mouse(this);
 
-    if (rect_anchor)
+    if (rect_anchor && !rectDrag)
     {
       rect_select.style('display', 'none')
       rect_anchor = null
     }
-
-    rect_anchor = mouse;
+   
+    rectDrag = false;
+    rect_anchor = null
+    
+    console.log(rectDrag)
 
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
@@ -1426,20 +1436,47 @@ class View_State
         .attr('cy', new_yScale(d.y));
     }
   }
-
+  
+  var rectDrag = false;
   function onMouseDown()
   {
-    rect_anchor = d3.mouse(this);
-    rect_anchor = d3.mouse(this);
+    if (interface_mode == 'select')
+    {
+      rect_anchor = d3.mouse(this);
+    }
+    console.log('mousedown')
   }
+  
   function onMouseUp()
   {
-
   }
 
   function onMouseMove() 
   {
     let mouse = d3.mouse(this)
+
+    if (rect_anchor)
+    { 
+      rectDrag = true
+      let x = rect_anchor[0], y = rect_anchor[1];
+      let width = mouse[0] - x, height = mouse[1] - y;
+      
+      if (width < 0)
+        x = mouse[0], width = -width;
+
+      if (height < 0)
+        y = mouse[1], height = - height;
+      
+        rect_select.attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height)
+        .style('display', '')
+      
+      return;
+    }
+
+
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
@@ -1482,28 +1519,6 @@ class View_State
 
   function onZoom() 
   {
-    if (!rect_anchor)
-      return;
-      
-    var mouse = d3.mouse(this);
-    let x = rect_anchor[0], y = rect_anchor[1];
-    let width = mouse[0] - x, height = mouse[1] - y;
-    
-    if (width < 0)
-      x = mouse[0], width = -width;
-
-    if (height < 0)
-      y = mouse[1], height = - height;
-    
-      rect_select.attr('x', x)
-      .attr('y', y)
-      .attr('width', width)
-      .attr('height', height)
-      .style('display', '')
-    
-    return;
-
-
 
     zoomed = true
     currentTransform = d3.event.transform;
