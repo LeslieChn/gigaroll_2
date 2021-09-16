@@ -17,6 +17,7 @@ const salt = 'cardamom'
 const flash = require ('connect-flash')
 const got = require('got');
 
+var login_count = {}
 
 function hashPassword (pass){
   return md5(salt+pass)
@@ -30,10 +31,23 @@ function hashPassword (pass){
 // will be set at `req.user` in route handlers after authentication.
 passport.use(new Strategy(
   function(username, password, cb) {
+
+    if (!(username in login_count))
+      login_count[username]=0
+
+    let count = ++login_count[username]
     db.users.findByUsername(username, function(err, user) {
-      if (err) { return cb(err); }
-      if (!user) { return cb(null, false); }
-      if (user.password != hashPassword(password)) { return cb(null, false); }
+      if (err) {return cb(err); }
+      if (!user) {
+        console.log(`login attempt ${count} by non-existent user ${username} failed`)
+        return cb(null, false); 
+      }
+      if (user.password != hashPassword(password)) 
+      { 
+        console.log(`login attempt ${count} by user ${username} failed with bad password`)
+        return cb(null, false); 
+      }
+      console.log(`login attempt ${count} by user ${username} succeeded`)
       return cb(null, user);
     });
   }));
@@ -133,7 +147,7 @@ app.use(compression({
 var queryURL = "http://127.0.0.1:55555/req?";
 
 app.post('/gserver/:query', async (request, response) => {
-    
+  
   console.time(request.params.query);
   
   //only comment in the following to simulate a delay

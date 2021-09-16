@@ -562,8 +562,8 @@ class View_State
       </div>
       
       <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn col-5 text-nowrap text-white" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -993,6 +993,9 @@ class View_State
 
   async scatterChart()
   {
+    var interface_mode = ''
+    var self = this 
+
     if(!this.toolTipDiv)
     {
       this.tooltipDiv = d3.select(`.card-body`).append("div")
@@ -1075,10 +1078,13 @@ class View_State
     var randomIndex = _.sampleSize(_.range(points.length), Math.min(points.length,10000));
 
     if (n_vals >= 3)
+    {
       this.setupColors(min_val, max_val)
-    var bubbleLocator = function (d) {
-        return 'translate(' + (bubbleX(d)+20) + ',' + (bubbleY(d)) + ')';
-        };
+      for (let point of points)
+      {
+        point.color = this.point_colors(server_js.data[point.i][i3])
+      }
+    }
         
     $(`#${this.getId()}`).html(`<svg id="${this.getId()}-svg" class="plot"></svg>
     <canvas id="${this.getId()}-canvas" class="plot"></canvas>`)
@@ -1144,6 +1150,8 @@ class View_State
 
     canvas.on("click", onClick)
           .on('mousemove', onMouseMove)
+          .on('mousedown', onMouseDown)
+          .on('mouseout', onMouseOut)
 
     canvas.call(zoomBehaviour);
 
@@ -1172,6 +1180,9 @@ class View_State
   
   function resetZoom()
   {
+    if (interface_mode == 'select')
+      return 
+
     if (points.length<2500)
     {
       canvas
@@ -1194,18 +1205,32 @@ class View_State
     let self = selected_vs
     let req = self.state.request
     sessionStorage.setItem("type", 'data')
-    // sessionStorage.setItem("base_dim", 'property')
-    // sessionStorage.setItem("dim_filters", self.itemSubstitute(req.dim_filters, self.getId()))
-    // sessionStorage.setItem("val_filters", '')
-    let 
+
+    let  xLeft, xRight, yTop, yBottom;
+
+    if (rect_select.style('display') != 'none')
+    {
+      let x = parseFloat(rect_select.attr('x'))
+      let y = parseFloat(rect_select.attr('y'))
+      let width = parseFloat(rect_select.attr('width'))
+      let height = parseFloat(rect_select.attr('height'))
+
+      xLeft = new_xScale.invert(x)
+      xRight = new_xScale.invert (x + width)
+      yTop = new_yScale.invert (y)
+      yBottom = new_yScale.invert (y + height)
+    }
+    else
+    {
       xLeft = new_xScale.domain()[0],
       xRight = new_xScale.domain()[1],
       yTop = new_yScale.domain()[1],
       yBottom = new_yScale.domain()[0];
+    }
 
-      let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
-      if (indices.length == 0)
-        return;
+    let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
+    if (indices.length == 0)
+      return;
 
     let server_data = {}
     server_data.headers = selected_vs.server_js.headers
@@ -1229,17 +1254,56 @@ class View_State
   if (this.detailDiv)
     $("#detail-button-div").remove()
 
+  if (this.selectDiv)
+  $("#detail-button-div").remove()
 
   this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
 
   this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon-colored.svg"/></div>`)
+
+  this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', openDetails)
+  $('#select-button').on('click', startSelect)
 
+  function updateButtonIcons()
+  {
+    if (interface_mode == 'zoom')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon.svg');
+    }
+    else if (interface_mode == 'select')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon_disabled.svg');
+    }
+  }
 
+  function startSelect()
+  {
+    let selected = $('#select-button').attr('value');
+    if(selected == "Off")
+    {
+      $('#select-button').attr('value', "On" );
+      interface_mode = 'select'
+      updateButtonIcons()
+      canvas.on('.zoom', null)
+    }
+    else
+    {
+      $('#select-button').attr('value', "Off" )
+      interface_mode = 'zoom'
+      rect_anchor = null
+      rect_select.style('display', 'none')
+      updateButtonIcons()
+      canvas.call(zoomBehaviour)
+    }
+  }
 
   // Find the closest node within the specified rectangle.
   function findClosest(quadtree, base_point, x0, y0, x3, y3) 
@@ -1288,7 +1352,6 @@ class View_State
           let inside = (d.x >= x0) && (d.x < x3) && (d.y >= y0) && (d.y < y3);
           if (inside)
           {
-            console.log(d)
             indices.push(d.i)
           }
         } 
@@ -1301,10 +1364,35 @@ class View_State
   }
 
   var zoomed = false
+  // add a circle for indicating the highlighted point
+  var rect_select = g.append('rect')
+  .attr('class', 'rect-select')
+  .style('fill', 'rgba(255,0,0,0.2)')
+  .style('display', 'none')
+  .style('stroke', 'red')
+  .style('stroke-width', 2)
+  
+  var rect_anchor = null
 
   function onClick() 
   {
     var mouse = d3.mouse(this);
+
+    if (rect_anchor && !rectDrag)
+    {
+      let x = parseFloat(rect_select.attr('x'))
+      let y = parseFloat(rect_select.attr('y'))
+      let width = parseFloat(rect_select.attr('width'))
+      let height = parseFloat(rect_select.attr('height'))
+
+      if (mouse[0] < x || mouse[0] >= x + width || mouse[1] < y || mouse[1] >= y + height)
+        rect_select.style('display', 'none')
+    }
+   
+    rectDrag = false;
+    rect_anchor = null
+    
+    console.log(rectDrag)
 
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
@@ -1369,11 +1457,44 @@ class View_State
         .attr('cy', new_yScale(d.y));
     }
   }
+  
+  var rectDrag = false;
+  function onMouseDown()
+  {
+    if (interface_mode == 'select')
+    {
+      rect_anchor = d3.mouse(this);
+    }
+    console.log('mousedown')
+  }
+  
+
 
   function onMouseMove() 
   {
-    
-    var mouse = d3.mouse(this);
+    let mouse = d3.mouse(this)
+
+    if (rect_anchor)
+    { 
+      rectDrag = true
+      let x = rect_anchor[0], y = rect_anchor[1];
+      let width = mouse[0] - x, height = mouse[1] - y;
+      
+      if (width < 0)
+        x = mouse[0], width = -width;
+
+      if (height < 0)
+        y = mouse[1], height = - height;
+      
+        rect_select.attr('x', x)
+        .attr('y', y)
+        .attr('width', width)
+        .attr('height', height)
+        .style('display', '')
+      
+      return;
+    }
+
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
     var yClicked = new_yScale.invert(mouse[1]);
@@ -1390,13 +1511,16 @@ class View_State
     if(closest)
     {
       let position = $(`#${selected_vs.getId()}`).offset()
-      let x = d3.event.x- position.left
-      let y = d3.event.y- position.top
+      let pos_x = d3.event.x- position.left
+      let pos_y = d3.event.y- position.top
+      let z = null
+      if (n_vals >= 3)
+        z = server_js.data[closest.i][i3]
       selected_vs.tooltipDiv
       .style("opacity", 1)
-      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}`)
-      .style("left", (x + 10) + "px")
-      .style("top", (y + 10) + "px");
+      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}${z? ',' + meas3 + ':' + z : ''} `)
+      .style("left", (pos_x + 10) + "px")
+      .style("top", (pos_y + 10) + "px");
     }
     else
     {
@@ -1406,6 +1530,12 @@ class View_State
 
   }
     
+  function onMouseOut()
+  {
+    highlight(null);
+    
+    self.tooltipDiv.style('opacity', '0')
+  }
 
   var zoomEndTimeout;
   var currentTransform = d3.zoomIdentity;
@@ -1413,6 +1543,7 @@ class View_State
 
   function onZoom() 
   {
+
     zoomed = true
     currentTransform = d3.event.transform;
     new_xScale = currentTransform.rescaleX(xScale)
@@ -1456,6 +1587,7 @@ class View_State
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fillStyle = point.color;
             context.fill();
             //context.stroke();
             //context.closePath();
@@ -1470,6 +1602,7 @@ class View_State
             var cx = new_xScale(point.x);
             var cy = new_yScale(point.y);
             context.arc(cx, cy, pointRadius, 0, c2PI);
+            context.fillStyle = point.color;
             context.fill();
             context.stroke();
             //context.closePath();
@@ -1522,32 +1655,32 @@ function euclideanDistance(x1, y1, x2, y2)
 
     this.color_lookup = {} ;
 
-    function colorCallback(instance, context) 
-    {
-      if (n_vals >= 3)
-      {
-        let val = server_js.data[context.dataIndex][i3]
-        return instance.point_colors(val)
-      }
-      else
-        return 'red';
+    // function colorCallback(instance, context) 
+    // {
+    //   if (n_vals >= 3)
+    //   {
+    //     let val = server_js.data[context.dataIndex][i3]
+    //     return instance.point_colors(val)
+    //   }
+    //   else
+    //     return 'red';
 
-      {
-        let city = server_js.data[context.dataIndex][1]
+    //   {
+    //     let city = server_js.data[context.dataIndex][1]
 
-        if (city in instance.color_lookup)
-          return instance.color_lookup[city];
-        else
-        {
-          var colors = ['green', 'red', 'blue']
-          let n = Object.keys(instance.color_lookup).length
-          let color = colors[(n+1)%colors.length]
-          instance.color_lookup[city] = color
-          return color
-        }
-      }
+    //     if (city in instance.color_lookup)
+    //       return instance.color_lookup[city];
+    //     else
+    //     {
+    //       var colors = ['green', 'red', 'blue']
+    //       let n = Object.keys(instance.color_lookup).length
+    //       let color = colors[(n+1)%colors.length]
+    //       instance.color_lookup[city] = color
+    //       return color
+    //     }
+    //   }
        
-    }
+    // }
   }
 
   
