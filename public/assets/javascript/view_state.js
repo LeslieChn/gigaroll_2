@@ -1261,10 +1261,10 @@ class View_State
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
 
   this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon-colored.svg"/></div>`)
 
   this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
-  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.png"/></div>`)
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', openDetails)
@@ -1276,7 +1276,7 @@ class View_State
     if(selected == "Off")
     {
       $('#select-button').attr('value', "On" );
-      $('#select-button').attr('src','../assets/images/select_icon-colored.png');
+      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
       interface_mode = 'select'
       canvas.on('.zoom', null)
     }
