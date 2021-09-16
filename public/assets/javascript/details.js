@@ -509,7 +509,7 @@ function showMap()
 {
   if (osMap==null) 
   {
-    try
+    // try
      { 
       var streets = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}@2x.png?key=vgYeUXLEg9nfjeVPRVwr', {id: 'simple_map', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'}),
       satellite   = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}@2x.jpg?key=vgYeUXLEg9nfjeVPRVwr', {id: 'satellite', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'}),
@@ -517,21 +517,63 @@ function showMap()
       var baseMaps = {
         "Streets": streets,
         "Satellite": satellite,
-        "Toner": toner
+        "Toner": toner,
       };
+    
       osMap = L.map("map", 
        {preferCanvas: true,
         minZoom: 1,
         maxZoom: 16,
         layers: [streets]
        });
+
+       var state_colors = {'09':'red', '34':'green', '36':'blue'}
+
+       var counties = null;
+
+       var countiesOverlay = L.d3SvgOverlay(function(sel, proj){
+
+        var features = sel.selectAll('path')
+          .data(topojson.feature(counties, counties.objects.counties).features);
+      
+        features
+          .enter()
+          .append('path')
+          .attr('stroke','white')
+          // .attr('fill', 'blue')
+          // .attr('fill-opacity', 0.2)
+          .attr("style", function (d)
+            {
+                let state_code = d.properties.STATE;
+                // let s = parseInt(code);
+                let county_name = d.properties.NAME;
+                let county_code = d.properties.COUNTY;
+                let op = parseInt(county_code)/100
+                // let value = county_data[code][county];
+
+                return `fill:${state_colors[state_code]}; fill-opacity: ${op}`;
+
+            })
+          .attr('d', proj.pathFromGeojson)
+      
+        features
+          .attr('stroke-width', 0.6 / proj.scale);
+      
+      });
+      
+      
+      d3.json('topojson_counties.json', function(error, data){
+        counties = data;
+        countiesOverlay.addTo(osMap);
+      });
+
        this.object_instance = osMap
      }
-     catch(e)
-     {
-       console.log(e)
-     }
-     L.control.layers(baseMaps).addTo(osMap);
+    //  catch(e)
+    //  {
+    //    console.log(e)
+    //  }
+     L.control.layers(baseMaps, {"Counties": countiesOverlay}).addTo(osMap);
      L.easyButton( 'fa-undo', function(){
       osMap.fitBounds(bounds);
       }).addTo(osMap);
