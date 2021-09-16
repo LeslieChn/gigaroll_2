@@ -1270,23 +1270,37 @@ class View_State
   $('#details-button').on('click', openDetails)
   $('#select-button').on('click', startSelect)
 
+  function updateButtonIcons()
+  {
+    if (interface_mode == 'zoom')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon.svg');
+    }
+    else if (interface_mode == 'select')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon_disabled.svg');
+    }
+  }
+
   function startSelect()
   {
     let selected = $('#select-button').attr('value');
     if(selected == "Off")
     {
       $('#select-button').attr('value', "On" );
-      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
       interface_mode = 'select'
+      updateButtonIcons()
       canvas.on('.zoom', null)
     }
     else
     {
       $('#select-button').attr('value', "Off" )
-      $('#select-button').attr('src','../assets/images/select_icon.png');
       interface_mode = 'zoom'
       rect_anchor = null
       rect_select.style('display', 'none')
+      updateButtonIcons()
       canvas.call(zoomBehaviour)
     }
   }
