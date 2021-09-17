@@ -29,6 +29,14 @@ let aliases = {
   'pop 2019'       : 'Population 2019'
 }
 
+var colorschemes = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd},
+                    {id: 1, text: 'Blues', d3: d3.interpolateBlues},
+                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn},
+                    {id: 3, text: 'Greys', d3: d3.interpolateGreys}]
+
+let state_code_from_name =
+{ CT: "09", NY: "36", NJ: "34", MA: "25" }                  
+
 var propDiv = null;
 
 function alias(name)
@@ -66,6 +74,115 @@ async function serverRequest(params)
   return json;
 }
 
+var county_data = null;
+
+
+async function getCountyData()
+{
+  let params = 
+  {
+    qid: 'MD_AGG',
+    dim: 'property',
+    gby : 'county',
+    val: 'beds:count,price:avg,size:avg,elevation:avg'
+  }
+
+  if (county_data == null)
+  {
+    county_data = await serverRequest(params)
+  }
+}
+
+function getColorScheme()
+{
+    //let scheme = w2ui.layout.get('top').toolbar.get("color-scheme").selected
+    //return w2ui.layout.get('top').toolbar.get("color-scheme").items[scheme].d3
+    
+    return colorschemes[0].d3 
+}
+
+async function buildCountyDataLookup(value_idx)
+{
+    await getCountyData();
+    let min = Infinity, max = -Infinity
+    let lut = {}
+
+    for (let row of county_data.data)
+    {
+        let c = row[0][0]
+        let state = c.substring(c.length - 2)
+        let county = c.substring(0, c.length - 3)
+        let code = state_code_from_name[state]
+        if (lut[code] == null)
+        {
+            lut[code] = {}
+        }
+        let value = row[1][value_idx]
+        max = Math.max(value, max)
+        min = Math.min(value, min)
+        lut[code][county] = value
+    }
+    return { lut: lut, max: max, min: min }
+}
+
+var county_lookup = null;
+
+async function buildCountyColorLookup(view_idx)
+{
+  let result = await buildCountyDataLookup(view_idx);
+
+  county_lookup = result.lut;
+  max_data = result.max;
+  min_data = result.min;
+
+  let colors = [];
+  let num_colors = 12;
+  let scheme = getColorScheme();
+
+  for (let i = 0; i <= num_colors; ++i)
+      colors.push(scheme(i / num_colors));
+
+    let domain = [],
+        m1,
+        m2;
+    if (min_data <= 0 && max_data <= 0)
+    {
+        m1 = min_data == 0 ? -1 : min_data + 0.5;
+        m2 = max_data == 0 ? -1 : max_data;
+        let r = (m2 / m1) ** (1 / (num_colors));
+
+        for (let x = m1; x <= m2; x *= r)
+            domain.push(x);
+    }
+    else if (min_data >= 0 && max_data >= 0) 
+    {
+        m1 = min_data == 0 ? 1 : min_data + 0.5;
+        m2 = max_data == 0 ? 1 : max_data;
+        let r = (m2 / m1) ** (1 / (num_colors));
+
+        for (let x = m1; x <= m2; x *= r)
+            domain.push(x);
+    }
+    else 
+    {
+        m1 = min_data;
+        m2 = max_data;
+
+        domain.push(min_data + 0.5);
+        let r = max_data ** (1 / (num_colors - 1));
+
+        for (let x = 1; x <= max_data; x *= r)
+            domain.push(x);
+    }
+      color = d3
+      .scaleThreshold()
+      .domain(domain)
+      //.range(d3.schemePuBu[9]);
+      //.range(d3.schemeOrRd[9]);
+      //.range(d3.schemeYlOrRd[9])
+      .range(colors);
+}
+/******************************************************************/
 $(function () {
   var pstyle = "border: 1px solid #dfdfdf";
   $("#layout").w2layout({
@@ -360,8 +477,8 @@ function findPoints()
   }
 }
 /************************************************************** */
-function updateGrid(server_js) {
-
+function updateGrid(server_js) 
+{
   //$().w2destroy('grid');
 
   let searches=[]
@@ -505,7 +622,7 @@ function launchMap()
   showMap()
 }
 
-function showMap()
+async function showMap()
 {
   if (osMap==null) 
   {
@@ -529,6 +646,8 @@ function showMap()
 
        var state_colors = {'09':'red', '34':'green', '36':'blue'}
 
+       await buildCountyColorLookup(3)
+
        var counties = null;
 
        var countiesOverlay = L.d3SvgOverlay(function(sel, proj){
@@ -548,10 +667,9 @@ function showMap()
                 // let s = parseInt(code);
                 let county_name = d.properties.NAME;
                 let county_code = d.properties.COUNTY;
-                let op = parseInt(county_code)/100
-                // let value = county_data[code][county];
+                let value = county_lookup[state_code][county_name];
 
-                return `fill:${state_colors[state_code]}; fill-opacity: ${op}`;
+                return `fill:${color(value)}; fill-opacity: 0.75`;
 
             })
           .attr('d', proj.pathFromGeojson)
