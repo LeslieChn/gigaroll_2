@@ -14,6 +14,7 @@ var tileLayer
 var layerGroup = null
 var mapZoom
 var markerColor = "red"
+var countiesOverlay = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
@@ -33,6 +34,10 @@ var colorschemes = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd}
                     {id: 1, text: 'Blues', d3: d3.interpolateBlues},
                     {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn},
                     {id: 3, text: 'Greys', d3: d3.interpolateGreys}]
+
+let overlay_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg', 'year_built:avg']
+
+let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
 let state_code_from_name =
 { CT: "09", NY: "36", NJ: "34", MA: "25" }                  
@@ -84,7 +89,7 @@ async function getCountyData()
     qid: 'MD_AGG',
     dim: 'property',
     gby : 'county',
-    val: 'beds:count,price:avg,size:avg,elevation:avg'
+    val: overlay_measures.join(',')
   }
 
   if (county_data == null)
@@ -283,6 +288,21 @@ $(function () {
               disabled: true,
               text: "Find Points",
                   onClick: findPoints,
+            },
+            { type: "break" },
+            {
+              type: "menu-radio",
+              id: "overlay-type",
+              text: 
+              function (item) {
+                var el = this.get("overlay-type:" + item.selected);
+                return el.text;
+              },
+              selected: overlays[0].id,
+              items: overlays,
+              onRefresh: function(event){
+                switchOverlayType(event.item.selected)
+              }
             },
             { type: "spacer"},
             {
@@ -646,11 +666,13 @@ async function showMap()
 
        var state_colors = {'09':'red', '34':'green', '36':'blue'}
 
-       await buildCountyColorLookup(3)
+       let overlay_type = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
+
+       await buildCountyColorLookup(overlay_type)
 
        var counties = null;
 
-       var countiesOverlay = L.d3SvgOverlay(function(sel, proj){
+       countiesOverlay = L.d3SvgOverlay(function(sel, proj){
 
         var features = sel.selectAll('path')
           .data(topojson.feature(counties, counties.objects.counties).features);
@@ -742,10 +764,13 @@ function setClusterMap()
   autoZoom()
 }
 
-function switchMapType(mapType){
-  if (osMap){
+function switchMapType(mapType)
+{
+  if (osMap)
+  {
     clearMap()
-    switch (mapType) {
+    switch (mapType)
+    {
       case "heat-map":
           setHeatMap()
         break;
@@ -757,6 +782,13 @@ function switchMapType(mapType){
         break;
     }
   }
+}
+
+async function switchOverlayType(id)
+{
+  osMap.removeLayer(countiesOverlay)
+  await buildCountyColorLookup(id)
+  osMap.addLayer(countiesOverlay)
 }
 
 function disableBn(buttons){
