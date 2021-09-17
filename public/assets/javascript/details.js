@@ -15,6 +15,7 @@ var layerGroup = null
 var mapZoom
 var markerColor = "red"
 var countiesOverlay = null
+var lcontrol = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
@@ -30,7 +31,7 @@ let aliases = {
   'pop 2019'       : 'Population 2019'
 }
 
-var colorschemes = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd},
+var overlay_colors = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd},
                     {id: 1, text: 'Blues', d3: d3.interpolateBlues},
                     {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn},
                     {id: 3, text: 'Greys', d3: d3.interpolateGreys}]
@@ -38,6 +39,8 @@ var colorschemes = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd}
 let overlay_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg', 'year_built:avg']
 
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
+
+var baseMaps
 
 let state_code_from_name =
 { CT: "09", NY: "36", NJ: "34", MA: "25" }                  
@@ -98,12 +101,10 @@ async function getCountyData()
   }
 }
 
-function getColorScheme()
+function getOverlayColor()
 {
-    //let scheme = w2ui.layout.get('top').toolbar.get("color-scheme").selected
-    //return w2ui.layout.get('top').toolbar.get("color-scheme").items[scheme].d3
-    
-    return colorschemes[0].d3 
+    let id = w2ui.layout.get('bottom').toolbar.get("overlay-color").selected
+    return overlay_colors[id].d3 
 }
 
 async function buildCountyDataLookup(value_idx)
@@ -142,7 +143,7 @@ async function buildCountyColorLookup(view_idx)
 
   let colors = [];
   let num_colors = 12;
-  let scheme = getColorScheme();
+  let scheme = getOverlayColor();
 
   for (let i = 0; i <= num_colors; ++i)
       colors.push(scheme(i / num_colors));
@@ -302,6 +303,21 @@ $(function () {
               items: overlays,
               onRefresh: function(event){
                 switchOverlayType(event.item.selected)
+              }
+            },
+            { type: "break" },
+            {
+              type: "menu-radio",
+              id: "overlay-color",
+              text: 
+              function (item) {
+                var el = this.get("overlay-color:" + item.selected);
+                return el.text;
+              },
+              selected: overlay_colors[0].id,
+              items: overlay_colors,
+              onRefresh: function(event){
+                switchOverlayType()
               }
             },
             { type: "spacer"},
@@ -644,6 +660,7 @@ function launchMap()
 
 async function showMap()
 {
+ 
   if (osMap==null) 
   {
     // try
@@ -651,12 +668,13 @@ async function showMap()
       var streets = L.tileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}@2x.png?key=vgYeUXLEg9nfjeVPRVwr', {id: 'simple_map', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'}),
       satellite   = L.tileLayer('https://api.maptiler.com/maps/hybrid/{z}/{x}/{y}@2x.jpg?key=vgYeUXLEg9nfjeVPRVwr', {id: 'satellite', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'}),
       toner = L.tileLayer('https://api.maptiler.com/maps/toner/{z}/{x}/{y}@2x.png?key=vgYeUXLEg9nfjeVPRVwr', {id: 'toner', tileSize: 1024, zoomOffset: -2, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'});
-      var baseMaps = {
+    
+      baseMaps = {
         "Streets": streets,
         "Satellite": satellite,
         "Toner": toner,
-      };
-    
+      }
+  
       osMap = L.map("map", 
        {preferCanvas: true,
         minZoom: 1,
@@ -672,7 +690,9 @@ async function showMap()
 
        var counties = null;
 
-       countiesOverlay = L.d3SvgOverlay(function(sel, proj){
+       createCountiesOverlay()
+         
+      /* countiesOverlay = L.d3SvgOverlay(function(sel, proj){
 
         var features = sel.selectAll('path')
           .data(topojson.feature(counties, counties.objects.counties).features);
@@ -680,6 +700,13 @@ async function showMap()
         features
           .enter()
           .append('path')
+          .attr('class', 'county-class')
+          .attr('id', function (d)
+            {
+              let state_code = d.properties.STATE;
+              let county_name = d.properties.NAME;
+              return state_code + '-' + county_name
+            })
           .attr('stroke','white')
           // .attr('fill', 'blue')
           // .attr('fill-opacity', 0.2)
@@ -695,17 +722,19 @@ async function showMap()
 
             })
           .attr('d', proj.pathFromGeojson)
-      
+
         features
           .attr('stroke-width', 0.6 / proj.scale);
-      
       });
       
       
       d3.json('topojson_counties.json', function(error, data){
         counties = data;
-        countiesOverlay.addTo(osMap);
+        countiesOverlay.addTo(osMap)
       });
+
+      // L.DomEvent.on('.county-class', 'click', onClickCounty);
+      $('.county-class').on('click', onClickCounty)
 
        this.object_instance = osMap
      }
@@ -717,8 +746,9 @@ async function showMap()
      L.easyButton( 'fa-undo', function(){
       osMap.fitBounds(bounds);
       }).addTo(osMap);
+      */
+    }
   }
-
   
   clearMap()
   var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
@@ -738,8 +768,46 @@ async function showMap()
   
   w2ui.layout.get('bottom').size = '50%'
   w2ui.layout.show('bottom', true)
+
 }
 
+function createCountiesOverlay()
+{ 
+  let idx = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
+  let meas_name = overlays[idx].text
+
+  $.getJSON('geomap_counties.json', function(county_json) {
+   countiesOverlay = L.geoJSON(county_json, 
+    {
+      style: function(d) 
+      {
+        let state_code = d.properties.STATE;
+        // let s = parseInt(code);
+        let county_name = d.properties.NAME;
+        let county_code = d.properties.COUNTY;
+        let value = county_lookup[state_code][county_name];
+        return {fillColor:color(value), fillOpacity: 0.65, color:'white', weight:1};
+      },
+      onEachFeature: function(d, layer)
+      {
+        let state_code = d.properties.STATE;
+        // let s = parseInt(code);
+        let county_name = d.properties.NAME;
+        let county_code = d.properties.COUNTY;
+        let value = county_lookup[state_code][county_name];
+        layer.bindPopup(`county:<b>${county_name}</b> <br> ${meas_name}:<b>${value}</b>`);
+      }
+    });
+    countiesOverlay.addTo(osMap)
+    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay})
+    lcontrol.addTo(osMap);  
+  })
+}
+
+function onClickCounty(d)
+{
+  alert('clicked')
+}
 
 function autoZoom()
 {
@@ -784,11 +852,14 @@ function switchMapType(mapType)
   }
 }
 
-async function switchOverlayType(id)
+async function switchOverlayType()
 {
+  // lcontrol.removeFrom(osMap)
+  lcontrol.removeLayer(countiesOverlay)
+  let overlay_type = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
   osMap.removeLayer(countiesOverlay)
-  await buildCountyColorLookup(id)
-  osMap.addLayer(countiesOverlay)
+  await buildCountyColorLookup(overlay_type)
+  createCountiesOverlay()
 }
 
 function disableBn(buttons){
@@ -824,6 +895,7 @@ function setMarkers()
         color: 'white',
         weight: 1,
         radius: 6,
+        zIndex:300
     }).addTo(markers)
     .on('click', onMapClick);
     
