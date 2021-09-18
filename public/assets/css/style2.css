@@ -77,3 +77,11 @@ body { height: 100%;margin: 0;padding: 0;}
   border-radius: 0.5rem;
   transition: all 0.15s ease-in;
 }
+
+#counties_legend{
+  background-color: white;
+  border-style: solid;
+  border-color: black;
+  width: 100px;
+  height: 350px;
+}

@@ -16,6 +16,7 @@ var mapZoom
 var markerColor = "red"
 var countiesOverlay = null
 var lcontrol = null
+var color = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
@@ -31,10 +32,10 @@ let aliases = {
   'pop 2019'       : 'Population 2019'
 }
 
-var overlay_colors = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd},
-                    {id: 1, text: 'Blues', d3: d3.interpolateBlues},
-                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn},
-                    {id: 3, text: 'Greys', d3: d3.interpolateGreys}]
+var overlay_colors = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
+                    {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
+                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
+                    {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}]
 
 let overlay_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg', 'year_built:avg']
 
@@ -76,7 +77,6 @@ async function serverRequest(params)
   var request = new Request(api_url, { method: "POST" });
 
   const response = await fetch(request);
-  console.log("here",response)
   const json = await response.json();
 
   return json;
@@ -131,7 +131,9 @@ async function buildCountyDataLookup(value_idx)
     return { lut: lut, max: max, min: min }
 }
 
-var county_lookup = null;
+var county_lookup = null,
+max_data = null,
+min_data = null;
 
 async function buildCountyColorLookup(view_idx)
 {
@@ -658,6 +660,128 @@ function launchMap()
   showMap()
 }
 
+function showLegend(color, min, max,)
+{
+    let legendDiv = "counties_legend"
+    
+    let n_divs = color.range().length;
+
+    var client_width = document.getElementById(legendDiv).clientWidth
+    let legend_width = client_width / 3
+    let rect_width = Math.max(legend_width / 6 , 10)
+    let left_margin = client_width / 2 - rect_width
+
+    let rect_idx = 0;
+    let rect_id = 0;
+    var client_height = document.getElementById(legendDiv).clientHeight
+    let legend_height = client_height * 0.8 
+    let top_margin = client_height * 0.15
+    let rect_height = legend_height / (n_divs + 1)
+    let color_idx = w2ui.layout.get('bottom').toolbar.get("overlay-color").selected
+    let null_color = overlay_colors[color_idx].null_color;
+    
+    var svg
+    svg =  d3.select(`#${legendDiv}`)
+    .html('')
+    .append("svg")
+    .attr("width", client_width)
+    .attr("height", client_height);
+    // let rectPos = (i) => left_margin + i * rect_width;
+    let rectPos = (i) => top_margin + (n_divs - 1 - i) * rect_height;
+
+    var g = svg.append("g")
+        .attr("class", "key")
+        .attr("transform", "translate(0,0)");
+
+    g.selectAll("rect")
+        .data(color.range().map((d) => rect_idx++ ) )
+        .enter().append("rect")
+        .attr("height", rect_height)
+        .attr("x", left_margin)
+        .attr("y", d => rectPos(d))
+        .attr("width", rect_width)
+        .attr("fill", function (d) { return color.range()[d] })
+        .attr("id", d => `rect_${rect_id++}`)
+
+    g.append("rect")
+    .attr("stroke", "black")
+    .attr("height", rect_height / 2)
+    .attr("x", rect_width)
+    .attr("y", rectPos(-2))
+    .attr("width", rect_width)
+    .attr("fill", `${null_color}`)
+    .attr("id", "no_data")
+
+    g.append("text")
+    .attr("x", rect_width + rect_width * 2)
+    .attr("y", rectPos(-2) + rect_height / 2 )
+    .text("- No Data")
+    .attr("style", "font-size: 75%")
+    .attr("id", "no-data")
+
+    // let toolbar = w2ui.layout.get('top').toolbarv
+    // let id = toolbar.get("values").selected
+    // let text = toolbar.get(`values:${id}`).text
+    // let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
+    let idx = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
+    let text = overlays[idx].text
+
+    g.append("text")
+        .attr("id", "caption")
+        .attr("x", 0) 
+        .attr("y", top_margin / 2)
+        .attr("fill", "#000")
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .attr("style", "font-size: 75%")
+        .text(text);
+
+    let text_pixels = document.getElementById("caption").getComputedTextLength()
+    g.select("#caption")
+        .attr("x", client_width  /  2 - text_pixels /2 );
+
+    // Create the tickmarks
+    let vals = [[min,0]]
+    for (let j = 1; j < 4; ++j)
+    {
+        //let idx = Math.floor(j * n_divs / 4)
+        let val_idx = Math.floor(j * (color.domain().length) / 4);
+        let val = color.domain()[val_idx]
+        let idx = color.range().indexOf(color(val))
+        vals.push([val, idx]);
+    }
+    vals.push([max, n_divs])
+
+    for (let val of vals)
+    {
+        g.append("text")
+            .attr("y", rectPos(val[1] - 1) + 3)
+            .attr("x", left_margin + rect_width * 1.5)
+            .attr("class", "ldegree")
+            .attr("fill", "#000")
+            .attr("style", "font-size: 60%")
+            .text(Math.round(val[0]));
+            //.text(Math.round(10*val[0])/10);
+    }
+
+    for (let i = 0; i <= n_divs; ++i)
+    {
+        let width = rect_width, height = 1;
+        if (i % 4 == 0)
+        {
+            width += 2;
+            height = 2;
+        }
+        g.append('line')
+            .style("stroke", "black")
+            .style("stroke-width", height)
+            .attr("x1", left_margin)
+            .attr("y1", rectPos(i-1))
+            .attr("x2", left_margin + width)
+            .attr("y2", rectPos(i-1)); 
+    }
+}
+
 async function showMap()
 {
  
@@ -681,13 +805,21 @@ async function showMap()
         maxZoom: 16,
         layers: [streets]
        });
+       osMap.on('overlayadd',function (e){countiesOverlay.bringToBack();console.log(e)})
+
+      var legend = L.control({position: 'bottomright'});
+      legend.onAdd = function () {
+        var div = L.DomUtil.create('div', 'info_legend');
+        div.setAttribute('id','counties_legend');
+        return div;
+      };
+      legend.addTo(osMap);    
 
        var state_colors = {'09':'red', '34':'green', '36':'blue'}
 
        let overlay_type = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
 
        await buildCountyColorLookup(overlay_type)
-
        var counties = null;
 
        createCountiesOverlay()
@@ -799,14 +931,19 @@ function createCountiesOverlay()
       }
     });
     countiesOverlay.addTo(osMap)
-    countiesOverlay.bringToBack()
     if (lcontrol) 
     {
       lcontrol.remove();
     }
     lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay})
     lcontrol.addTo(osMap);
+    countiesOverlay.bringToBack()
   })
+  $(map).ready(function ()
+  {
+    showLegend(color,min_data,max_data)
+  });
+
 }
 
 function onClickCounty(d)
@@ -818,7 +955,6 @@ function autoZoom()
 {
   $(map).ready(function () 
   {
-    console.log("This is map:",map)
     osMap.invalidateSize()
     mapZoom = osMap.getBoundsZoom(bounds)
     osMap.fitBounds(bounds)
@@ -859,12 +995,14 @@ function switchMapType(mapType)
 
 async function switchOverlayType()
 {
-  // lcontrol.removeFrom(osMap)
-  lcontrol.removeLayer(countiesOverlay)
-  let overlay_type = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
-  osMap.removeLayer(countiesOverlay)
-  await buildCountyColorLookup(overlay_type)
-  createCountiesOverlay()
+  if (countiesOverlay)
+  {
+    lcontrol.removeLayer(countiesOverlay)
+    let overlay_type = w2ui.layout.get('bottom').toolbar.get("overlay-type").selected
+    osMap.removeLayer(countiesOverlay)
+    await buildCountyColorLookup(overlay_type)
+    createCountiesOverlay()
+  }
 }
 
 function disableBn(buttons){
@@ -1010,10 +1148,6 @@ async function InitPage()
   let base_dim = sessionStorage.getItem('base_dim')
   let dim_filters = sessionStorage.getItem('dim_filters')
   let val_filters = sessionStorage.getItem('val_filters')
-
-  console.log('base_dim='+base_dim)
-  console.log('dim_filters='+dim_filters)
-  console.log('val_filters='+val_filters)
   
   var params = {
     qid: "MD_RETR",
