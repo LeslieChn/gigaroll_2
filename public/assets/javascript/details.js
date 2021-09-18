@@ -799,6 +799,7 @@ function createCountiesOverlay()
       }
     });
     countiesOverlay.addTo(osMap)
+    countiesOverlay.bringToBack()
     lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay})
     lcontrol.addTo(osMap);  
   })
@@ -894,8 +895,7 @@ function setMarkers()
         stroke: true,
         color: 'white',
         weight: 1,
-        radius: 6,
-        zIndex:300
+        radius: 6
     }).addTo(markers)
     .on('click', onMapClick);
     
@@ -909,6 +909,7 @@ function setMarkers()
   }
 
   markers.addTo(osMap);
+  markers.bringToFront();
 }
 
 
