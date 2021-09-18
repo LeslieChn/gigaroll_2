@@ -782,6 +782,7 @@ function showLegend(color, min, max,)
     }
 }
 
+var legend_control = L.featureGroup();
 async function showMap()
 {
  
@@ -805,15 +806,26 @@ async function showMap()
         maxZoom: 16,
         layers: [streets]
        });
-       osMap.on('overlayadd',function (e){countiesOverlay.bringToBack();console.log(e)})
+       osMap.on('overlayadd',function (e)
+       {
+         if (e.name == "Legend")
+          $("#counties_legend").show()
+         countiesOverlay.bringToBack();
+       })
+       osMap.on('overlayremove',function (e)
+       {
+         if (e.name == "Legend")
+          $("#counties_legend").hide()
+       })
 
-      var legend = L.control({position: 'bottomright'});
+      var legend = L.control({position: 'bottomleft'});
       legend.onAdd = function () {
         var div = L.DomUtil.create('div', 'info_legend');
         div.setAttribute('id','counties_legend');
         return div;
       };
-      legend.addTo(osMap);    
+      legend.addTo(osMap);
+      legend_control.addTo(osMap);
 
        var state_colors = {'09':'red', '34':'green', '36':'blue'}
 
@@ -821,7 +833,7 @@ async function showMap()
 
        await buildCountyColorLookup(overlay_type)
        var counties = null;
-
+       
        createCountiesOverlay()
          
       /* countiesOverlay = L.d3SvgOverlay(function(sel, proj){
@@ -935,7 +947,7 @@ function createCountiesOverlay()
     {
       lcontrol.remove();
     }
-    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay})
+    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay, "Markers": markers, "Legend": legend_control})
     lcontrol.addTo(osMap);
     countiesOverlay.bringToBack()
   })
