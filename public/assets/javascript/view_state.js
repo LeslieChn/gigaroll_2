@@ -1391,8 +1391,6 @@ class View_State
    
     rectDrag = false;
     rect_anchor = null
-    
-    console.log(rectDrag)
 
     // map the clicked point to the data space
     var xClicked = new_xScale.invert(mouse[0]);
