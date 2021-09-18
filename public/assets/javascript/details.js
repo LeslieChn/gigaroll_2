@@ -800,8 +800,12 @@ function createCountiesOverlay()
     });
     countiesOverlay.addTo(osMap)
     countiesOverlay.bringToBack()
+    if (lcontrol) 
+    {
+      lcontrol.remove();
+    }
     lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay})
-    lcontrol.addTo(osMap);  
+    lcontrol.addTo(osMap);
   })
 }
 
