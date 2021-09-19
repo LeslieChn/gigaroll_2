@@ -29,16 +29,25 @@ let aliases = {
   'postal_code'    : 'Zip Code',
   'elevation:avg'  : 'Average Elevation',
   'year_built:min' : 'Earliest Construction (Year)',
-  'pop 2019'       : 'Population 2019'
+  'pop_2019'       : 'Population 2019'
 }
 
-var overlay_colors = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
-                    {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
-                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
-                    {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}]
+var overlay_colors = [
+          {id: 0, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
+          {id: 1, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
+          {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
+          {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}
+        ]
 
-let overlay_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg', 'year_built:avg']
-
+let county_measures =  [
+  "Housing_Units_2019",
+  "Median_Income_2019",
+  "Occupied_2019",
+  "pop_2019",
+  "Vacant_2019"
+];
+let agg_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg']
+let overlay_measures = agg_measures.concat(county_measures)
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
 var baseMaps
@@ -55,6 +64,7 @@ function alias(name)
   {
     aliased_name = aliases[name]
   }
+  aliased_name = aliased_name.replaceAll('_', ' ')
   return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
 }
 
@@ -92,12 +102,33 @@ async function getCountyData()
     qid: 'MD_AGG',
     dim: 'property',
     gby : 'county',
-    val: overlay_measures.join(',')
+    val: agg_measures.join(',')
   }
-
+  let county_measure_indices = null;
   if (county_data == null)
   {
     county_data = await serverRequest(params)
+
+    let county_headers ;
+    for (let row of county_data.data)
+    {
+      let county = row[0][0]
+      let js = await serverRequest( {qid: "MD_RETR", dim: "county", dim_filters: `county:${county}`})
+      let measures = js.data
+      county_headers = js.headers
+
+      if (!county_measure_indices)
+      {
+        county_measure_indices = county_measures.map(e => js.headers.indexOf(e))
+      }
+
+      for (let i of county_measure_indices)
+      {
+        row[1].push(measures[0][i])
+      }
+     
+    }
+
   }
 }
 
@@ -116,6 +147,8 @@ async function buildCountyDataLookup(value_idx)
     for (let row of county_data.data)
     {
         let c = row[0][0]
+        if (c == "Westchester-CT")
+          continue
         let state = c.substring(c.length - 2)
         let county = c.substring(0, c.length - 3)
         let code = state_code_from_name[state]
@@ -930,7 +963,7 @@ function createCountiesOverlay()
         let county_name = d.properties.NAME;
         let county_code = d.properties.COUNTY;
         let value = county_lookup[state_code][county_name];
-        return {fillColor:color(value), fillOpacity: 0.65, color:'white', weight:1};
+        return {fillColor:color(value), fillOpacity: 0.75, color:'white', weight:1};
       },
       onEachFeature: function(d, layer)
       {
@@ -1058,6 +1091,8 @@ function setMarkers()
       let x = e.originalEvent.x 
       let y = e.originalEvent.y 
       let node = server_js.data[coord[1]]
+      node[12] *= 1e-6
+      node[13] *= 1e-6
       propertyPopup(node, x, y)
     }
   }
