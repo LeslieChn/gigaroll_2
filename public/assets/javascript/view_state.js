@@ -336,8 +336,7 @@ class View_State
   }
   createControls()
   {
-    $('.dropdown-column').remove()
-    $('.knob-column').remove()
+    $('.controls-column').remove()
     if ('dropdowns' in this.state == false)
       return ''
     for (const [id, instance] of Object.entries(knob_objects))
@@ -361,44 +360,52 @@ class View_State
         knob_width=75
       }
       let position='position' in def? def.position:'bottom-right'
+      let knob_position='knob_position' in def? def.knob_position:''
 
-      let dropdown_html = `<div id=${id}-${this.getId()}-column 
-        class="${position=='top-left'?' col-4 mt-sm-3 mt-1':'col-2 mt-sm-3 mt-1'} 
-        px-sm-3 text-center m${position=='bottom-right'?'s-sm-auto pe-1':'e-sm-auto ps-1'} dropdown-column">
-        <h6 class="mb-1 text-white">${def.name}</h6>
+      let control_col = `<div id=${id}-${this.getId()}-column 
+        class="${position=='top-left'?' col mt-sm-3 mt-1':'col mt-sm-3 mt-1'} 
+        px-sm-3 d-flex align-items-center ${position=='bottom-right'?' pe-1':' ps-1'} controls-column">
+        <h6 class="me-2 text-white">${def.name}</h6>`
+
+      let dropdown_html = 
+        `
         <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center pt-0" 
         data-tile-id="${this.getId()}" 
         data-knob='${id}-${this.getId()}-knob' aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
-        </select></div>`
+        </select>`
 
-      let knob_html=`<div class="${position=='top-left'?'col-2 mt-1':'col-1 mt-sm-2 mt-1'} 
-        ${position=='bottom-right'?'me-sm-0':'ms-sm-0 '}
-        d-flex justify-content-center px-0 knob-column">
-        <input id='${id}-${this.getId()}-knob' class='p1' type="range" min="0" max="10" 
+      let knob_html = `<input id='${id}-${this.getId()}-knob' class='p1' type="range" min="0" max="10" 
         data-dropdown=${id}-${this.getId()} data-width="${knob_width}" data-height="${knob_height}" 
-        data-angleOffset="220" data-angleRange="280"></div>`
+        data-angleOffset="220" data-angleRange="280">`
+
+      let controls_html = knob_position=='left'?control_col + knob_html + dropdown_html+'</div>'
+      :knob_position=='right'?control_col + dropdown_html + knob_html + '</div>'
+      :control_col+dropdown_html+'</div>'
 
       if(position=='bottom-left')
       {
-        let bl_controls=knob_html+dropdown_html
+        let bl_controls = controls_html
         bottom_controls.prepend(bl_controls)
       }
       else if(position=='top-left')
       {
-        let tl_controls=knob_html+dropdown_html
+        let tl_controls = controls_html
         top_controls.prepend(tl_controls)
       }
       else
       {
-        let br_controls=dropdown_html+knob_html
+        let br_controls = controls_html
         bottom_controls.append(br_controls)
       }
-      let input=document.getElementById(`${id}-${this.getId()}-knob`)
-      input.dataset.labels = (def.contents).map(()=>'.')
-      input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
-      // console.log('input value:'+ input.value)
-      knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
+
+      if(knob_position){
+        let input=document.getElementById(`${id}-${this.getId()}-knob`)
+        input.dataset.labels = (def.contents).map(()=>'.')
+        input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
+        // console.log('input value:'+ input.value)
+        knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
+      }
     }
   }
   createTile()

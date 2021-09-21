@@ -95,19 +95,19 @@ let dropdowns = {
     name:'Groupby 1',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
     position:'bottom-left',
-    // knob_position:'left'
+    knob_position:'left'
   },
   gby_option_2:{
     name:'Groupby 2',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
     position:'bottom-left',
-    // knob_position:'left'
+    knob_position:'left'
   },
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
-    // knob_position:'left'
+    knob_position:'left'
   }
 }
 
@@ -117,19 +117,19 @@ let dropdowns2 = {
     name:'Color',
     contents:['red', 'blue','green','grey'],
     position:'bottom-left',
-    // knob_position:'left'
+    knob_position:'left'
   },
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
-    // knob_position:'right'
+    knob_position:'right'
   },
   val_filter_option:{
     name:'Filters',
     contents: ['', 'county:Median_Income_2019>40000', 'county:Median_Income_2019>20000,county:Median_Income_2019<=30000', 'county:pop_2019>500000', 'county:pop_2019<50000', 'county:pop_2019<pop_2015', 'property:elevation>600'],
     position:'top-left',
-    // knob_position:'right'
+    knob_position:'right'
   }
 }
 
