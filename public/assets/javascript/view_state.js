@@ -366,7 +366,7 @@ class View_State
         class="${position=='top-left'?' col-4 mt-sm-3 mt-1':'col-2 mt-sm-3 mt-1'} 
         px-sm-3 text-center m${position=='bottom-right'?'s-sm-auto pe-1':'e-sm-auto ps-1'} dropdown-column">
         <h6 class="mb-1 text-white">${def.name}</h6>
-        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select pt-0" 
+        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center pt-0" 
         data-tile-id="${this.getId()}" 
         data-knob='${id}-${this.getId()}-knob' aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
@@ -1258,10 +1258,10 @@ class View_State
   $("#detail-button-div").remove()
 
   this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
-  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
   this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon-colored.svg"/></div>`)
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
   this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
@@ -1275,7 +1275,7 @@ class View_State
     if (interface_mode == 'zoom')
     {
       $('#select-button').attr('src','../assets/images/select_icon.svg');
-      $('#reset-button').attr('src','../assets/images/reset_icon.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon-bw.svg');
     }
     else if (interface_mode == 'select')
     {

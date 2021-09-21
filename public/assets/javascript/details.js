@@ -651,9 +651,15 @@ function processResp(resp)
 {
   server_js = resp;
   updateGrid(resp);
+  $(document).ready(function ()
+  {
+    w2ui.grid.selectAll();
+    launchMap(100);
+    maximizeMap();
+  });
 }
 
-function launchMap()
+function launchMap(percentage)
 {
   coords=[]
   rec_ids = []
@@ -690,7 +696,7 @@ function launchMap()
 
   map_center=[center_lat, center_lng]
   
-  showMap()
+  showMap(percentage)
 }
 
 function showLegend(color, min, max,)
@@ -816,9 +822,11 @@ function showLegend(color, min, max,)
 }
 
 var legend_control = L.featureGroup();
-async function showMap()
+async function showMap(percentage)
 {
- 
+  if (!percentage)
+    percentage = 50
+    
   if (osMap==null) 
   {
     // try
@@ -869,63 +877,8 @@ async function showMap()
        
        createCountiesOverlay()
          
-      /* countiesOverlay = L.d3SvgOverlay(function(sel, proj){
-
-        var features = sel.selectAll('path')
-          .data(topojson.feature(counties, counties.objects.counties).features);
-      
-        features
-          .enter()
-          .append('path')
-          .attr('class', 'county-class')
-          .attr('id', function (d)
-            {
-              let state_code = d.properties.STATE;
-              let county_name = d.properties.NAME;
-              return state_code + '-' + county_name
-            })
-          .attr('stroke','white')
-          // .attr('fill', 'blue')
-          // .attr('fill-opacity', 0.2)
-          .attr("style", function (d)
-            {
-                let state_code = d.properties.STATE;
-                // let s = parseInt(code);
-                let county_name = d.properties.NAME;
-                let county_code = d.properties.COUNTY;
-                let value = county_lookup[state_code][county_name];
-
-                return `fill:${color(value)}; fill-opacity: 0.75`;
-
-            })
-          .attr('d', proj.pathFromGeojson)
-
-        features
-          .attr('stroke-width', 0.6 / proj.scale);
-      });
-      
-      
-      d3.json('topojson_counties.json', function(error, data){
-        counties = data;
-        countiesOverlay.addTo(osMap)
-      });
-
-      // L.DomEvent.on('.county-class', 'click', onClickCounty);
-      $('.county-class').on('click', onClickCounty)
-
-       this.object_instance = osMap
-     }
-    //  catch(e)
-    //  {
-    //    console.log(e)
-    //  }
-     L.control.layers(baseMaps, {"Counties": countiesOverlay}).addTo(osMap);
-     L.easyButton( 'fa-undo', function(){
-      osMap.fitBounds(bounds);
-      }).addTo(osMap);
-      */
+      }
     }
-  }
   
   clearMap()
   var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
@@ -943,7 +896,7 @@ async function showMap()
   }
 
   
-  w2ui.layout.get('bottom').size = '50%'
+  w2ui.layout.get('bottom').size = percentage + '%'
   w2ui.layout.show('bottom', true)
 
 }
