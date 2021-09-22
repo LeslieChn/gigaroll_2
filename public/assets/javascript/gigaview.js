@@ -10,7 +10,20 @@ let aliases = {
   'postal_code'    : 'Zip Code',
   'elevation:avg'  : 'Average Elevation',
   'year_built:min' : 'Earliest Construction (Year)',
-  'pop 2019'       : 'Population 2019'
+  'pop 2019'       : 'Population 2019',
+  'city:New York-NY' : 'New York City',
+  'city:Brooklyn-NY' : 'Brooklyn',
+  'city:Newark-NJ' : 'Newark',
+  'city:Stamford-CT' : 'Stamford',
+  'city:New Canaan-CT' : 'New Canaan',
+  'city:Greenwich-CT' : 'Greenwich',
+  'state_code:NY' : 'New York State',
+  'size' : 'Size',
+  'price' : 'Price',
+  'beds' : 'Beds',
+  'baths' : 'Baths',
+  'year_built' : 'Year Built',
+  'elevation' : 'Elevation'
 }
 
 let req1 =
@@ -169,14 +182,14 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', '', 'city:Stamford-CT,New Canaan-CT', 'city:Greenwich-CT,New Canaan-CT'],
+    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY'],
     position:'top-left',
     // knob_position:'right'
   }
 }
 
 
-let view_def=[{id:'treemap1', view_type:'treemap', request: req4, chart_def: chart_def, dropdowns:dropdowns, aliases:aliases,  tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
+let view_def=[{id:'treemap1', view_type:'treemap', request: req4, chart_def: chart_def, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
 {id:'line-chart1', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
 {id:'grid1', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
 {id:'countymap1', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},
@@ -215,8 +228,9 @@ resizeContent()
 function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
-  let row_height = $('#vs-knob-column').height()
-  return client_height - 2.25 * row_height 
+  let row_height = 60 //$('#vs-column').height()
+  console.log(row_height)
+  return client_height - 2.5 * row_height 
 }
 
 function resizeContent()
@@ -243,28 +257,28 @@ function createVsKnob(labels)
     knob_width=75
   }
 
-  $('#vs-knob-column').html(`<input id='view-knob' class='p2' type="range" min="0" max="10" data-dropdown='view-select' 
-    data-width="${knob_width}" data-height="${knob_height}" data-angleOffset="220" data-angleRange="280"></div>
-    <div class="dropdown float-end ps-3 pt-1">
+  $('#vs-column').append(/*`<input id='view-knob' class='p2' type="range" min="0" max="10" data-dropdown='view-select' 
+    data-width="${knob_width}" data-height="${knob_height}" data-angleOffset="220" data-angleRange="280"></div>*/
+    `<div class="dropdown float-end ps-3 pt-1">
     <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.5rem;">
-      <i class="fa fa-ellipsis-v fa-4x" aria-hidden="true" style="color:white;"></i>
+      <i class="fa fa-ellipsis-v fa-3x" aria-hidden="true" style="color:white;line-height:2;"></i>
     </a>
     <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable" style="">
       <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>
       <li><a class="dropdown-item border-radius-md" href="./explore.html">Explore</a></li>
     </ul>
     </div>`)
-  let input=document.getElementById(`view-knob`)
+  /*let input=document.getElementById(`view-knob`)
   input.value = view_states.indexOf(selected_vs)
   input.dataset.labels = labels
-  vs_knob = new Knob(input, new Ui.P1({}))
+  vs_knob = new Knob(input, new Ui.P1({}))*/
 }
 
 function refreshTiles(){
-  createVsKnob(this.labels)
+  // createVsKnob(this.labels)
   selected_vs.createControls()
   resizeContent()
-  console.log('resizing knobs')
+  // console.log('resizing knobs')
   selected_vs.refresh()
   $(".p1").on("change", controlsKnobChangeCallback)
   $(".p2").on("change", viewKnobChangeCallback)
@@ -280,6 +294,10 @@ function viewsDropdownCallBack ()
     $("#"+ knob_id).val(index)
     getKnob(knob_id).changed(0)
   }
+  else
+    selected_vs=view_states[index]
+    selected_vs.state.tile_config.height = `${getContentHeight()}px`
+    selected_vs.createTile()
 }
 
 

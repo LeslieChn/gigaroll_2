@@ -362,15 +362,15 @@ class View_State
       let name = def.name
       let position='position' in def? def.position:'bottom-right'
       let knob_position='knob_position' in def? def.knob_position:''
-      
+      let show_names = this.state.show_names || false
 
       let control_col = `<div id=${id}-${this.getId()}-column 
-        class="col px-sm-3 d-flex align-items-center ${position=='bottom-right'?'justify-content-end pe-1':' ps-1'} controls-column">
-        ${name?`<h6 class="me-2 text-white">${name}</h6>`:''}`
+        class="col my-4 px-sm-3 d-flex align-items-center ${position=='bottom-right'?'justify-content-end pe-1':' ps-1'} controls-column">
+        ${name && show_names?`<h6 class="me-2 text-white">${name}</h6>`:''}`
 
       let dropdown_html = 
         `
-        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center my-4 pt-0" 
+        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center  pt-0 mx-1" 
         data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
         </select>`
@@ -419,10 +419,10 @@ class View_State
     $(cfg.parent_div).empty()
     $(cfg.parent_div).html(`<div id="${this.getId()}-box" class="col-lg-${cfg.width} mx-auto">
       <div class="row">
-          <div class="col-1 align-self-center">
+          <div class="col-sm-1 col-2 align-self-center">
             <div id="side-controls" class="d-flex flex-column align-items-center"></div>
           </div>
-          <div class="col-11">
+          <div class="col-sm-11 col-10">
             <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
                 <div class="card-body p-1">
                   <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
@@ -1270,13 +1270,13 @@ class View_State
   if (this.selectDiv)
   $("#select-button-div").remove()
 
-  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px;z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-1 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; z-index:1000;">
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="m-1"  style="width:25px; z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
