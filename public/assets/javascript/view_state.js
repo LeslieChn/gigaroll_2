@@ -359,19 +359,19 @@ class View_State
         knob_height=75
         knob_width=75
       }
+      let name = def.name
       let position='position' in def? def.position:'bottom-right'
       let knob_position='knob_position' in def? def.knob_position:''
+      
 
       let control_col = `<div id=${id}-${this.getId()}-column 
-        class="${position=='top-left'?' col mt-sm-3 mt-1':'col mt-sm-3 mt-1'} 
-        px-sm-3 d-flex align-items-center ${position=='bottom-right'?' pe-1':' ps-1'} controls-column">
-        <h6 class="me-2 text-white">${def.name}</h6>`
+        class="col px-sm-3 d-flex align-items-center ${position=='bottom-right'?'justify-content-end pe-1':' ps-1'} controls-column">
+        ${name?`<h6 class="me-2 text-white">${name}</h6>`:''}`
 
       let dropdown_html = 
         `
-        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center pt-0" 
-        data-tile-id="${this.getId()}" 
-        data-knob='${id}-${this.getId()}-knob' aria-label=".form-select-sm example">
+        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center my-4 pt-0" 
+        data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
         </select>`
 
@@ -380,8 +380,8 @@ class View_State
         data-angleOffset="220" data-angleRange="280">`
 
       let controls_html = knob_position=='left'?control_col + knob_html + dropdown_html+'</div>'
-      :knob_position=='right'?control_col + dropdown_html + knob_html + '</div>'
-      :control_col+dropdown_html+'</div>'
+        :knob_position=='right'?control_col + dropdown_html + knob_html + '</div>'
+        :control_col+dropdown_html+'</div>'
 
       if(position=='bottom-left')
       {
@@ -418,14 +418,20 @@ class View_State
     }
     $(cfg.parent_div).empty()
     $(cfg.parent_div).html(`<div id="${this.getId()}-box" class="col-lg-${cfg.width} mx-auto">
-      <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
-        <div class="card-body p-1">
-          <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
+      <div class="row">
+          <div class="col-1 align-self-center">
+            <div id="side-controls" class="d-flex flex-column align-items-center"></div>
+          </div>
+          <div class="col-11">
+            <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
+                <div class="card-body p-1">
+                  <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
-      </div>
       <div id="bottom-controls" class="row justify-content-between"> 
-        
       </div>
      </div>`);
      this.createControls()
@@ -1262,15 +1268,15 @@ class View_State
     $("#detail-button-div").remove()
 
   if (this.selectDiv)
-  $("#detail-button-div").remove()
+  $("#select-button-div").remove()
 
-  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px;z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="m-1"  style="width:25px; z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)

@@ -24,7 +24,7 @@
 }
 
 .p1 text.active {
-  fill: yellow;
+  fill: white;
   font-weight: 600;
   /* font-smooth: always; */
   /* transition: all .3s ease-in-out; */

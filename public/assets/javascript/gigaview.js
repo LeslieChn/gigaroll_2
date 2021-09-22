@@ -95,19 +95,19 @@ let dropdowns = {
     name:'Groupby 1',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
     position:'bottom-left',
-    knob_position:'left'
+    // knob_position:'left'
   },
   gby_option_2:{
     name:'Groupby 2',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
     position:'bottom-left',
-    knob_position:'left'
+    // knob_position:'left'
   },
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
-    knob_position:'left'
+    // knob_position:'left'
   }
 }
 
@@ -117,19 +117,19 @@ let dropdowns2 = {
     name:'Color',
     contents:['red', 'blue','green','grey'],
     position:'bottom-left',
-    knob_position:'left'
+    // knob_position:'left'
   },
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
-    knob_position:'right'
+    // knob_position:'right'
   },
   val_filter_option:{
     name:'Filters',
     contents: ['', 'county:Median_Income_2019>40000', 'county:Median_Income_2019>20000,county:Median_Income_2019<=30000', 'county:pop_2019>500000', 'county:pop_2019<50000', 'county:pop_2019<pop_2015', 'property:elevation>600'],
     position:'top-left',
-    knob_position:'right'
+    // knob_position:'right'
   }
 }
 
@@ -247,7 +247,7 @@ function createVsKnob(labels)
     data-width="${knob_width}" data-height="${knob_height}" data-angleOffset="220" data-angleRange="280"></div>
     <div class="dropdown float-end ps-3 pt-1">
     <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.5rem;">
-      <i class="fa fa-ellipsis-v fa-2x" aria-hidden="true" style="color:orange;"></i>
+      <i class="fa fa-ellipsis-v fa-4x" aria-hidden="true" style="color:white;"></i>
     </a>
     <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable" style="">
       <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>
@@ -276,8 +276,10 @@ function viewsDropdownCallBack ()
  {
   let index = $(this).prop('selectedIndex');
   let knob_id =  $(this).attr('data-knob')
-  $("#"+ knob_id).val(index)
-  getKnob(knob_id).changed(0)
+  if(knob_id) {
+    $("#"+ knob_id).val(index)
+    getKnob(knob_id).changed(0)
+  }
 }
 
 
@@ -297,8 +299,12 @@ function controlsDropdownCallBack ()
  {
   let index = $(this).prop('selectedIndex');
   let knob_id =  $(this).attr('data-knob')
-  $("#"+ knob_id).val(index)
-  getKnob(knob_id).changed(0)
+  if(knob_id){
+    $("#"+ knob_id).val(index)
+    getKnob(knob_id).changed(0)
+  }
+  else
+    selected_vs.createContent()
 }
 
 
