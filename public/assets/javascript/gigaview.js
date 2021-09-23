@@ -298,6 +298,7 @@ function viewsDropdownCallBack ()
     selected_vs=view_states[index]
     selected_vs.state.tile_config.height = `${getContentHeight()}px`
     selected_vs.createTile()
+    $(".controls-select").on("change", controlsDropdownCallBack)
 }
 
 
