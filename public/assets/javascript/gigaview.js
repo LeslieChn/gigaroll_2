@@ -52,7 +52,7 @@ let req3 =
   qid: "MD_AGG",
   base_dim: 'property',
   groupbys: ['?gby_option'],
-  measures: ["?val_option"],
+  measures: ["?val_option", "?val_option2"],
   filters: []
 }
 
@@ -95,15 +95,15 @@ let chart_def = [
   {
     yAxisID: "left",
     type: "bar",
-    backgroundColor: "#2271b4",
+    backgroundColor: "#2271b440",
     borderColor:"#2271b4"
   },
-  // {
-  //   yAxisID: "right",
-  //   type: "bar",
-  //   backgroundColor: "#0000ff",
-  //   borderColor:"#0000ff"
-  // } 
+  {
+    yAxisID: "right",
+    type: "line",
+    backgroundColor: "#9b001f",
+    borderColor:"#9b001f"
+  } 
 ]
 
 let dropdowns = {
@@ -113,16 +113,23 @@ let dropdowns = {
     position:'bottom-left',
     // knob_position:'left'
   },
-  gby_option_2:{
-    name:'Groupby 2',
-    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
-    position:'bottom-left',
+  // gby_option_2:{
+  //   name:'Groupby 2',
+  //   contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
+  //   position:'bottom-left',
     // knob_position:'left'
-  },
+  //},
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
+    // knob_position:'left'
+  },
+
+  val_option2:{
+    name:'Value',
+    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    position:'bottom-left',
     // knob_position:'left'
   }
 }
@@ -218,10 +225,10 @@ let scatterdropdowns = {
 }
 
 
-let view_def=[{id:'treemap1', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
-{id:'line-chart1', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
-{id:'grid1', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
-{id:'countymap1', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},
+let view_def=[{id:'treemap', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
+{id:'chart', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
+{id:'grid', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
+{id:'countymap', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},
 {id:'map', view_type:'geomap', request: req_geo, dropdowns:geodropdowns, aliases:aliases, tile_config: {header: `Map`, subheader: `Map of properties`, height:'65vh', width:12}},
 {id:'scatterchart', view_type:'scatterChart', request: req_scatter, dropdowns:scatterdropdowns, aliases:aliases, x_axis:'?x_axis_option', y_axis:'?y_axis_option', z_axis:'?z_axis_option', tile_config: {header: `ScatterChart`, subheader: `This is a Scatter Chart`, height:'65vh', width:12}}]
 

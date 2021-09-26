@@ -1715,10 +1715,6 @@ function euclideanDistance(x1, y1, x2, y2)
     let req=this.state.request;
     let gby_headers = this.itemSubstitute(req.groupbys, vs_id);
   
-    let params=this.createRequestParams();
-    console.log(params)
- 
-  
     let root = gby_headers[0]
     let data = [{id:root, value:0}]
     let nodes = new Set()
@@ -1818,12 +1814,53 @@ function euclideanDistance(x1, y1, x2, y2)
         .text(function(d) { return format(d.value); });
       
 
-    function type(d) {
-    d.value = +d.value;
-    return d;
+    function type(d) 
+    {
+      d.value = +d.value;
+      return d;
     }
       
+    function onClick()
+    {
+      let title=$(this).attr('title')
+      let params = selected_vs.createRequestParams()
+
+      let idx = title.indexOf("\n")
+      let gby = title.slice(0,idx).split('.')
+      let n_gby = gby.length
+
+      let params_dim_filters = params.dim_filters.split(';')
+      let params_gby = params.gby.split(',')
+
+      let dim_filters = []
+      for (let i = 0; i < n_gby; ++i)
+      {
+        dim_filters.push(`${params_gby[i]}:${gby[i]}`)
+      }
+
+      for (let df of params_dim_filters)
+      {
+          let dim = df.substring(0, df.indexOf(":"))
+          if ( (params.gby).includes(dim) )
+            continue;
+          
+          dim_filters.push(df)
+      }
+
+      sessionStorage.setItem("type", 'request')
+      sessionStorage.setItem("base_dim", params.dim)
+      sessionStorage.setItem("dim_filters", dim_filters.join(';'))
+      sessionStorage.setItem("val_filters", '')
+      
+      window.open('./details.html', '_blank');
     }
+
+    if (!this.registered_listerner)
+    {
+      $(document).on("click",".node", onClick)
+      this.registered_listerner = true
+    }
+  }
 
   async getCountyData(){
     let state_code_from_name =
