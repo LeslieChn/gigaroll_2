@@ -23,7 +23,10 @@ let aliases = {
   'beds' : 'Beds',
   'baths' : 'Baths',
   'year_built' : 'Year Built',
-  'elevation' : 'Elevation'
+  'elevation' : 'Elevation',
+  'flood_zone:AE,VE,AO' : 'High Flood Risk',
+  'flood_zone' : 'Flood Zone',
+  '   ' : 'All'
 }
 
 let req1 =
@@ -53,13 +56,13 @@ let req3 =
   filters: []
 }
 
-let req4 =
+let treemap_req =
 {
   qid: "MD_AGG",
   base_dim: 'property',
   groupbys: ['?gby_option','?gby_option_2'],
   measures: ['?val_option'],
-  filters: []
+  dim_filters: ["?dim_filter_option"]
 }
 
 let req5 =
@@ -106,13 +109,13 @@ let chart_def = [
 let dropdowns = {
   gby_option:{
     name:'Groupby 1',
-    contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
     position:'bottom-left',
     // knob_position:'left'
   },
   gby_option_2:{
     name:'Groupby 2',
-    contents:['prop_type','state_code', 'postal_code', 'city', 'county'],
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
     position:'bottom-left',
     // knob_position:'left'
   },
@@ -121,6 +124,32 @@ let dropdowns = {
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
+  }
+}
+let treemap_dropdowns = {
+  gby_option:{
+    name:'Groupby 1',
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
+    position:'bottom-left',
+    // knob_position:'left'
+  },
+  gby_option_2:{
+    name:'Groupby 2',
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
+    position:'bottom-left',
+    // knob_position:'left'
+  },
+  val_option:{
+    name:'Value',
+    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    position:'bottom-right',
+    // knob_position:'left'
+  },
+  dim_filter_option:{
+    name:'City',
+    contents: ['',  'city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
+    position:'top-left',
+    // knob_position:'right'
   }
 }
 
@@ -182,14 +211,14 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY'],
+    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
 }
 
 
-let view_def=[{id:'treemap1', view_type:'treemap', request: req4, chart_def: chart_def, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
+let view_def=[{id:'treemap1', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
 {id:'line-chart1', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
 {id:'grid1', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
 {id:'countymap1', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},

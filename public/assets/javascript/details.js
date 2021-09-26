@@ -1043,9 +1043,9 @@ function setMarkers()
     {
       let x = e.originalEvent.x 
       let y = e.originalEvent.y 
-      let node = server_js.data[coord[1]]
-      node[12] *= 1e-6
+      let node = server_js.data[coord[1]].slice()
       node[13] *= 1e-6
+      node[14] *= 1e-6
       propertyPopup(node, x, y)
     }
   }
@@ -1164,6 +1164,22 @@ async function InitPage()
 
 } //initPage
 
+function propDetailsFormat(node) 
+{
+  let headers = this.server_js.headers
+  let fields = ['prop_type', 'beds', 'baths', 'size', 'price', 'year_built', 'elevation', 'flood_zone']
+  let indices = fields.map (f => headers.indexOf(f))
+  
+  let html = ''
+  for (let i of indices)
+  {
+      let header = headers[i]
+      let data =  node[i]
+      html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data}</b></td></tr>`
+  }
+  return html
+}
+
 function propInfoFormat(data) 
 {
   let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
@@ -1233,13 +1249,7 @@ async function propertyPopup(node, x, y)
           <div class="carousel-item active">
             <table class="popup-table">
               <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
-              <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
-              <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
-              <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
-              <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
-              <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
-              <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
-              <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+              ${this.propDetailsFormat(node)}
             </table>
           </div>
           <div class="carousel-item" id="state_info">
@@ -1265,7 +1275,7 @@ async function propertyPopup(node, x, y)
     
     <div class="row px-4  align-items-center justify-content-center">
       <a style=" margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[13]},${node[14]}">Google</a>
     </div>
     `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
