@@ -1754,7 +1754,7 @@ function euclideanDistance(x1, y1, x2, y2)
     let ttdiv_id = `${this.getId()}-tooltip`
     let ttlegend_id = `${this.getId()}-legend`
 
-    
+
     $(`#${ttlegend_id}`).remove()
 
     this.toolTipDiv = d3.select(`#${this.getId()}-box`).append("div")
@@ -1767,7 +1767,7 @@ function euclideanDistance(x1, y1, x2, y2)
     .style("opacity", 1)
     .style("width", "200px")
     .style("height", "500px")
-    .style("background-color", "white")
+    .style("background-color", "#ddd")
     .style("z-index", "999")
 
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
@@ -1779,9 +1779,9 @@ function euclideanDistance(x1, y1, x2, y2)
 
     var format = d3.format(",d");
 
-    var color = d3.scaleOrdinal()
-      .range(d3.schemeCategory20
-          .map(function(c) { c = d3.rgb(c); c.opacity = 0.8; return c; }));
+    this.color = d3.scaleOrdinal()
+      .range(d3.schemeCategory20)
+          //.map(function(c) { c = d3.rgb(c); c.opacity = 0.8; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
@@ -1792,7 +1792,7 @@ function euclideanDistance(x1, y1, x2, y2)
       .round(true);
 
     let data = await this.getTreeMapData();
-
+  
     
     if (selected_vs && this!==selected_vs)
     {
@@ -1810,17 +1810,19 @@ function euclideanDistance(x1, y1, x2, y2)
       return b.value - a.value  
     })
 
+    this.data = data 
+    
     this.data_map = {}
 
     for (let i = 0 ; i < data.length ; ++i)
     {
       this.data_map [data[i].id] = i
-      console.log(this.data_map)
     }
 
 
     d3.select(`#${treemap_div}`)
       .html("")
+
 
     d3.select(`#${treemap_div}`)
       .selectAll(".node")
@@ -1840,7 +1842,7 @@ function euclideanDistance(x1, y1, x2, y2)
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
-        .style("background", function(d) { while (d.depth > 1) d = d.parent; console.log(d.id); return color(d.id); })
+        .style("background", function(d) { while (d.depth > 1) d = d.parent; return selected_vs.color(d.id); })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
@@ -1858,6 +1860,7 @@ function euclideanDistance(x1, y1, x2, y2)
       d.value = +d.value;
       return d;
     }
+    
 
     showLegend(this)
     
@@ -1927,9 +1930,15 @@ function euclideanDistance(x1, y1, x2, y2)
       d3.select(`#${ttdiv_id}`).style("opacity", 0)
 
       let rect_id = selected_vs.data_map[title]
+
       let rect = d3.select(`#rect_${rect_id}`)
-      let color = rect.attr('data-fill')
-      rect.attr('fill', color)
+    
+      let a = selected_vs.data[rect_id].id.split('.');
+      let c = selected_vs.color(`${a[0]}.${a[1]}`)
+
+      console.log(`${a[0]}.${a[1]}`)
+
+      rect.attr('fill', c)
     }
 
     function onMouseMove(e)
@@ -1955,30 +1964,39 @@ function euclideanDistance(x1, y1, x2, y2)
     {
         let n_divs = data.length;
         var client_width = document.getElementById(ttlegend_id).clientWidth
-        let legend_width = client_width / 3
-        let rect_width = Math.max(legend_width / 2 , 100)
-        let right_margin = 10;
+        let legend_width = client_width
+        let margin = legend_width / 12
+        let rect_width = legend_width - 2 * margin
         let rect_idx = 0;
         let rect_id = 0;
         var client_height = document.getElementById(ttlegend_id).clientHeight
         let legend_height = client_height * 0.8 
-        let top_margin = client_height * 0.15
-        let rect_height = legend_height / (n_divs + 1)
+        let top_margin = client_height * 0.05
+        let rect_height = Math.min(legend_height / (n_divs + 1), 20)
   
+        let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
 
+        d3.select(`#${ttlegend_id}`).append("div")
+          .html('')
+          .attr("id", "caption")
+          .attr("fill", "#000")
+          .attr("text-anchor", "start")
+          .attr("font-weight", "bold")
+          .attr("class", "text-center")
+          .html(`<center>${text}</center>`);
+    
         var xScale = d3.scaleLinear()
-        .domain([data[0].value, data.at(-1).value])
+        .domain([Math.cbrt(data[0].value), 0]) //Math.cbrt(data.at(-1).value)])
         .range([rect_width, 5]);
 
         var svg
         svg =  d3.select(`#${ttlegend_id}`)
-        .html('')
         .append("svg")
         .attr("width", client_width)
         .attr("height", client_height);
         // let rectPos = (i) => left_margin + i * rect_width;
-        let rectPos = (i) => top_margin + (i - 1) * rect_height;
-    
+        let rectPos = (i) => top_margin + i * rect_height;
+
         var g = svg.append("g")
             .attr("class", "key")
             .attr("transform", "translate(0,0)");
@@ -1989,42 +2007,31 @@ function euclideanDistance(x1, y1, x2, y2)
             .attr("height", rect_height)
             .attr("width", function (d)
             { 
-              let width = xScale(data[d].value)
+              let width = xScale(Math.cbrt(data[d].value))
               return width
             }
             )
             .attr("x", function (d)
             { 
-              let width = xScale(data[d].value)
-              return 150 + right_margin - width
+              let width = xScale(Math.cbrt(data[d].value))
+              //return margin
+              return legend_width - margin - width
             }
             )
-            .attr("y", d => rectPos(d))
+            .attr("y", d => { return rectPos(d)})
             .attr("rx", "1")
             .attr("ry", "1")
             .attr("fill", function (d) { 
               let a = data[d].id.split('.');
-              console.log(`${a[0]}.${a[1]}`)
-              return color(`${a[0]}.${a[1]}`) })
-            .attr("data-fill", function (d) {let a = data[d].id.split('.'); 
-              return color(`${a[0]}.${a[1]}`)})
+              return instance.color(`${a[0]}.${a[1]}`) })
+            // .attr("data-fill", function (d) {let a = data[d].id.split('.'); 
+            //   return selected_vs.color(`${a[0]}.${a[1]}`)})
+            // .attr("data-index", d => d)
             .attr("id", d => `rect_${rect_id++}`)
         // let toolbar = w2ui.layout.get('top').toolbarv
         // let id = toolbar.get("values").selected
         // let text = toolbar.get(`values:${id}`).text
-       /* let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
-
-        g.append("text")
-            .attr("id", "caption")
-            .attr("x", 0) 
-            .attr("y", top_margin / 2)
-            .attr("fill", "#000")
-            .attr("text-anchor", "start")
-            .attr("font-weight", "bold")
-            .attr("style", "font-size: 75%")
-            .text(text);
-        */
-
+  
     
         /*let text_pixels = document.getElementById("caption").getComputedTextLength()
         g.select("#caption")

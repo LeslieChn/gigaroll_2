@@ -190,11 +190,10 @@ div.treemapLegend {
   right:15px;
   z-index:999;               
   padding: 8px;               
-  color:white;             
+  color:black;             
   padding: 8px;               
   font: 13px sans-serif; 
   font-weight: bold;     
-  background:  rgb(155, 0, 31);
   border: 0px;        
   border-radius: 4px;      
   pointer-events: none;   
