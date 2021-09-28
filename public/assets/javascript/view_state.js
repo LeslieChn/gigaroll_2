@@ -679,8 +679,8 @@ class View_State
      let data_index = 0
      for (const data of server_js.data)
      {
-       lat = parseInt(data[12]) /1e6
-       lng = parseInt(data[13]) /1e6
+       lat = parseInt(data[13]) /1e6
+       lng = parseInt(data[14]) /1e6
        max_lat = (lat>max_lat)? lat : max_lat
        max_lng = (lng>max_lng)? lng : max_lng
        min_lat = (lat<min_lat)? lat : min_lat
@@ -1716,7 +1716,7 @@ function euclideanDistance(x1, y1, x2, y2)
     let gby_headers = this.itemSubstitute(req.groupbys, vs_id);
   
     let root = gby_headers[0]
-    let data = [{id:root, value:0}]
+    let data = [{id:root, value:0, extra:true}]
     let nodes = new Set()
     let n_gbys = gby_headers.length
     
@@ -1739,11 +1739,11 @@ function euclideanDistance(x1, y1, x2, y2)
         str += '.' + g2
         if (i < ng && !nodes.has(str))
         {
-          data.push( { id:str , value: 0});
+          data.push( { id:str , value: 0, extra:true});
           nodes.add(str);
         } 
       }
-      data.push( { id:str , value: val});
+      data.push( { id:str , value: val, extra:false});
     }
   
     return data;
@@ -1751,6 +1751,25 @@ function euclideanDistance(x1, y1, x2, y2)
   async treemap()
   {
     let treemap_div = `${this.getId()}-treemap`
+    let ttdiv_id = `${this.getId()}-tooltip`
+    let ttlegend_id = `${this.getId()}-legend`
+
+    
+    $(`#${ttlegend_id}`).remove()
+
+    this.toolTipDiv = d3.select(`#${this.getId()}-box`).append("div")
+    .attr("class", "treemapTooltip")
+    .attr("id", ttdiv_id)
+
+    this.legendDiv = d3.select(`.card-body`).append("div")
+    .attr("class", "treemapLegend")
+    .attr("id", ttlegend_id)
+    .style("opacity", 1)
+    .style("width", "200px")
+    .style("height", "500px")
+    .style("background-color", "white")
+    .style("z-index", "999")
+
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
     var parent_width = $(`#${this.getId()}`).width();
@@ -1785,6 +1804,21 @@ function euclideanDistance(x1, y1, x2, y2)
         .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
 
     treemap(root);
+    data = data.filter(a => a.extra == false)
+    data = data.sort(function (a,b)
+    {
+      return b.value - a.value  
+    })
+
+    this.data_map = {}
+
+    for (let i = 0 ; i < data.length ; ++i)
+    {
+      this.data_map [data[i].id] = i
+      console.log(this.data_map)
+    }
+
+
     d3.select(`#${treemap_div}`)
       .html("")
 
@@ -1793,7 +1827,12 @@ function euclideanDistance(x1, y1, x2, y2)
       .data(root.leaves())
       .enter().append("div")
         .attr("class", "node")
-        .attr("title", function(d) 
+        .attr("id", function(d) 
+        { 
+          return d.id
+        })
+        .attr("value", (d) => d.value)
+        .attr("data", function(d) 
         { 
           return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
         })
@@ -1801,7 +1840,7 @@ function euclideanDistance(x1, y1, x2, y2)
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
-        .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
+        .style("background", function(d) { while (d.depth > 1) d = d.parent; console.log(d.id); return color(d.id); })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
@@ -1819,14 +1858,16 @@ function euclideanDistance(x1, y1, x2, y2)
       d.value = +d.value;
       return d;
     }
-      
+
+    showLegend(this)
+    
     function onClick()
     {
-      let title=$(this).attr('title')
+      let data=$(this).attr('data')
       let params = selected_vs.createRequestParams()
 
-      let idx = title.indexOf("\n")
-      let gby = title.slice(0,idx).split('.')
+      let idx = data.indexOf("\n")
+      let gby = data.slice(0,idx).split('.')
       let n_gby = gby.length
 
       let params_dim_filters = params.dim_filters.split(';')
@@ -1855,10 +1896,181 @@ function euclideanDistance(x1, y1, x2, y2)
       window.open('./details.html', '_blank');
     }
 
-    if (!this.registered_listerner)
+    function onMouseOver(e)
     {
+      let data=$(this).attr('data')
+      let title=$(this).attr('id')
+      let value=$(this).attr('value')
+      let idx = data.indexOf("\n")
+      let gby = data.slice(0,idx).split('.')
+      let html = function () {
+        let str = ''
+        gby.forEach((g) => {
+          str += g + '<br>'
+        }) 
+        str += value
+        return str
+      } 
+      let rect_id = selected_vs.data_map[title]
+      d3.select(`#${ttdiv_id}`).style("opacity", 1)
+      .html(html)
+      .style("left", (e.originalEvent.x + 20) + "px")
+      .style("top", (e.originalEvent.y + 20) + "px");
+
+      let rect = d3.select(`#rect_${rect_id}`)
+      rect.attr('fill', 'red')
+    }
+
+    function onMouseOut()
+    {
+      let title=$(this).attr('id')
+      d3.select(`#${ttdiv_id}`).style("opacity", 0)
+
+      let rect_id = selected_vs.data_map[title]
+      let rect = d3.select(`#rect_${rect_id}`)
+      let color = rect.attr('data-fill')
+      rect.attr('fill', color)
+    }
+
+    function onMouseMove(e)
+    {
+      d3.select(`#${ttdiv_id}`)
+      .style("z-index", 999)
+      .style("left", (e.originalEvent.x + 20) + "px")
+      .style("top", (e.originalEvent.y + 20) + "px");
+    }
+
+    if (!this.registered_listener)
+    {
+
       $(document).on("click",".node", onClick)
-      this.registered_listerner = true
+      .on('mouseover', '.node', onMouseOver)
+      .on('mousemove', '.node', onMouseMove)
+      .on('mouseout', '.node', onMouseOut)
+      this.registered_listener = true
+      
+    }
+
+    function showLegend(instance)
+    {
+        let n_divs = data.length;
+        var client_width = document.getElementById(ttlegend_id).clientWidth
+        let legend_width = client_width / 3
+        let rect_width = Math.max(legend_width / 2 , 100)
+        let right_margin = 10;
+        let rect_idx = 0;
+        let rect_id = 0;
+        var client_height = document.getElementById(ttlegend_id).clientHeight
+        let legend_height = client_height * 0.8 
+        let top_margin = client_height * 0.15
+        let rect_height = legend_height / (n_divs + 1)
+  
+
+        var xScale = d3.scaleLinear()
+        .domain([data[0].value, data.at(-1).value])
+        .range([rect_width, 5]);
+
+        var svg
+        svg =  d3.select(`#${ttlegend_id}`)
+        .html('')
+        .append("svg")
+        .attr("width", client_width)
+        .attr("height", client_height);
+        // let rectPos = (i) => left_margin + i * rect_width;
+        let rectPos = (i) => top_margin + (i - 1) * rect_height;
+    
+        var g = svg.append("g")
+            .attr("class", "key")
+            .attr("transform", "translate(0,0)");
+    
+        g.selectAll("rect")
+            .data(data.map((d) => rect_idx++ ) )
+            .enter().append("rect")
+            .attr("height", rect_height)
+            .attr("width", function (d)
+            { 
+              let width = xScale(data[d].value)
+              return width
+            }
+            )
+            .attr("x", function (d)
+            { 
+              let width = xScale(data[d].value)
+              return 150 + right_margin - width
+            }
+            )
+            .attr("y", d => rectPos(d))
+            .attr("rx", "1")
+            .attr("ry", "1")
+            .attr("fill", function (d) { 
+              let a = data[d].id.split('.');
+              console.log(`${a[0]}.${a[1]}`)
+              return color(`${a[0]}.${a[1]}`) })
+            .attr("data-fill", function (d) {let a = data[d].id.split('.'); 
+              return color(`${a[0]}.${a[1]}`)})
+            .attr("id", d => `rect_${rect_id++}`)
+        // let toolbar = w2ui.layout.get('top').toolbarv
+        // let id = toolbar.get("values").selected
+        // let text = toolbar.get(`values:${id}`).text
+       /* let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
+
+        g.append("text")
+            .attr("id", "caption")
+            .attr("x", 0) 
+            .attr("y", top_margin / 2)
+            .attr("fill", "#000")
+            .attr("text-anchor", "start")
+            .attr("font-weight", "bold")
+            .attr("style", "font-size: 75%")
+            .text(text);
+        */
+
+    
+        /*let text_pixels = document.getElementById("caption").getComputedTextLength()
+        g.select("#caption")
+            .attr("x", client_width  /  2 - text_pixels /2 );
+        
+
+        // Create the tickmarks
+        let vals = [[min,0]]
+        for (let j = 1; j < 4; ++j)
+        {
+            //let idx = Math.floor(j * n_divs / 4)
+            let val_idx = Math.floor(j * (color.domain().length) / 4);
+            let val = color.domain()[val_idx]
+            let idx = color.range().indexOf(color(val))
+            vals.push([val, idx]);
+        }
+        vals.push([max, n_divs])
+    
+        for (let val of vals)
+        {
+            g.append("text")
+                .attr("y", rectPos(val[1] - 1) + 3)
+                .attr("x", left_margin + rect_width * 1.5)
+                .attr("class", "ldegree")
+                .attr("fill", "#000")
+                .attr("style", "font-size: 60%")
+                .text(Math.round(val[0]));
+                //.text(Math.round(10*val[0])/10);
+        }
+        */
+        // for (let i = 0; i <= n_divs; ++i)
+        // {
+        //     let width = rect_width, height = 1;
+        //     if (i % 4 == 0)
+        //     {
+        //         width += 2;
+        //         height = 2;
+        //     }
+        //     g.append('line')
+        //         .style("stroke", "black")
+        //         .style("stroke-width", height)
+        //         .attr("x1", left_margin)
+        //         .attr("y1", rectPos(i-1))
+        //         .attr("x2", left_margin + width)
+        //         .attr("y2", rectPos(i-1)); 
+        // }
     }
   }
 
@@ -2117,7 +2329,7 @@ function euclideanDistance(x1, y1, x2, y2)
             });
           }
 
-          function showLegend(color, min, max,)
+          function showLegend(color, min, max)
           {
                    
               let n_divs = color.range().length;

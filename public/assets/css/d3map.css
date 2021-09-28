@@ -74,7 +74,7 @@ div.scatterTooltip {
   width: 80px;                    
   height: 28px;
   */      
-  z-index:1000;    
+  z-index:999;    
   color:white;             
   padding: 8px;               
   font: 10px sans-serif; 

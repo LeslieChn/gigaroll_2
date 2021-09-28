@@ -265,7 +265,6 @@ function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
   let row_height = 60 //$('#vs-column').height()
-  console.log(row_height)
   return client_height - 2.5 * row_height 
 }
 
