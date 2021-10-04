@@ -108,23 +108,27 @@ async function getCountyData()
   if (county_data == null)
   {
     county_data = await serverRequest(params)
+    let js = await serverRequest( {qid: "MD_RETR", dim: "county", include_member_name: 'true'})
+    let county_headers = js.headers;
+    if (!county_measure_indices)
+    {
+      county_measure_indices = county_measures.map(e => county_headers.indexOf(e))
+    }
+    let mem_name_idx = county_headers.indexOf("Member_Name")
+    let county_dict = {}, row_num = 0;
+    for (let row of js.data)
+    {
+      county_dict[row[mem_name_idx]] = row_num++
+    }
 
-    let county_headers ;
     for (let row of county_data.data)
     {
       let county = row[0][0]
-      let js = await serverRequest( {qid: "MD_RETR", dim: "county", dim_filters: `county:${county}`})
-      let measures = js.data
-      county_headers = js.headers
-
-      if (!county_measure_indices)
-      {
-        county_measure_indices = county_measures.map(e => js.headers.indexOf(e))
-      }
+      let measures = js.data[county_dict[county]]
 
       for (let i of county_measure_indices)
       {
-        row[1].push(measures[0][i])
+        row[1].push(measures[i])
       }
      
     }
