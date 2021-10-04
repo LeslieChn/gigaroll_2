@@ -26,6 +26,8 @@ let aliases = {
   'elevation' : 'Elevation',
   'flood_zone:AE,VE,AO' : 'High Flood Risk',
   'flood_zone' : 'Flood Zone',
+  'range(property:year_built;1600;10;200)' : 'Year Built' , 
+  'range(county:Median_Income_2019;0;1000;200)' : 'County Median Income 2019',
   '   ' : 'All'
 }
 
@@ -109,7 +111,9 @@ let chart_def = [
 let dropdowns = {
   gby_option:{
     name:'Groupby 1',
-    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
+    contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone', 
+    'range(property:year_built;1600;10;200)', 
+    'range(county:Median_Income_2019;0;1000;200)'],
     position:'bottom-left',
     // knob_position:'left'
   },
@@ -129,7 +133,7 @@ let dropdowns = {
   val_option2:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
-    position:'bottom-left',
+    position:'bottom-middle',
     // knob_position:'left'
   }
 }
@@ -143,7 +147,7 @@ let treemap_dropdowns = {
   gby_option_2:{
     name:'Groupby 2',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone'],
-    position:'bottom-left',
+    position:'bottom-middle',
     // knob_position:'left'
   },
   val_option:{
@@ -201,13 +205,13 @@ let scatterdropdowns = {
   x_axis_option:{
     name:'X-Axis',
     contents: ['size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
-    position:'bottom-left',
+    position:'bottom-middle',
     // knob_position:'right'
   },
   y_axis_option:{
     name:'Y-Axis',
     contents: ['price', 'size', 'beds', 'baths', 'year_built', 'elevation'],
-    position:'bottom-right',
+    position:'bottom-left',
     // knob_position:'right'
   },
   z_axis_option:{

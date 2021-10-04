@@ -52,27 +52,24 @@
 </body>
     <div id='main-container' class="container-fluid">
       <div id="main-header" class="row g-0">
-        <!-- <div id='logo-div'>
-          <a id="logotext" class="mx-auto" href="/"></a>
-              <span id="logo-text" class="align-middle">GigaRoll</span>
-          </a>
-        </div> -->
-          <div id='top-controls-column' class='col-6'>
-            <div id="top-controls" class="row justify-content-start"></div>
-          </div>
-          <div class="col-6">
-            <div class='row justify-content-end'>
-              <div id='vs-column' class='col d-flex align-items-center justify-content-end'>
+          <!-- <div id='logo-div'>
+            <a id="logotext" class="mx-auto" href="/"></a>
+                <span id="logo-text" class="align-middle">GigaRoll</span>
+            </a>
+          </div> -->
+            <div class="col-sm-1"></div>
+            <div id='tl-controls' class='col mt-4 justify-content-start'>
+            </div>
+            <div class="col-sm-1 d-flex align-items-center"><h2 id="logo">Gigaroll</h2></div>
+            <div id='vs-column' class="col d-flex align-items-center justify-content-end">
                 <!-- <h6 class="mb-1 text-white">Views</h6> -->
                 <select id='view-select' class="form-select form-select-sm text-center my-4 pt-0" data-tile-id="" aria-label="view select"></select>
-              </div>
+            </div>
               <!-- <div id='vs-knob-column' class='col-2 d-flex justify-content-center mt-1 px-0 me-sm-0 me-n4'>
               </div> -->
-            </div>
-          </div>
         </div>
       <div id="main-panel" class="row">
-      </div>
+        </div>
     </div>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBt1YAVs6NKSAMs35eLlxthP24i_r7nnhk&libraries=visualization,geometry,drawing&v=weekly"></script>
 <!-- Plugin for the charts, full documentation here: https://www.chartjs.org/ -->
@@ -86,61 +83,6 @@
 <script src="./assets/javascript/plugins/smooth-scrollbar.min.js"></script>
 <script type="text/javascript" src="./assets/javascript/view_state.js"></script>
 <script type="text/javascript" src="./assets/javascript/gigaview.js"></script>
-<svg>
-  <filter id="dropshadow" height="150%" width="150%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-      <feOffset dx="0" dy="3" result="offsetblur"/>
-      <feMerge>
-          <feMergeNode/>
-          <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-  </filter>
-  <filter id='inner-shadow'>
-
-      <!-- Shadow Offset -->
-      <feOffset
-              dx='0'
-              dy='5'
-              />
-
-      <!-- Shadow Blur -->
-      <feGaussianBlur
-              stdDeviation='5'
-              result='offset-blur'
-              />
-
-      <!-- Invert the drop shadow
-           to create an inner shadow -->
-      <feComposite
-              operator='out'
-              in='SourceGraphic'
-              in2='offset-blur'
-              result='inverse'
-              />
-
-      <!-- Color & Opacity -->
-      <feFlood
-              flood-color='black'
-              flood-opacity='0.75'
-              result='color'
-              />
-
-      <!-- Clip color inside shadow -->
-      <feComposite
-              operator='in'
-              in='color'
-              in2='inverse'
-              result='shadow'
-              />
-
-      <!-- Put shadow over original object -->
-      <feComposite
-              operator='over'
-              in='shadow'
-              in2='SourceGraphic'
-              />
-  </filter>
-</svg>
 </body>
 
 </html>

@@ -200,7 +200,10 @@ div.treemapLegend {
   box-shadow: 4px 4px 10px rgba(0,0,0,.4);         
 }
 
-
+#logo{
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: rgb(204, 204, 204);
+}
 
 
 @media only screen and (max-width: 812px) {

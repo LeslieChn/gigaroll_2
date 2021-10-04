@@ -347,8 +347,10 @@ class View_State
     let dropdowns=this.state.dropdowns
     for (const [id, def] of Object.entries(dropdowns))
     {
-      let top_controls=$(`#top-controls`)
-      let bottom_controls=$(`#bottom-controls`)
+      let tl_controls=$(`#tl-controls`)
+      let bl_controls=$(`#bl-controls`)
+      let bm_controls=$(`#bm-controls`)
+      let br_controls=$(`#br-controls`)
       let client_width = document.documentElement.clientWidth
       let client_height = document.documentElement.clientHeight
       let size = Math.min(client_width, client_height)
@@ -364,12 +366,9 @@ class View_State
       let knob_position='knob_position' in def? def.knob_position:''
       let show_names = this.state.show_names || false
 
-      let control_col = `<div id=${id}-${this.getId()}-column 
-        class="col my-4 px-sm-3 d-flex align-items-center ${position=='bottom-right'?'justify-content-end pe-1':' ps-1'} controls-column">
-        ${name && show_names?`<h6 class="me-2 text-white">${name}</h6>`:''}`
 
       let dropdown_html = 
-        `
+        `${name && show_names?`<h6 class="me-2 text-white">${name}</h6>`:''}
         <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center  pt-0 mx-1" 
         data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
@@ -379,24 +378,25 @@ class View_State
         data-dropdown=${id}-${this.getId()} data-width="${knob_width}" data-height="${knob_height}" 
         data-angleOffset="220" data-angleRange="280">`
 
-      let controls_html = knob_position=='left'?control_col + knob_html + dropdown_html+'</div>'
-        :knob_position=='right'?control_col + dropdown_html + knob_html + '</div>'
-        :control_col+dropdown_html+'</div>'
+      let controls_html = knob_position=='left'?knob_html + dropdown_html+'</div>'
+        :knob_position=='right'?dropdown_html + knob_html + '</div>'
+        :dropdown_html+'</div>'
 
       if(position=='bottom-left')
       {
-        let bl_controls = controls_html
-        bottom_controls.prepend(bl_controls)
+        bl_controls.html(controls_html)
+      }
+      else if(position=='bottom-middle')
+      {
+        bm_controls.html(controls_html)
       }
       else if(position=='top-left')
       {
-        let tl_controls = controls_html
-        top_controls.prepend(tl_controls)
+        tl_controls.html(controls_html)
       }
       else
       {
-        let br_controls = controls_html
-        bottom_controls.append(br_controls)
+        br_controls.html(controls_html)
       }
 
       if(knob_position){
@@ -431,7 +431,11 @@ class View_State
               </div>
           </div>
         </div>
-      <div id="bottom-controls" class="row justify-content-between"> 
+      <div id="bottom-controls" class="row mt-3"> 
+        <div class="col-sm-1"></div>
+        <div class="col d-flex justify-content-start" id="bl-controls"></div>
+        <div class="col d-flex justify-content-center" id="bm-controls"></div>
+        <div class="col d-flex justify-content-end" id="br-controls"></div>
       </div>
      </div>`);
      this.createControls()
@@ -1760,6 +1764,7 @@ function euclideanDistance(x1, y1, x2, y2)
     this.toolTipDiv = d3.select(`#${this.getId()}-box`).append("div")
     .attr("class", "treemapTooltip")
     .attr("id", ttdiv_id)
+    .style("display", "none")
 
     this.legendDiv = d3.select(`.card-body`).append("div")
     .attr("class", "treemapLegend")
@@ -1917,6 +1922,7 @@ function euclideanDistance(x1, y1, x2, y2)
       let rect_id = selected_vs.data_map[title]
       d3.select(`#${ttdiv_id}`).style("opacity", 1)
       .html(html)
+      .style("display", "inline")
       .style("left", (e.originalEvent.x + 20) + "px")
       .style("top", (e.originalEvent.y + 20) + "px");
 
