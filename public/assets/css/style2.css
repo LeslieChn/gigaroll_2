@@ -99,3 +99,7 @@ body { height: 100%;margin: 0;padding: 0;}
   margin-bottom:20px;
   padding:10px;
 }
+
+.w2ui-toolbar{
+  background: white !important;
+}

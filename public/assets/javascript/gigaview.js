@@ -114,7 +114,7 @@ let dropdowns = {
     contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone', 
     'range(property:year_built;1600;10;200)', 
     'range(county:Median_Income_2019;0;1000;200)'],
-    position:'bottom-left',
+    position:'bottom-middle',
     // knob_position:'left'
   },
   // gby_option_2:{
@@ -126,14 +126,14 @@ let dropdowns = {
   val_option:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
-    position:'bottom-right',
+    position:'bottom-left',
     // knob_position:'left'
   },
 
   val_option2:{
     name:'Value',
     contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
-    position:'bottom-middle',
+    position:'bottom-right',
     // knob_position:'left'
   }
 }

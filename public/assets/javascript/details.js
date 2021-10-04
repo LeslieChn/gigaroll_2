@@ -607,9 +607,20 @@ function updateGrid(server_js)
           { type: 'break' },
           { type: 'html', id: 'launch-map',  
           html: 
-          '<button style="border:1px;padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
           disabled: true,
-          onClick: launchMap}
+          onClick: launchMap},
+          { type: 'spacer' },
+          { type: 'html', id: 'font-increase',  
+          html: 
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; margin: 0px 2px 0px 0px; padding:2px;font-weight:normal" onclick="JavaScript:increaseFontSize()"> <img src="./assets/images/font_size_increase.svg" style="height:20px;width:20px" /></button>',
+          disabled: false,
+          onClick: increaseFontSize},
+          { type: 'html', id: 'font-decrease',  
+          html: 
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; margin: 0px 2px 0px 0px; padding:2px;font-weight:normal" onclick="JavaScript:decreaseFontSize()"> <img src="./assets/images/font_size_decrease.svg" style="height:20px;width:20px" /></button>',
+          disabled: false,
+          onClick: decreaseFontSize},
       ],
     },
     multiSearch: true,
@@ -702,6 +713,24 @@ function launchMap(percentage)
   
   showMap(percentage)
 }
+
+function increaseFontSize()
+ {
+  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  font_size = parseInt(font_size.slice(0, -2)) + 1
+  if(font_size > 18)
+    font_size = 18
+  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+ }
+
+ function decreaseFontSize()
+ {
+  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  font_size = parseInt(font_size.slice(0, -2)) - 1
+  if(font_size < 10)
+    font_size = 10
+  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+ }
 
 function showLegend(color, min, max,)
 {

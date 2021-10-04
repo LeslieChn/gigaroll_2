@@ -336,7 +336,7 @@ class View_State
   }
   createControls()
   {
-    $('.controls-column').remove()
+    $('.controls').empty()
     if ('dropdowns' in this.state == false)
       return ''
     for (const [id, instance] of Object.entries(knob_objects))
@@ -433,9 +433,9 @@ class View_State
         </div>
       <div id="bottom-controls" class="row mt-3"> 
         <div class="col-sm-1"></div>
-        <div class="col d-flex justify-content-start" id="bl-controls"></div>
-        <div class="col d-flex justify-content-center" id="bm-controls"></div>
-        <div class="col d-flex justify-content-end" id="br-controls"></div>
+        <div class="col d-flex justify-content-start controls" id="bl-controls"></div>
+        <div class="col d-flex justify-content-center controls" id="bm-controls"></div>
+        <div class="col d-flex justify-content-end controls" id="br-controls"></div>
       </div>
      </div>`);
      this.createControls()
@@ -970,6 +970,14 @@ class View_State
                 lineHeight: 2
               },
             }
+          },
+          'left': {
+            type: 'linear',
+            position: 'left'
+          },
+          'right': {
+            type: 'linear',
+            position: 'right' 
           },
         },
       },
@@ -1926,8 +1934,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("left", (e.originalEvent.x + 20) + "px")
       .style("top", (e.originalEvent.y + 20) + "px");
 
-      let rect = d3.select(`#rect_${rect_id}`)
-      rect.attr('fill', 'red')
+      let line = d3.select(`#line_${rect_id}`)
+      line.attr('stroke-width', '2')
     }
 
     function onMouseOut()
@@ -1937,14 +1945,15 @@ function euclideanDistance(x1, y1, x2, y2)
 
       let rect_id = selected_vs.data_map[title]
 
-      let rect = d3.select(`#rect_${rect_id}`)
+      let line = d3.select(`#line_${rect_id}`)
+      line.attr('stroke-width', '0')
     
-      let a = selected_vs.data[rect_id].id.split('.');
-      let c = selected_vs.color(`${a[0]}.${a[1]}`)
+      // let a = selected_vs.data[rect_id].id.split('.');
+      // let c = selected_vs.color(`${a[0]}.${a[1]}`)
 
-      console.log(`${a[0]}.${a[1]}`)
+      // console.log(`${a[0]}.${a[1]}`)
 
-      rect.attr('fill', c)
+      // rect.attr('fill', c)
     }
 
     function onMouseMove(e)
@@ -2030,60 +2039,28 @@ function euclideanDistance(x1, y1, x2, y2)
             .attr("fill", function (d) { 
               let a = data[d].id.split('.');
               return instance.color(`${a[0]}.${a[1]}`) })
-            // .attr("data-fill", function (d) {let a = data[d].id.split('.'); 
-            //   return selected_vs.color(`${a[0]}.${a[1]}`)})
-            // .attr("data-index", d => d)
             .attr("id", d => `rect_${rect_id++}`)
-        // let toolbar = w2ui.layout.get('top').toolbarv
-        // let id = toolbar.get("values").selected
-        // let text = toolbar.get(`values:${id}`).text
-  
-    
-        /*let text_pixels = document.getElementById("caption").getComputedTextLength()
-        g.select("#caption")
-            .attr("x", client_width  /  2 - text_pixels /2 );
         
+        let line_idx = 0, 
+            line_id = 0
 
-        // Create the tickmarks
-        let vals = [[min,0]]
-        for (let j = 1; j < 4; ++j)
-        {
-            //let idx = Math.floor(j * n_divs / 4)
-            let val_idx = Math.floor(j * (color.domain().length) / 4);
-            let val = color.domain()[val_idx]
-            let idx = color.range().indexOf(color(val))
-            vals.push([val, idx]);
-        }
-        vals.push([max, n_divs])
-    
-        for (let val of vals)
-        {
-            g.append("text")
-                .attr("y", rectPos(val[1] - 1) + 3)
-                .attr("x", left_margin + rect_width * 1.5)
-                .attr("class", "ldegree")
-                .attr("fill", "#000")
-                .attr("style", "font-size: 60%")
-                .text(Math.round(val[0]));
-                //.text(Math.round(10*val[0])/10);
-        }
-        */
-        // for (let i = 0; i <= n_divs; ++i)
-        // {
-        //     let width = rect_width, height = 1;
-        //     if (i % 4 == 0)
-        //     {
-        //         width += 2;
-        //         height = 2;
-        //     }
-        //     g.append('line')
-        //         .style("stroke", "black")
-        //         .style("stroke-width", height)
-        //         .attr("x1", left_margin)
-        //         .attr("y1", rectPos(i-1))
-        //         .attr("x2", left_margin + width)
-        //         .attr("y2", rectPos(i-1)); 
+        g.selectAll("line")
+        .data(data.map((d) => line_idx++ ) )
+        .enter().append("line")
+        // .attr("width", function (d)
+        // { 
+        //   let width = xScale(Math.cbrt(data[d].value))
+        //   return width
         // }
+        // )
+        .attr("x1", 0)
+        .attr("y1", d => { return rectPos(d) + 0.5 * rect_height})
+        .attr("x2", legend_width - margin)
+        .attr("y2", d => { return rectPos(d) + 0.5 * rect_height})
+        .attr("stroke", "rgb(155, 0, 31)")
+        .attr("stroke-width", "0")
+        .attr("id", d => `line_${line_id++}`)   
+      
     }
   }
 
