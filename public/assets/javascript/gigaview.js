@@ -55,7 +55,7 @@ let req3 =
   base_dim: 'property',
   groupbys: ['?gby_option'],
   measures: ["?val_option", "?val_option2"],
-  filters: []
+  dim_filters: ["?dim_filter_option"]
 }
 
 let treemap_req =
@@ -132,9 +132,16 @@ let dropdowns = {
 
   val_option2:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['price:avg', 'beds:count','size:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
+  },
+
+  dim_filter_option:{
+    name:'City',
+    contents: ['',  'city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
+    position:'top-left',
+    // knob_position:'right'
   }
 }
 let treemap_dropdowns = {

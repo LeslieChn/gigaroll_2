@@ -29,7 +29,19 @@ let aliases = {
   'postal_code'    : 'Zip Code',
   'elevation:avg'  : 'Average Elevation',
   'year_built:min' : 'Earliest Construction (Year)',
-  'pop_2019'       : 'Population 2019'
+  'pop_2019'       : 'Population 2019',
+  'prop_status'    : 'Status',
+  'elevation'      : 'Elevation',
+  'flood_zone'     : 'Flood Zone',
+  'beds'           : 'Beds',
+  'baths'          : 'Baths',
+  'size'           : 'Size',
+  'price'          : 'Price',
+  'year_built'     : 'Year Built',
+  'latitude'       : 'Latitude',
+  'longitude'      : 'Longitude',
+  'address'        : 'Address',
+
 }
 
 var overlay_colors = [
@@ -571,9 +583,15 @@ function updateGrid(server_js)
   {
     let col = headers[i]
     let type = typing[typeof(data[0][i])]
-    columns.push({field:col, text:col, sortable:true})
+    columns.push({field:col, text:alias(col), sortable:true})
     searches.push({field:col, text:col, label:col, type: type})
   }
+
+  columns[headers.indexOf('address')].size = "200px"
+  columns[headers.indexOf('city')].size = "100px"
+  columns[headers.indexOf('beds')].size = "50px"
+  columns[headers.indexOf('baths')].size = "50px"
+  columns[headers.indexOf('state_code')].size = "50px"
 
   // w2ui.grid.searches=searches
   let count=1

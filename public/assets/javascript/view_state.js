@@ -210,9 +210,10 @@ class View_State
       alert("The data server returned "+ server_meta.status)
       return
     }
-    this.server_js = server_result["data"]
-    // if (server_meta.is_range)
-    //   server_range = server_result.range;
+    this.server_js = server_result.data
+    this.server_result = server_result
+    if (server_meta.is_range)
+      this.server_range = server_result.range;
   }
   getId()
   {
@@ -813,13 +814,22 @@ class View_State
     let count=1
     let records=[]
 
+    let is_range = this.server_result.meta.is_range
+
     for (let row of server_js)
     {
       let rec={recid:count++}
       let n_gbys=gby_headers.length
       for (let i=0; i<n_gbys; i++)
       {
-        rec [gby_headers[i]]=row[0][i]
+        if (i == 0 && is_range)
+        {
+          let interval = this.server_range[row[0][0]]
+          let interval_str = `[${interval[0]} – ${interval[1]})`
+          rec [gby_headers[i]] = interval_str
+        }
+        else
+          rec [gby_headers[i]] = row[0][i]
       }
       for (let i=0; i<val_headers.length; i++){
         rec[val_headers[i]]=row[1][i]
@@ -904,10 +914,22 @@ class View_State
 
     let labels=[]
 
-    for (let row of this.server_js){
-      labels.push(row[0][0])
-      //to do: handle multiple group bys
+    if (this.server_result.meta.is_range)
+    {
+      for (let row of this.server_js)
+      {
+        let interval = this.server_range[row[0][0]]
+        labels.push(`[${interval[0]} – ${interval[1]})`)
+      }
     }
+    else
+    {
+       for (let row of this.server_js)
+      {
+        labels.push(row[0][0])
+      }
+    }
+
 
     let ds = []
 
