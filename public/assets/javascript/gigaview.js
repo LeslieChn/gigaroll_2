@@ -1,8 +1,8 @@
 var view_states=[]
 let aliases = {
   'beds:count'     : 'Number of Properties',
-  'price:avg'      : 'Average Price',
-  'size:avg'       : 'Average Size',
+  'price:avg'      : 'Price, Average',
+  'size:avg'       : 'Size, Average',
   'prop_type'      : 'Property Type',
   'county'         : 'County',
   'state_code'     : 'State',
@@ -11,12 +11,12 @@ let aliases = {
   'elevation:avg'  : 'Average Elevation',
   'year_built:min' : 'Earliest Construction (Year)',
   'pop 2019'       : 'Population 2019',
-  'city:New York-NY' : 'New York City',
-  'city:Brooklyn-NY' : 'Brooklyn',
-  'city:Newark-NJ' : 'Newark',
-  'city:Stamford-CT' : 'Stamford',
-  'city:New Canaan-CT' : 'New Canaan',
-  'city:Greenwich-CT' : 'Greenwich',
+  'city:New York-NY' : 'New York City, NY',
+  'city:Brooklyn-NY' : 'Brooklyn, NY',
+  'city:Newark-NJ' : 'Newark, NJ',
+  'city:Stamford-CT' : 'Stamford, CT',
+  'city:New Canaan-CT' : 'New Canaan, CT',
+  'city:Greenwich-CT' : 'Greenwich, CT',
   'state_code:NY' : 'New York State',
   'size' : 'Size',
   'price' : 'Price',
@@ -28,7 +28,7 @@ let aliases = {
   'flood_zone' : 'Flood Zone',
   'range(property:year_built;1600;10;200)' : 'Year Built' , 
   'range(county:Median_Income_2019;0;1000;200)' : 'County Median Income 2019',
-  '   ' : 'All'
+  '' : 'All (No Filter)'
 }
 
 let req1 =
@@ -139,7 +139,7 @@ let dropdowns = {
 
   dim_filter_option:{
     name:'City',
-    contents: ['',  'city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
@@ -165,7 +165,7 @@ let treemap_dropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['',  'city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
@@ -175,7 +175,7 @@ let treemap_dropdowns = {
 let dropdowns2 = {
   col_option:{
     name:'Color',
-    contents:['red', 'blue','green','grey'],
+    contents:['Greys', 'Blues','Greens', 'Yellow Green', 'Oranges', 'Inferno', "Purple Red", 'Yellow Brown', 'Cool'],
     position:'bottom-left',
     // knob_position:'left'
   },
@@ -202,7 +202,7 @@ let geodropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY','city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', ''],
+    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
     position:'bottom-right',
     // knob_position:'right'
   }
@@ -229,19 +229,19 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['city:New York-NY', 'city:Brooklyn-NY','city:Greenwich-CT', 'city:New Canaan-CT', 'city:Stamford-CT', 'city:Newark-NJ', 'state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
 }
 
 
-let view_def=[{id:'treemap', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
-{id:'chart', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
-{id:'grid', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
-{id:'countymap', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},
-{id:'map', view_type:'geomap', request: req_geo, dropdowns:geodropdowns, aliases:aliases, tile_config: {header: `Map`, subheader: `Map of properties`, height:'65vh', width:12}},
-{id:'scatterchart', view_type:'scatterChart', request: req_scatter, dropdowns:scatterdropdowns, aliases:aliases, x_axis:'?x_axis_option', y_axis:'?y_axis_option', z_axis:'?z_axis_option', tile_config: {header: `ScatterChart`, subheader: `This is a Scatter Chart`, height:'65vh', width:12}}]
+let view_def=[{id:'TreeMap', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, height:'80vh', width:12}},
+{id:'Chart', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, height:'65vh', width:12}},
+{id:'Grid', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
+{id:'CountyMap', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, height:'65vh', width:12}},
+{id:'Map', view_type:'geomap', request: req_geo, dropdowns:geodropdowns, aliases:aliases, tile_config: {header: `Map`, subheader: `Map of properties`, height:'65vh', width:12}},
+{id:'ScatterChart', view_type:'scatterChart', request: req_scatter, dropdowns:scatterdropdowns, aliases:aliases, x_axis:'?x_axis_option', y_axis:'?y_axis_option', z_axis:'?z_axis_option', tile_config: {header: `ScatterChart`, subheader: `This is a Scatter Chart`, height:'65vh', width:12}}]
 
 
 const main_ps = new PerfectScrollbar('#main-container',

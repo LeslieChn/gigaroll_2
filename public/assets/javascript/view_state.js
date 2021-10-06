@@ -444,10 +444,18 @@ class View_State
   }
   getColorScheme()
   {
-    var color_schemes = {"red": [d3.interpolateYlOrRd, "black"],
-                        "blue": [d3.interpolateBlues, "black"],
-                        "green": [d3.interpolateYlGn, "black"],
-                        "grey": [d3.interpolateGreys, "wheat"]}
+    var color_schemes = {//"red": [d3.interpolateYlOrRd, "black"],
+                        "Blues": [d3.interpolateBlues, "black"],
+                        "Yellow Green": [d3.interpolateYlGn, "black"],
+                        "Greys": [d3.interpolateGreys, "#9b001f"],
+                        "Greens" : [d3.interpolateGreens, "black"],
+                        "Oranges" : [d3.interpolateOranges, "black"],
+                        "Inferno" : [d3.interpolateInferno, "black"],
+                        "Purple Red" : [d3.interpolatePuRd, "black"],
+                        "Yellow Brown" : [d3.interpolateYlOrBr, "black"],
+                        'Cool' :  [d3.interpolateCool, "black"],
+                      
+                      }
 
     let color_scheme = this.state.color_scheme
     let color = ""

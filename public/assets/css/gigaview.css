@@ -202,7 +202,10 @@ div.treemapLegend {
 
 #logo{
   -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: rgb(204, 204, 204);
+  -webkit-text-stroke-color: #000000;
+  font-weight: 400;
+  font-family: Arial;
+  color: black;
 }
 
 

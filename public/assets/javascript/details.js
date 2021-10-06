@@ -13,7 +13,7 @@ var osMap = null
 var tileLayer
 var layerGroup = null
 var mapZoom
-var markerColor = "red"
+var markerColor = "#9b001f"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
@@ -290,12 +290,12 @@ $(function () {
                 var bb = this.get("marker_color:" + item.selected);
                 return bb.text;
               },
-              selected: "red",
+              selected: "#9b001f",
               items: [
                 { id: "black", text: "Black"},
                 { id: "green", text: "Green"},
                 { id: "blue", text: "Blue"},
-                { id: "red", text: "Red"},
+                { id: "#9b001f", text: "Red"},
                 { id: "orange", text: "Orange"},
               ],
               onRefresh: function(event){
@@ -625,7 +625,7 @@ function updateGrid(server_js)
           { type: 'break' },
           { type: 'html', id: 'launch-map',  
           html: 
-          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:4px;font-weight:normal" onclick="JavaScript:launchMap()"> Show on Map</button>',
           disabled: true,
           onClick: launchMap},
           { type: 'spacer' },
@@ -1086,7 +1086,7 @@ function setMarkers()
         stroke: true,
         color: 'white',
         weight: 1,
-        radius: 6
+        radius: 4
     }).addTo(markers)
     .on('click', onMapClick);
     
