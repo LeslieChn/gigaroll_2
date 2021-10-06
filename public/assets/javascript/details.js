@@ -984,7 +984,7 @@ function createCountiesOverlay()
     {
       lcontrol.remove();
     }
-    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay, "Markers": markers, "Legend": legend_control})
+    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay, "Legend": legend_control, "Markers": markers})
     lcontrol.addTo(osMap);
     countiesOverlay.bringToBack()
   })
@@ -1104,6 +1104,7 @@ function setMarkers()
     }
   }
   markers.addTo(osMap);
+  lcontrol.addOverlay(markers,"Markers");
   markers.bringToFront();
 }
 
