@@ -45,10 +45,12 @@ let aliases = {
 }
 
 var overlay_colors = [
-          {id: 0, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
-          {id: 1, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
-          {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
-          {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}
+          {id: 0, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"},
+          {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
+          {id: 2, text: 'Yellow-Brown', d3: d3.interpolateYlOrBr, null_color: "black"},
+          {id: 3, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
+          {id: 4, text: 'Greens', d3: d3.interpolateGreens, null_color: "black"},
+          
         ]
 
 let county_measures =  [
@@ -614,6 +616,7 @@ function updateGrid(server_js)
   //$('#grid').w2grid
   $().w2grid({
     name : 'grid',  
+    style: 'font-weight: 400',
     show: {
       toolbar: true,
       footer: true,
