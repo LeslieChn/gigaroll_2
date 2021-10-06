@@ -13,7 +13,7 @@ var osMap = null
 var tileLayer
 var layerGroup = null
 var mapZoom
-var markerColor = "#9b001f"
+var markerColor = "red"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
@@ -45,12 +45,10 @@ let aliases = {
 }
 
 var overlay_colors = [
-          {id: 0, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"},
-          {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
-          {id: 2, text: 'Yellow-Brown', d3: d3.interpolateYlOrBr, null_color: "black"},
-          {id: 3, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
-          {id: 4, text: 'Greens', d3: d3.interpolateGreens, null_color: "black"},
-          
+          {id: 0, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
+          {id: 1, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
+          {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
+          {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}
         ]
 
 let county_measures =  [
@@ -292,12 +290,12 @@ $(function () {
                 var bb = this.get("marker_color:" + item.selected);
                 return bb.text;
               },
-              selected: "#9b001f",
+              selected: "red",
               items: [
                 { id: "black", text: "Black"},
                 { id: "green", text: "Green"},
                 { id: "blue", text: "Blue"},
-                { id: "#9b001f", text: "Red"},
+                { id: "red", text: "Red"},
                 { id: "orange", text: "Orange"},
               ],
               onRefresh: function(event){
@@ -616,7 +614,6 @@ function updateGrid(server_js)
   //$('#grid').w2grid
   $().w2grid({
     name : 'grid',  
-    style: 'font-weight: 400',
     show: {
       toolbar: true,
       footer: true,
@@ -628,7 +625,7 @@ function updateGrid(server_js)
           { type: 'break' },
           { type: 'html', id: 'launch-map',  
           html: 
-          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:4px;font-weight:normal" onclick="JavaScript:launchMap()"> Show on Map</button>',
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
           disabled: true,
           onClick: launchMap},
           { type: 'spacer' },
@@ -1069,7 +1066,10 @@ function enableBn(buttons){
 
 function clearMap(){
   if (markers)
+  {
     osMap.removeLayer(markers);
+	lcontrol.removeLayer(markers);
+  }
   if (heatmap)
     osMap.removeLayer(heatmap);
   if (cluMarkers)
@@ -1089,7 +1089,7 @@ function setMarkers()
         stroke: true,
         color: 'white',
         weight: 1,
-        radius: 4
+        radius: 6
     }).addTo(markers)
     .on('click', onMapClick);
     
@@ -1103,7 +1103,6 @@ function setMarkers()
       propertyPopup(node, x, y)
     }
   }
-
   markers.addTo(osMap);
   markers.bringToFront();
 }
