@@ -1013,12 +1013,17 @@ function autoZoom()
 
 function setClusterMap()
 {
+  if(cluMarkers)
+	  lcontrol.removeLayer(cluMarkers);
   cluMarkers = L.markerClusterGroup();
   for (let coord of coords) 
   {
     cluMarkers.addLayer(L.marker(coord[0]));
   }
   osMap.addLayer(cluMarkers);
+  if(heatmap)
+	  lcontrol.removeLayer(heatmap);
+  lcontrol.addOverlay(cluMarkers,"Markers")
   disableBn(["heat_gradient","heat_radius","heat_opacity","marker_type","marker_color"])
   autoZoom()
 }
@@ -1105,7 +1110,14 @@ function setMarkers()
     }
   }
   markers.addTo(osMap);
-  lcontrol.addOverlay(markers,"Markers");
+  if (lcontrol)
+  {
+	lcontrol.addOverlay(markers,"Markers");
+	if (heatmap)
+		lcontrol.removeLayer(heatmap);
+	if (cluMarkers)
+		lcontrol.removeLayer(cluMarkers);
+  }
   markers.bringToFront();
 }
 
@@ -1121,6 +1133,11 @@ function setRegMap(){
 function setHeatMap()
 {
   let data = []
+  if (heatmap)
+	 lcontrol.removeLayer(heatmap);
+  if(cluMarkers)
+	 lcontrol.removeLayer(cluMarkers);
+
   for (let coord of coords)
     data.push(coord[0]);
   heatmap = L.heatLayer(data,{radius: radiusVal, blur: 0, max: 1, minOpacity: opacity, gradient:{
@@ -1130,6 +1147,7 @@ function setHeatMap()
     '0.75': 'rgb(255,255,0)',
     '1.00': 'rgb(255,0,0)'
   }});
+  lcontrol.addOverlay(heatmap,"Heat Map")
   heatmap.addTo(osMap)
   disableBn(["marker_type",,"marker_color"])
   enableBn(["heat_gradient","heat_radius","heat_opacity"])
