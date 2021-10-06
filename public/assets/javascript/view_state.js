@@ -685,7 +685,7 @@ class View_State
      let server_js=this.server_js
      let coords = []
      let lat, lng, markers;
-     let markerColor = "red"
+     let markerColor = "#9b001f"
      var boostType = "balloon"
      let max_lat = -999, max_lng = -999
      let min_lat =  999, min_lng =  999
@@ -766,7 +766,7 @@ class View_State
              boostType: boostType,
              boostScale: 1,
              boostExp: 0,
-             radius: 6
+             radius: 4
          })
          .addTo(markers)
         //  .bindPopup("Loading element data, please wait...")

@@ -47,9 +47,9 @@ let aliases = {
 var overlay_colors = [
   {id: 0, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"},
   {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
-  {id: 2, text: 'Yellow-Brown', d3: d3.interpolateYlOrBr, null_color: "black"},
-  {id: 3, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
-  {id: 4, text: 'Greens', d3: d3.interpolateGreens, null_color: "black"},
+  {id: 2, text: 'Greens', d3: d3.interpolateGreens, null_color: "black"},
+  {id: 3, text: 'Orange', d3: d3.interpolateOranges, null_color: "black"},
+  {id: 4, text: 'Yellow-Brown', d3: d3.interpolateYlOrBr, null_color: "black"},
         ]
 
 let county_measures =  [
@@ -626,7 +626,7 @@ function updateGrid(server_js)
           { type: 'break' },
           { type: 'html', id: 'launch-map',  
           html: 
-          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:4px;font-weight:normal" onclick="JavaScript:launchMap()"> Show on Map</button>',
           disabled: true,
           onClick: launchMap},
           { type: 'spacer' },

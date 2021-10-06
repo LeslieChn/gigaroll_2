@@ -175,7 +175,7 @@ let treemap_dropdowns = {
 let dropdowns2 = {
   col_option:{
     name:'Color',
-    contents:['Greys', 'Blues','Greens', 'Yellow Green', 'Oranges', 'Inferno', "Purple Red", 'Yellow Brown', 'Cool'],
+    contents:['Greys', 'Blues','Greens',  'Oranges',  'Yellow Brown'],
     position:'bottom-left',
     // knob_position:'left'
   },
