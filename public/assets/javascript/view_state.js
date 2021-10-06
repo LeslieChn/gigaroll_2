@@ -1810,21 +1810,21 @@ function euclideanDistance(x1, y1, x2, y2)
     .style("opacity", 1)
     .style("width", "200px")
     .style("height", "500px")
-    .style("background-color", "#ddd")
+    .style("background-color", "#fff")
     .style("z-index", "999")
 
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
     var parent_width = $(`#${this.getId()}`).width();
-    var width = Math.round(parent_width*0.67);
+    var width = Math.round(parent_width*0.85);
     var height = Math.round(ht);
     var margin = Math.round((parent_width - width)/2)
 
     var format = d3.format(",d");
 
     this.color = d3.scaleOrdinal()
-      .range(d3.schemeCategory20)
-          //.map(function(c) { c = d3.rgb(c); c.opacity = 0.8; return c; }));
+    .range(d3.schemeCategory20
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.40; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
@@ -1881,11 +1881,12 @@ function euclideanDistance(x1, y1, x2, y2)
         { 
           return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
         })
-        .style("left", function(d) { return d.x0 + margin + "px"; })
+        .style("left", function(d) { return d.x0  + "px"; })
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
         .style("background", function(d) { while (d.depth > 1) d = d.parent; return selected_vs.color(d.id); })
+        .style("border", function(d) { while (d.depth > 1) d = d.parent; return  `${selected_vs.color(d.id)} solid 3px` })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
