@@ -503,7 +503,7 @@ class View_State
   propDetailsFormat(node) 
   {
     let headers = this.server_js.headers
-    let fields = ['prop_type', 'beds', 'baths', 'building_size', 'lot_size', 'price', 'price_per_sqft', 'price_per_acre', 'year_built', 'elevation', 'flood_zone']
+    let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
     let indices = fields.map (f => headers.indexOf(f))
     
     let html = ''
@@ -1235,7 +1235,7 @@ class View_State
     .attr("text-anchor", "end")
     .attr("x", width)
     .attr("y", height - 6)
-    .text(meas1);
+    .text(this.alias(meas1));
 
     svg.append("text")
     .attr("class", "y label")
@@ -1243,7 +1243,7 @@ class View_State
     .attr("y", 6)
     .attr("dy", ".75em")
     .attr("transform", "rotate(-90)")
-    .text(meas2);
+    .text(this.alias(meas2));
 
   draw();
 
@@ -1587,7 +1587,7 @@ class View_State
         z = server_js.data[closest.i][i3]
       selected_vs.tooltipDiv
       .style("opacity", 1)
-      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}${z? ',' + meas3 + ':' + z : ''} `)
+      .html(`${selected_vs.alias(meas1)}:${closest.x}, ${selected_vs.alias(meas2)}:${closest.y}${z? ',' + selected_vs.alias(meas3) + ':' + z : ''} `)
       .style("left", (pos_x + 10) + "px")
       .style("top", (pos_y + 10) + "px");
     }

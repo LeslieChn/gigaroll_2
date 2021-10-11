@@ -21,14 +21,14 @@ var iLat = null, iLng = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
-  'price:avg'      : 'Average Price',
-  'size:avg'       : 'Average Size',
+  'price:avg'      : 'Price, Average',
+  'size:avg'       : 'Size, Average',
   'prop_type'      : 'Property Type',
   'county'         : 'County',
   'state_code'     : 'State',
   'city'           : 'City',
   'postal_code'    : 'Zip Code',
-  'elevation:avg'  : 'Average Elevation',
+  'elevation:avg'  : 'Elevation, Average', 
   'year_built:min' : 'Earliest Construction (Year)',
   'pop_2019'       : 'Population 2019',
   'prop_status'    : 'Status',
@@ -42,7 +42,11 @@ let aliases = {
   'latitude'       : 'Latitude',
   'longitude'      : 'Longitude',
   'address'        : 'Address',
-
+  'assessment_building:avg' : 'Assessed Value, Building',
+  'assessment_land:avg' : 'Assessed Value, Land',
+  'assessment_total:avg' : 'Assessed Value, Total',
+  'building_size:avg'  : 'Building Size, Average',
+  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
 }
 
 var overlay_colors = [
@@ -60,7 +64,7 @@ let county_measures =  [
   "pop_2019",
   "Vacant_2019"
 ];
-let agg_measures = ['beds:count', 'price:avg', 'price_per_sqft:avg', 'price_per_acre:avg', 'elevation:avg']
+let agg_measures = ['beds:count', 'price:avg', 'price_per_sqft:avg', 'building_size:avg', 'assessment_building:avg', 'assessment_land:avg', 'assessment_total:avg', 'elevation:avg']
 let overlay_measures = agg_measures.concat(county_measures)
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
@@ -1247,7 +1251,7 @@ async function InitPage()
 function propDetailsFormat(node) 
 {
   let headers = this.server_js.headers
-  let fields = ['prop_type', 'beds', 'baths', 'building_size', 'lot_size', 'price', 'year_built', 'elevation', 'flood_zone']
+  let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
   let indices = fields.map (f => headers.indexOf(f))
   
   let html = ''

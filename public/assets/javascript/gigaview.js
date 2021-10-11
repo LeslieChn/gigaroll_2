@@ -8,7 +8,7 @@ let aliases = {
   'state_code'     : 'State',
   'city'           : 'City',
   'postal_code'    : 'Zip Code',
-  'elevation:avg'  : 'Average Elevation',
+  'elevation:avg'  : 'Elevation, Average ',
   'year_built:min' : 'Earliest Construction (Year)',
   'pop 2019'       : 'Population 2019',
   'city:New York-NY' : 'New York City, NY',
@@ -18,6 +18,8 @@ let aliases = {
   'city:New Canaan-CT' : 'New Canaan, CT',
   'city:Greenwich-CT' : 'Greenwich, CT',
   'state_code:NY' : 'New York State',
+  'state_code:CT' : 'Connecticut',
+  'state_code:NJ' : 'New Jersey',
   'size' : 'Size',
   'price' : 'Price',
   'beds' : 'Beds',
@@ -28,7 +30,14 @@ let aliases = {
   'flood_zone' : 'Flood Zone',
   'range(property:year_built;1600;10;200)' : 'Year Built' , 
   'range(county:Median_Income_2019;0;1000;200)' : 'County Median Income 2019',
-  '' : 'All (No Filter)'
+  '' : 'All (No Filter)',
+  'building_size:avg'  : 'Building Size, Average',
+  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
+  'building_size'  : 'Building Size, sqft',
+  'price_per_sqft' : 'Price Per Square Feet',
+  'assessment_building' : 'Assessed Value, Building',
+  'assessment_land' : 'Assessed Value, Land',
+  'assessment_total' : 'Assessed Value, Total',
 }
 
 let req1 =
@@ -159,7 +168,7 @@ let treemap_dropdowns = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count', 'building_size:avg', 'lot_size:avg', 'price_per_sqft:avg', 'price_per_acre:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'price_per_sqft:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
@@ -181,7 +190,7 @@ let dropdowns2 = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count', 'building_size:avg', 'lot_size:avg', 'price_per_sqft:avg', 'price_per_acre:avg','price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'price_per_sqft:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'right'
   },
@@ -211,13 +220,13 @@ let geodropdowns = {
 let scatterdropdowns = {
   x_axis_option:{
     name:'X-Axis',
-    contents: ['building_size', 'lot_size', 'price_per_sqft', 'price_per_acre','price', 'assessment_building', 'assessment_land', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['building_size', 'price_per_sqft', 'price', 'assessment_building', 'assessment_land', 'assessment_total', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-middle',
     // knob_position:'right'
   },
   y_axis_option:{
     name:'Y-Axis',
-    contents: ['price', 'building_size', 'lot_size', 'price_per_sqft', 'price_per_acre','assessment_building', 'assessment_land', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['price', 'building_size', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-left',
     // knob_position:'right'
   },
