@@ -1956,6 +1956,7 @@ function euclideanDistance(x1, y1, x2, y2)
       let value=$(this).attr('value')
       let idx = data.indexOf("\n")
       let gby = data.slice(0,idx).split('.')
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
       let html = function () {
         let str = ''
         gby.forEach((g) => {
@@ -1971,15 +1972,17 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("left", (e.originalEvent.x + 20) + "px")
       .style("top", (e.originalEvent.y + 20) + "px");
 
+      d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
       let line = d3.select(`#line_${rect_id}`)
       line.attr('stroke-width', '2')
     }
 
     function onMouseOut()
     {
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
       let title=$(this).attr('id')
       d3.select(`#${ttdiv_id}`).style("opacity", 0)
-
+      d3.select(`#caption`).html(`<center>${text}</center>`)
       let rect_id = selected_vs.data_map[title]
 
       let line = d3.select(`#line_${rect_id}`)
@@ -2031,6 +2034,7 @@ function euclideanDistance(x1, y1, x2, y2)
         d3.select(`#${ttlegend_id}`).append("div")
           .html('')
           .attr("id", "caption")
+          .style("height", "50px")
           .attr("fill", "#000")
           .attr("text-anchor", "start")
           .attr("font-weight", "bold")

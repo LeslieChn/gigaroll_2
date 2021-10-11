@@ -42,9 +42,9 @@ let aliases = {
   'latitude'       : 'Latitude',
   'longitude'      : 'Longitude',
   'address'        : 'Address',
-  'assessment_building:avg' : 'Assessed Value, Building',
-  'assessment_land:avg' : 'Assessed Value, Land',
-  'assessment_total:avg' : 'Assessed Value, Total',
+  'assessment_building:avg' : 'Assessed Building Value, Average',
+  'assessment_land:avg' : 'Assessed Land Value, Average',
+  'assessment_total:avg' : 'Assessed Total Value, Average',
   'building_size:avg'  : 'Building Size, Average',
   'price_per_sqft:avg' : 'Price Per Square Feet, Average',
 }

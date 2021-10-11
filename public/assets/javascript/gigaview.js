@@ -35,9 +35,9 @@ let aliases = {
   'price_per_sqft:avg' : 'Price Per Square Feet, Average',
   'building_size'  : 'Building Size, sqft',
   'price_per_sqft' : 'Price Per Square Feet',
-  'assessment_building' : 'Assessed Value, Building',
-  'assessment_land' : 'Assessed Value, Land',
-  'assessment_total' : 'Assessed Value, Total',
+  'assessment_building' : 'Assessed Building Value',
+  'assessment_land' : 'Assessed Land Value',
+  'assessment_total' : 'Assessed Total Value',
 }
 
 let req1 =
