@@ -159,7 +159,7 @@ let treemap_dropdowns = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'lot_size:avg', 'price_per_sqft:avg', 'price_per_acre:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
@@ -181,7 +181,7 @@ let dropdowns2 = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'lot_size:avg', 'price_per_sqft:avg', 'price_per_acre:avg','price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'right'
   },
@@ -211,13 +211,13 @@ let geodropdowns = {
 let scatterdropdowns = {
   x_axis_option:{
     name:'X-Axis',
-    contents: ['size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['building_size', 'lot_size', 'price_per_sqft', 'price_per_acre','price', 'assessment_building', 'assessment_land', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-middle',
     // knob_position:'right'
   },
   y_axis_option:{
     name:'Y-Axis',
-    contents: ['price', 'size', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['price', 'building_size', 'lot_size', 'price_per_sqft', 'price_per_acre','assessment_building', 'assessment_land', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-left',
     // knob_position:'right'
   },
@@ -229,7 +229,7 @@ let scatterdropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['state_code:CT', 'state_code:NY', 'state_code:NJ', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }

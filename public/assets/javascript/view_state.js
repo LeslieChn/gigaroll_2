@@ -56,6 +56,8 @@ const html_sub = {
   '>': "&gt",
 };
 const popup_width = 300
+
+var iLat = null, iLng = null
 /*******************************************************************************/
 
 function Comma_Sep(a,vs_id) {
@@ -501,7 +503,7 @@ class View_State
   propDetailsFormat(node) 
   {
     let headers = this.server_js.headers
-    let fields = ['prop_type', 'beds', 'baths', 'size', 'price', 'year_built', 'elevation', 'flood_zone']
+    let fields = ['prop_type', 'beds', 'baths', 'building_size', 'lot_size', 'price', 'price_per_sqft', 'price_per_acre', 'year_built', 'elevation', 'flood_zone']
     let indices = fields.map (f => headers.indexOf(f))
     
     let html = ''
@@ -599,7 +601,7 @@ class View_State
       
       <div class="row px-4  align-items-center justify-content-center">
         <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[13]},${node[14]}">Google</a>
+        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -683,6 +685,10 @@ class View_State
      }
  
      let server_js=this.server_js
+
+     iLat = server_js.headers.indexOf('latitude')
+     iLng = server_js.headers.indexOf('longitude')
+
      let coords = []
      let lat, lng, markers;
      let markerColor = "#9b001f"
@@ -692,14 +698,14 @@ class View_State
      let data_index = 0
      for (const data of server_js.data)
      {
-       lat = parseInt(data[13]) /1e6
-       lng = parseInt(data[14]) /1e6
+       lat = parseInt(data[iLat]) /1e6
+       lng = parseInt(data[iLng]) /1e6
        max_lat = (lat>max_lat)? lat : max_lat
        max_lng = (lng>max_lng)? lng : max_lng
        min_lat = (lat<min_lat)? lat : min_lat
        min_lng = (lng<min_lng)? lng : min_lng
-       data[12] = lat
-       data[13] = lng
+       data[iLat] = lat
+       data[iLng] = lng
        coords.push([lat,lng,data_index++])
      }
      this.numcoords = coords.length
@@ -1489,8 +1495,8 @@ class View_State
     let x = d3.event.x- position.left
     let y = d3.event.y- position.top
     let node = selected_vs.server_js.data[closest.i].slice()
-    node[13] *= 1e-6
-    node[14] *= 1e-6
+    node[iLat] *= 1e-6
+    node[iLng] *= 1e-6
     selected_vs.propertyPopup(node, x, y)
   }
 

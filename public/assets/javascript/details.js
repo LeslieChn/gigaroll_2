@@ -17,6 +17,7 @@ var markerColor = "#9b001f"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
+var iLat = null, iLng = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
@@ -59,7 +60,7 @@ let county_measures =  [
   "pop_2019",
   "Vacant_2019"
 ];
-let agg_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg']
+let agg_measures = ['beds:count', 'price:avg', 'price_per_sqft:avg', 'price_per_acre:avg', 'elevation:avg']
 let overlay_measures = agg_measures.concat(county_measures)
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
@@ -607,14 +608,13 @@ function updateGrid(server_js)
   }
   */
   console.timeEnd("Prepare Data")
-  //console.log(columns)
-  //console.log(searches)
-  //console.log(records)
+
 
   console.time("Init Grid")
   //$('#grid').w2grid
   $().w2grid({
     name : 'grid',  
+
     show: {
       toolbar: true,
       footer: true,
@@ -665,14 +665,17 @@ function updateGrid(server_js)
 
   })
 
-  for (let row of data){
-    let rec={recid:count++}
-    for (let i=0; i< headers.length; i++){
+  for (let row of data)
+  {
+    let rec={recid:count++, w2ui: {} }
+    for (let i=0; i< headers.length; i++)
+    {
       rec [headers[i]]= row[i]
     }
+    rec.w2ui.style = 'font-weight:600;'
     w2ui.grid.records.push(rec)
   }
-  console.timeEnd("Init Grid")
+
 
   w2ui.grid.refresh();
   $('#grid').w2render('grid');
@@ -684,6 +687,10 @@ var sever_js = null;
 function processResp(resp)
 {
   server_js = resp;
+  
+  iLat = server_js.headers.indexOf('latitude')
+  iLng = server_js.headers.indexOf('longitude')
+
   updateGrid(resp);
   $(document).ready(function ()
   {
@@ -735,20 +742,20 @@ function launchMap(percentage)
 
 function increaseFontSize()
  {
-  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
   font_size = parseInt(font_size.slice(0, -2)) + 1
   if(font_size > 18)
     font_size = 18
-  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
  }
 
  function decreaseFontSize()
  {
-  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
   font_size = parseInt(font_size.slice(0, -2)) - 1
   if(font_size < 10)
     font_size = 10
-  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
  }
 
 function showLegend(color, min, max,)
@@ -1104,8 +1111,8 @@ function setMarkers()
       let x = e.originalEvent.x 
       let y = e.originalEvent.y 
       let node = server_js.data[coord[1]].slice()
-      node[13] *= 1e-6
-      node[14] *= 1e-6
+      node[iLat] *= 1e-6
+      node[iLng] *= 1e-6
       propertyPopup(node, x, y)
     }
   }
@@ -1240,7 +1247,7 @@ async function InitPage()
 function propDetailsFormat(node) 
 {
   let headers = this.server_js.headers
-  let fields = ['prop_type', 'beds', 'baths', 'size', 'price', 'year_built', 'elevation', 'flood_zone']
+  let fields = ['prop_type', 'beds', 'baths', 'building_size', 'lot_size', 'price', 'year_built', 'elevation', 'flood_zone']
   let indices = fields.map (f => headers.indexOf(f))
   
   let html = ''
@@ -1348,7 +1355,7 @@ async function propertyPopup(node, x, y)
     
     <div class="row px-4  align-items-center justify-content-center">
       <a style=" margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[13]},${node[14]}">Google</a>
+      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
     </div>
     `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
