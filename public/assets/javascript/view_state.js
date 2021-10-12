@@ -569,16 +569,16 @@ class View_State
         </div>
       </div>
 
-      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+      <div id="popup-info" class="row px-4 d-flex">
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-          <div class="carousel-inner px-3">
+          <div class="carousel-inner px-3 pb-1" style="height:200px;">
             <div class="carousel-item active">
               <table class="popup-table">
                 <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
                 ${this.propDetailsFormat(node)}
               </table>
             </div>
-            <div class="carousel-item" id="state_info">
+            <div class="carousel-item" id="state_info" >
               ${this.propInfoFormat(prop_info_data.state_code)}
             </div>
             <div class="carousel-item" id="county_info">
@@ -630,7 +630,7 @@ class View_State
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      const popup_ps = new PerfectScrollbar(`#popup-info`, {
+      const popup_ps = new PerfectScrollbar(`.carousel-inner`, {
         wheelSpeed: 2,
         wheelPropagation: false,
         minScrollbarLength: 20
