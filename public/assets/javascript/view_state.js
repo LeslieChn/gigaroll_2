@@ -1096,10 +1096,12 @@ class View_State
     {
       return 
     } 
+ 
+    let server_js = this.server_js
+    iLat = server_js.headers.indexOf('latitude')
+    iLng = server_js.headers.indexOf('longitude')
 
     let vs_id=this.getId()
-
-    let server_js = this.server_js
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
