@@ -517,7 +517,9 @@ class View_State
   }
    propInfoFormat(data) 
    {
-    let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
+    let html = `<table class="popup-table"><thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;">
+    <b>${data.title}</b></p></thead>`;
+
     for (let i=0; i < data.headers.length; i++)
     {
       let header = data.headers[i].replaceAll('_', ' ')
@@ -552,10 +554,9 @@ class View_State
     }
 
       address = `
-      <div class="row">
-        <div class="col-11">
-        </div>
-          <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+      <div class="row" id="popup-header" style="">
+      <div class="row justify-content-end">
+          <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
       </div>
       <div class="row">
         <div class="col-12 align-content-center" style="height:200px;">
@@ -565,16 +566,16 @@ class View_State
 
       <div class="row">
         <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-          <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+          <p class="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
-
+      </div>
       <div id="popup-info" class="row px-4 d-flex">
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-          <div class="carousel-inner px-3 pb-1" style="height:200px;">
+          <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2">
             <div class="carousel-item active">
               <table class="popup-table">
-                <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
+                <thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;"><b>Property Details</b></p></thead>
                 ${this.propDetailsFormat(node)}
               </table>
             </div>
@@ -599,9 +600,9 @@ class View_State
         </div>
       </div>
       
-      <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
+      <div class="row px-4 d-flex align-items-center justify-content-center">
+        <a style="margin: 6px 6px 6px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 6px 0px 6px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -658,6 +659,7 @@ class View_State
       .style("left", x + "px")
       .style("top", y + "px")
       .style("z-index", 999)
+      .style("background-color", "f0f8ff")
       
   }
 
