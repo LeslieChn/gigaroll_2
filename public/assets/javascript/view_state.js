@@ -648,8 +648,7 @@ class View_State
       x += offset
       let right_edge = x + popup_width + position.left
       let bottom_edge = y + popup_height + position.top 
-      console.log(y)
-      console.log(bottom_edge + '= bottom_edge')
+
       if (right_edge >= screen_width)
         x = Math.max(x - popup_width - 2 * offset, 0)
       if (bottom_edge >= screen_height)
@@ -1232,7 +1231,8 @@ class View_State
 
     var context = canvas.node().getContext('2d');
     var r = regression.linear(points.map((i)=>([i.x,i.y]))),
-    m = r.equation[0], b = r.equation[1];
+    m = r.equation[0], b = r.equation[1],
+    r2 = Math.round(r.r2*100)/100;
 
     svg.append("text")
     .attr("class", "x label")
@@ -1538,7 +1538,6 @@ class View_State
     {
       rect_anchor = d3.mouse(this);
     }
-    console.log('mousedown')
   }
   
 
@@ -1690,14 +1689,18 @@ class View_State
         drawPoint(points[selectedPoint], pointRadius);
         context.fillStyle = 'steelblue';
     }
+    let
+      x1 = xRange[0],
+      x2 = xRange[1];
 
-    let rp = [[
-      new_xScale(xRange[0]),
-        new_yScale(m * xRange[0] + b)
-    ], [
-      new_xScale(xRange[1]),
-      new_yScale(m * xRange[1] + b)
-    ]];
+     let rp = [[
+       new_xScale(x1),
+         new_yScale(m * x1 + b)
+     ], [
+       new_xScale(x2),
+       new_yScale(m * x2 + b)
+     ]];    
+    
 
     var lineGenerator = d3.line()
       .context(context);
@@ -1706,7 +1709,19 @@ class View_State
     context.lineWidth = 1 
     context.beginPath();
     lineGenerator(rp);
-    context.stroke();
+    context.stroke()
+ 
+    
+    context.font = '20px arial';
+    context.fillStyle = 'red';
+    context.textAlign = 'end'
+    context.textBaseline = 'bottom'
+
+    x2 = new_xScale.invert(rp[1][0] - 100)
+    let y2 = m*x2 + b
+    
+
+    context.fillText( `R² = ${r2}`, new_xScale(x2) , new_yScale(y2));
   }
 
   function drawPoint(point, r) 
