@@ -589,15 +589,15 @@ function updateGrid(server_js)
   {
     let col = headers[i]
     let type = typing[typeof(data[0][i])]
-    columns.push({field:col, text:alias(col), sortable:true})
+    columns.push({field:col, text:alias(col), size: "120px", sortable:true})
     searches.push({field:col, text:col, label:col, type: type})
   }
 
   columns[headers.indexOf('address')].size = "200px"
-  columns[headers.indexOf('city')].size = "100px"
   columns[headers.indexOf('beds')].size = "50px"
   columns[headers.indexOf('baths')].size = "50px"
   columns[headers.indexOf('state_code')].size = "50px"
+  columns[headers.indexOf('postal_code')].size = "50px"
 
   // w2ui.grid.searches=searches
   let count=1

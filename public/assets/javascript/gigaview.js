@@ -54,7 +54,7 @@ let req2 =
   qid: "MD_AGG",
   base_dim: 'property',
   groupbys: ["state_code"],
-  measures: ["beds:count", "size:avg"],
+  measures: ["beds:count", "building_size:avg"],
   filters: []
 }
 
@@ -100,6 +100,7 @@ let req_scatter =
   qid: "MD_RETR",
   base_dim: 'property',
   dim_filters: ["?dim_filter_option"],
+  val_filters: ["property:building_size>0,property:beds>0,property:baths>0,property:assessment_land>0,property:assessment_building>0"]
 }
 
 let chart_def = [
@@ -134,14 +135,14 @@ let dropdowns = {
   //},
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count','building_size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-left',
     // knob_position:'left'
   },
 
   val_option2:{
     name:'Value',
-    contents: ['price:avg', 'beds:count','size:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['price:avg', 'beds:count','building_size:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
