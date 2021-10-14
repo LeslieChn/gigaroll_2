@@ -1188,6 +1188,15 @@ class View_State
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
 
+    const regression = d3.regressionLinear()
+    .x(d => d.x)
+    .y(d => d.y)
+
+    let reg = regression(points)
+    let r2 = Math.round(reg.rSquared*100)/100
+
+    yRange[1] = Math.max( yRange[1], reg.predict(xRange[1]) );
+
     var xScale = d3.scaleLinear()
       .domain([xRange[0] * 0.9, xRange[1] *1.05])
       .range([0, width]);
@@ -1230,9 +1239,6 @@ class View_State
     canvas.call(zoomBehaviour);
 
     var context = canvas.node().getContext('2d');
-    var r = regression.linear(points.map((i)=>([i.x,i.y]))),
-    m = r.equation[0], b = r.equation[1],
-    r2 = Math.round(r.r2*100)/100;
 
     svg.append("text")
     .attr("class", "x label")
@@ -1695,10 +1701,10 @@ class View_State
 
      let rp = [[
        new_xScale(x1),
-         new_yScale(m * x1 + b)
+         new_yScale(reg.predict(x1))
      ], [
        new_xScale(x2),
-       new_yScale(m * x2 + b)
+       new_yScale(reg.predict(x2))
      ]];    
     
 
@@ -1718,7 +1724,7 @@ class View_State
     context.textBaseline = 'bottom'
 
     x2 = new_xScale.invert(rp[1][0] - 100)
-    let y2 = m*x2 + b
+    let y2 = reg.predict(x2)
     
 
     context.fillText( `R² = ${r2}`, new_xScale(x2) , new_yScale(y2));
