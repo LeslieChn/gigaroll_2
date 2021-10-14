@@ -554,7 +554,7 @@ class View_State
     }
 
       address = `
-      <div class="row" id="popup-header" style="">
+      <div class="row" id="popup-header">
       <div class="row justify-content-end">
           <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
       </div>
@@ -1839,8 +1839,6 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr("class", "treemapLegend")
     .attr("id", ttlegend_id)
     .style("opacity", 1)
-    .style("width", "200px")
-    .style("height", "500px")
     .style("background-color", "#fff")
     .style("z-index", "999")
 
@@ -1850,6 +1848,16 @@ function euclideanDistance(x1, y1, x2, y2)
     var width = Math.round(parent_width*0.85);
     var height = Math.round(ht);
     var margin = Math.round((parent_width - width)/2)
+
+    // console.log(ht)
+
+    // var legend_width = Math.round(parent_width*0.15);
+
+    // console.log(legend_width)
+
+    // this.legendDiv
+    // .style('width', legend_width)
+    // .style('height', ht)
 
     var format = d3.format(",d");
 
@@ -2042,16 +2050,17 @@ function euclideanDistance(x1, y1, x2, y2)
 
     function showLegend(instance)
     {
+        instance.legendDiv.html('')
+        let ht=$(`#${instance.getId()}`).height();
+        let parent_width = $(`#${instance.getId()}`).width();
+        let legend_width = Math.round(parent_width*0.15);
+        let legend_height = Math.round(ht*0.90);
         let n_divs = data.length;
-        var client_width = document.getElementById(ttlegend_id).clientWidth
-        let legend_width = client_width
         let margin = legend_width / 12
         let rect_width = legend_width - 2 * margin
         let rect_idx = 0;
         let rect_id = 0;
-        var client_height = document.getElementById(ttlegend_id).clientHeight
-        let legend_height = client_height * 0.8 
-        let top_margin = client_height * 0.05
+        let top_margin = legend_height * 0.05
         let rect_height = Math.min(legend_height / (n_divs + 1), 20)
   
         let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
@@ -2073,8 +2082,8 @@ function euclideanDistance(x1, y1, x2, y2)
         var svg
         svg =  d3.select(`#${ttlegend_id}`)
         .append("svg")
-        .attr("width", client_width)
-        .attr("height", client_height);
+        .attr("width", legend_width)
+        .attr("height", legend_height);
         // let rectPos = (i) => left_margin + i * rect_width;
         let rectPos = (i) => top_margin + i * rect_height;
 

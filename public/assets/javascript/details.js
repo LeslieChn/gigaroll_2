@@ -1310,10 +1310,9 @@ async function propertyPopup(node, x, y)
     }
 
     address = `
-    <div class="row">
-      <div class="col-11">
-      </div>
-        <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+    <div class="row justify-content-center" id="popup-header">
+    <div class="row justify-content-end">
+        <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
     </div>
     <div class="row">
       <div class="col-12 align-content-center" style="height:200px;">
@@ -1323,13 +1322,13 @@ async function propertyPopup(node, x, y)
 
     <div class="row">
       <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-        <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+        <p class ="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
       </div>
     </div>
-
-    <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+    </div>
+    <div id="popup-info" class="row px-4 d-flex">
       <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-        <div class="carousel-inner px-3">
+        <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2;">
           <div class="carousel-item active">
             <table class="popup-table">
               <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
@@ -1392,13 +1391,11 @@ async function propertyPopup(node, x, y)
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      // const popup_ps = new PerfectScrollbar(`#popup-info`, {
-      //   wheelSpeed: 2,
-      //   wheelPropagation: false,
-      //   minScrollbarLength: 20
-      // })
-
-      // ps_object['popup-info']=popup_ps
+      new PerfectScrollbar(`.carousel-inner`, {
+        wheelSpeed: 2,
+        wheelPropagation: false,
+        minScrollbarLength: 20
+      })
 
       //let position = $(`#${this.getId()}`).offset()
       let screen_width = window.innerWidth

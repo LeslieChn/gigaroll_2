@@ -139,7 +139,7 @@ ul {
   opacity: 0.2;
 }
 
-#popup-info{
+.carousel-inner{
   overflow: hidden !important;
 }
 
@@ -186,8 +186,8 @@ div.treemapLegend {
   width: 80px;                    
   height: 28px;
   */    
-  top: 50px;
-  right:15px;
+  top: 0px;
+  right:0px;
   z-index:999;               
   padding: 8px;               
   color:black;             
