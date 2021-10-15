@@ -59,6 +59,14 @@ const popup_width = 300
 
 var iLat = null, iLng = null
 /*******************************************************************************/
+function shallow_copy(obj)
+{
+  let copy = {}
+  for (let k of Object.keys(obj))
+    copy[k] = obj[k]
+  
+  return copy
+}
 
 function Comma_Sep(a,vs_id) {
   var s = "";
@@ -1924,8 +1932,8 @@ function euclideanDistance(x1, y1, x2, y2)
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
-        .style("background", function(d) { while (d.depth > 1) d = d.parent; return selected_vs.color(d.id); })
-        .style("border", function(d) { while (d.depth > 1) d = d.parent; return  `${selected_vs.color(d.id)} solid 3px` })
+        .style("background", function(d) { while (d.depth > 1) d = d.parent;  let c = selected_vs.color(d.id); return c; })
+        .style("box-shadow", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; return  `0 0 0 4px ${rgba} inset` })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
