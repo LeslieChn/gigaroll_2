@@ -106,11 +106,9 @@ function reqParamsToString(params)
     return s
 }
   
-async function serverRequest(params) 
+async function serverRequest(req_str) 
 {
-    p = reqParamsToString(params)
-
-    const api_url = `gserver/${p}`;
+    const api_url = `gserver/${req_str}`;
 
     var request = new Request(api_url, { method: "POST" });
 
@@ -180,6 +178,7 @@ class View_State
     this.obj_instance=null
     this.server_js=null
     this.maximized=false
+    this.last_req_str = ''
   }
   createRequestParams()
   { 
@@ -208,7 +207,12 @@ class View_State
   async serverRequest()
   {
     let params=this.createRequestParams();
-    let server_result = await serverRequest(params);
+    let req_str = reqParamsToString(params)
+    if (req_str == this.last_req_str)
+      return
+    
+    this.last_req_str = req_str
+    let server_result = await serverRequest(req_str);
     if (params.qid == "MD_RETR")
     {
       this.server_js = server_result
@@ -480,11 +484,11 @@ class View_State
     }
     return color_schemes[color]
   }
-  createContent(mode)
+  createContent()
   {
     try
     {
-      this[this.state.view_type](mode)
+      this[this.state.view_type]()
     }
     catch (e)
     {
@@ -1071,7 +1075,7 @@ class View_State
   }
 
 
-  async scatterChart(mode)
+  async scatterChart()
   {
     var interface_mode = ''
     var self = this 
@@ -1094,8 +1098,7 @@ class View_State
     .style("opacity", 0)
     .style("width", "300px")
 
-    if (!mode || mode != 'refresh')
-      await this.serverRequest()
+    await this.serverRequest()
 
     if (this.object_instance)
     {
@@ -1828,10 +1831,9 @@ function euclideanDistance(x1, y1, x2, y2)
   
     return data;
   }
-  async treemap(mode)
+  async treemap()
   {
-    if (!mode || mode != 'refresh')
-      await this.serverRequest()
+    await this.serverRequest()
 
     if (selected_vs && this!==selected_vs)
     {
@@ -2176,9 +2178,9 @@ function euclideanDistance(x1, y1, x2, y2)
 
   }
 
-  async setCountymap(mapDiv,legendDiv, mode)
+  async setCountymap(mapDiv,legendDiv)
   {
-    if (!mode || mode != 'refresh')
+  
     await this.serverRequest()
     if (selected_vs && this!==selected_vs)
     {
@@ -2588,7 +2590,7 @@ function euclideanDistance(x1, y1, x2, y2)
     function mapReset(){}
 
   }
-  async countymap(mode)
+  async countymap()
   {
     let container = this.getId()
     let legendDiv = container + "Legend"
@@ -2601,7 +2603,7 @@ function euclideanDistance(x1, y1, x2, y2)
         <div id="${mapDiv}" style='position:relative;height:100%;'></div>
       </div>
     </div>`)
-    this.setCountymap(mapDiv,legendDiv,mode)
+    this.setCountymap(mapDiv,legendDiv)
   }
   
 }//end of Class definition
