@@ -331,7 +331,7 @@ class View_State
       case 'treemap':
       case 'countymap':
       case 'scatterChart':
-        this.createContent()
+        this.createContent('refresh')
         break
     }
   }
@@ -480,11 +480,11 @@ class View_State
     }
     return color_schemes[color]
   }
-  createContent()
+  createContent(mode)
   {
     try
     {
-      this[this.state.view_type]()
+      this[this.state.view_type](mode)
     }
     catch (e)
     {
@@ -1071,7 +1071,7 @@ class View_State
   }
 
 
-  async scatterChart()
+  async scatterChart(mode)
   {
     var interface_mode = ''
     var self = this 
@@ -1094,7 +1094,8 @@ class View_State
     .style("opacity", 0)
     .style("width", "300px")
 
-    await this.serverRequest()
+    if (!mode || mode != 'refresh')
+      await this.serverRequest()
 
     if (this.object_instance)
     {
@@ -1786,10 +1787,8 @@ function euclideanDistance(x1, y1, x2, y2)
   }
 
   
-  async getTreeMapData()
+  getTreeMapData()
   {
-    await this.serverRequest()
-
     let server_js=this.server_js
 
     let vs_id=this.getId();
@@ -1829,12 +1828,19 @@ function euclideanDistance(x1, y1, x2, y2)
   
     return data;
   }
-  async treemap()
+  async treemap(mode)
   {
+    if (!mode || mode != 'refresh')
+      await this.serverRequest()
+
+    if (selected_vs && this!==selected_vs)
+    {
+      return 
+    } 
+
     let treemap_div = `${this.getId()}-treemap`
     let ttdiv_id = `${this.getId()}-tooltip`
     let ttlegend_id = `${this.getId()}-legend`
-
 
     $(`#${ttlegend_id}`).remove()
 
@@ -1881,13 +1887,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .padding(1)
       .round(true);
 
-    let data = await this.getTreeMapData();
+    let data = this.getTreeMapData();
   
-    
-    if (selected_vs && this!==selected_vs)
-    {
-      return 
-    } 
 
     var root = stratify(data)
         .sum(function(d) { return d.value; })
@@ -2147,17 +2148,15 @@ function euclideanDistance(x1, y1, x2, y2)
     }
   }
 
-  async getCountyData(){
+  getCountyData()
+  {
     let state_code_from_name =
     { CT: "09", NY: "36", NJ: "34", MA: "25" }
-
-
-    await this.serverRequest()
     let server_js = this.server_js
-
     let value_idx = 0
     let min = Infinity, max = -Infinity
     let lut = {}
+
     for (let row of server_js)
     {
         let c = row[0][0]
@@ -2177,14 +2176,16 @@ function euclideanDistance(x1, y1, x2, y2)
 
   }
 
-  async setCountymap(mapDiv,legendDiv)
+  async setCountymap(mapDiv,legendDiv, mode)
   {
-    let result = await this.getCountyData();
-
+    if (!mode || mode != 'refresh')
+    await this.serverRequest()
     if (selected_vs && this!==selected_vs)
     {
       return 
     }
+
+    let result = this.getCountyData();
 
     let instance = this
 
@@ -2587,8 +2588,8 @@ function euclideanDistance(x1, y1, x2, y2)
     function mapReset(){}
 
   }
-  async countymap(){
-    
+  async countymap(mode)
+  {
     let container = this.getId()
     let legendDiv = container + "Legend"
     let mapDiv = container + "Map"
@@ -2600,7 +2601,7 @@ function euclideanDistance(x1, y1, x2, y2)
         <div id="${mapDiv}" style='position:relative;height:100%;'></div>
       </div>
     </div>`)
-    this.setCountymap(mapDiv,legendDiv)
+    this.setCountymap(mapDiv,legendDiv,mode)
   }
   
 }//end of Class definition

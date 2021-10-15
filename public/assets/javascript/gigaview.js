@@ -31,6 +31,7 @@ let aliases = {
   'range(property:year_built;1600;10;200)' : 'Year Built' , 
   'range(county:Median_Income_2019;0;1000;200)' : 'County Median Income 2019',
   '' : 'All (No Filter)',
+  ' ' : 'None',
   'building_size:avg'  : 'Building Size, Average',
   'price_per_sqft:avg' : 'Price Per Square Feet, Average',
   'building_size'  : 'Building Size, sqft',
@@ -206,7 +207,7 @@ let dropdowns2 = {
 let geodropdowns = {
   val_filter_option:{
     name:'Filters',
-    contents: ['', 'property:price>1000000', 'property:price<200000', 'property:size<1500', 'property:size>5000', 'property:year_built<=1970', 'property:year_built>=1985', 'property:elevation>600'],
+    contents: ['', 'property:price>1000000', 'property:price<200000', 'property:building_size<1500', 'property:building_size>5000', 'property:year_built<=1970', 'property:year_built>=1985', 'property:elevation>600'],
     position:'bottom-left',
     // knob_position:'right'
   },
@@ -233,7 +234,7 @@ let scatterdropdowns = {
   },
   z_axis_option:{
     name:'Z-Axis',
-    contents: ['','size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: [' ', 'building_size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-right',
     // knob_position:'right'
   },
