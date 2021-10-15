@@ -546,7 +546,7 @@ class View_State
    {
     if(x==null||x==undefined)
       x=20
-    if(x==null||x==undefined)
+    if(y==null||y==undefined)
       y=20
     let address, img_url = "";
 
@@ -561,7 +561,8 @@ class View_State
 
     for (let [key, value] of Object.entries(prop_info_params)) 
     {
-      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      let req_str = reqParamsToString({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key] = await serverRequest (req_str)
       prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
     }
 
@@ -1851,12 +1852,7 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr("id", ttdiv_id)
     .style("display", "none")
 
-    this.legendDiv = d3.select(`.card-body`).append("div")
-    .attr("class", "treemapLegend")
-    .attr("id", ttlegend_id)
-    .style("opacity", 1)
-    .style("background-color", "#fff")
-    .style("z-index", "999")
+   
 
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
@@ -1864,16 +1860,20 @@ function euclideanDistance(x1, y1, x2, y2)
     var width = Math.round(parent_width*0.85);
     var height = Math.round(ht);
     var margin = Math.round((parent_width - width)/2)
+    
+    var card_width = $(`#${this.getId()}-card`).width();
+    var card_height = $(`#${this.getId()}-card`).height();
+    var legend_width = Math.round(card_width*0.15);
+    var legend_height = card_height;
 
-    // console.log(ht)
-
-    // var legend_width = Math.round(parent_width*0.15);
-
-    // console.log(legend_width)
-
-    // this.legendDiv
-    // .style('width', legend_width)
-    // .style('height', ht)
+    this.legendDiv = d3.select(`#${this.getId()}-card`).append("div")
+    .attr("class", "treemapLegend")
+    .attr("id", ttlegend_id)
+    .style("opacity", 1)
+    .style("background-color", "#fff")
+    .style("z-index", "999")
+    .style('width', legend_width + 'px')
+    .style('height', legend_height + 'px')
 
     var format = d3.format(",d");
 
@@ -2061,11 +2061,10 @@ function euclideanDistance(x1, y1, x2, y2)
 
     function showLegend(instance)
     {
-        instance.legendDiv.html('')
         let ht=$(`#${instance.getId()}`).height();
         let parent_width = $(`#${instance.getId()}`).width();
         let legend_width = Math.round(parent_width*0.15);
-        let legend_height = Math.round(ht*0.90);
+        let legend_height = Math.round((ht-50)*0.90);
         let n_divs = data.length;
         let margin = legend_width / 12
         let rect_width = legend_width - 2 * margin
@@ -2076,6 +2075,8 @@ function euclideanDistance(x1, y1, x2, y2)
   
         let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
 
+        instance.legendDiv.html('')
+
         d3.select(`#${ttlegend_id}`).append("div")
           .html('')
           .attr("id", "caption")
@@ -2083,13 +2084,14 @@ function euclideanDistance(x1, y1, x2, y2)
           .attr("fill", "#000")
           .attr("text-anchor", "start")
           .attr("font-weight", "bold")
-          .attr("class", "text-center")
+          .attr("class", "mt-2 text-center")
           .html(`<center>${text}</center>`);
     
         var xScale = d3.scaleLinear()
         .domain([Math.cbrt(data[0].value), 0]) //Math.cbrt(data.at(-1).value)])
         .range([rect_width, 5]);
 
+     
         var svg
         svg =  d3.select(`#${ttlegend_id}`)
         .append("svg")
