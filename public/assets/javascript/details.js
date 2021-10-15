@@ -17,17 +17,18 @@ var markerColor = "#9b001f"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
+var iLat = null, iLng = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
-  'price:avg'      : 'Average Price',
-  'size:avg'       : 'Average Size',
+  'price:avg'      : 'Price, Average',
+  'size:avg'       : 'Size, Average',
   'prop_type'      : 'Property Type',
   'county'         : 'County',
   'state_code'     : 'State',
   'city'           : 'City',
   'postal_code'    : 'Zip Code',
-  'elevation:avg'  : 'Average Elevation',
+  'elevation:avg'  : 'Elevation, Average', 
   'year_built:min' : 'Earliest Construction (Year)',
   'pop_2019'       : 'Population 2019',
   'prop_status'    : 'Status',
@@ -41,7 +42,11 @@ let aliases = {
   'latitude'       : 'Latitude',
   'longitude'      : 'Longitude',
   'address'        : 'Address',
-
+  'assessment_building:avg' : 'Assessed Building Value, Average',
+  'assessment_land:avg' : 'Assessed Land Value, Average',
+  'assessment_total:avg' : 'Assessed Total Value, Average',
+  'building_size:avg'  : 'Building Size, Average',
+  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
 }
 
 var overlay_colors = [
@@ -59,7 +64,7 @@ let county_measures =  [
   "pop_2019",
   "Vacant_2019"
 ];
-let agg_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg']
+let agg_measures = ['beds:count', 'price:avg', 'price_per_sqft:avg', 'building_size:avg', 'assessment_building:avg', 'assessment_land:avg', 'assessment_total:avg', 'elevation:avg']
 let overlay_measures = agg_measures.concat(county_measures)
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
@@ -584,15 +589,15 @@ function updateGrid(server_js)
   {
     let col = headers[i]
     let type = typing[typeof(data[0][i])]
-    columns.push({field:col, text:alias(col), sortable:true})
+    columns.push({field:col, text:alias(col), size: "120px", sortable:true})
     searches.push({field:col, text:col, label:col, type: type})
   }
 
   columns[headers.indexOf('address')].size = "200px"
-  columns[headers.indexOf('city')].size = "100px"
   columns[headers.indexOf('beds')].size = "50px"
   columns[headers.indexOf('baths')].size = "50px"
   columns[headers.indexOf('state_code')].size = "50px"
+  columns[headers.indexOf('postal_code')].size = "50px"
 
   // w2ui.grid.searches=searches
   let count=1
@@ -607,14 +612,13 @@ function updateGrid(server_js)
   }
   */
   console.timeEnd("Prepare Data")
-  //console.log(columns)
-  //console.log(searches)
-  //console.log(records)
+
 
   console.time("Init Grid")
   //$('#grid').w2grid
   $().w2grid({
     name : 'grid',  
+
     show: {
       toolbar: true,
       footer: true,
@@ -665,14 +669,17 @@ function updateGrid(server_js)
 
   })
 
-  for (let row of data){
-    let rec={recid:count++}
-    for (let i=0; i< headers.length; i++){
+  for (let row of data)
+  {
+    let rec={recid:count++, w2ui: {} }
+    for (let i=0; i< headers.length; i++)
+    {
       rec [headers[i]]= row[i]
     }
+    rec.w2ui.style = 'font-weight:600;'
     w2ui.grid.records.push(rec)
   }
-  console.timeEnd("Init Grid")
+
 
   w2ui.grid.refresh();
   $('#grid').w2render('grid');
@@ -684,6 +691,10 @@ var sever_js = null;
 function processResp(resp)
 {
   server_js = resp;
+  
+  iLat = server_js.headers.indexOf('latitude')
+  iLng = server_js.headers.indexOf('longitude')
+
   updateGrid(resp);
   $(document).ready(function ()
   {
@@ -735,20 +746,20 @@ function launchMap(percentage)
 
 function increaseFontSize()
  {
-  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
   font_size = parseInt(font_size.slice(0, -2)) + 1
   if(font_size > 18)
     font_size = 18
-  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
  }
 
  function decreaseFontSize()
  {
-  let font_size= $('.w2ui-grid-body table td').css('font-size')
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
   font_size = parseInt(font_size.slice(0, -2)) - 1
   if(font_size < 10)
     font_size = 10
-  $('.w2ui-grid-body table td').css('font-size', `${font_size}px`)
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
  }
 
 function showLegend(color, min, max,)
@@ -1104,8 +1115,8 @@ function setMarkers()
       let x = e.originalEvent.x 
       let y = e.originalEvent.y 
       let node = server_js.data[coord[1]].slice()
-      node[13] *= 1e-6
-      node[14] *= 1e-6
+      node[iLat] *= 1e-6
+      node[iLng] *= 1e-6
       propertyPopup(node, x, y)
     }
   }
@@ -1240,7 +1251,7 @@ async function InitPage()
 function propDetailsFormat(node) 
 {
   let headers = this.server_js.headers
-  let fields = ['prop_type', 'beds', 'baths', 'size', 'price', 'year_built', 'elevation', 'flood_zone']
+  let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
   let indices = fields.map (f => headers.indexOf(f))
   
   let html = ''
@@ -1299,10 +1310,9 @@ async function propertyPopup(node, x, y)
     }
 
     address = `
-    <div class="row">
-      <div class="col-11">
-      </div>
-        <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+    <div class="row justify-content-center" id="popup-header">
+    <div class="row justify-content-end">
+        <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
     </div>
     <div class="row">
       <div class="col-12 align-content-center" style="height:200px;">
@@ -1312,13 +1322,13 @@ async function propertyPopup(node, x, y)
 
     <div class="row">
       <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-        <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+        <p class ="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
       </div>
     </div>
-
-    <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+    </div>
+    <div id="popup-info" class="row px-4 d-flex">
       <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-        <div class="carousel-inner px-3">
+        <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2;">
           <div class="carousel-item active">
             <table class="popup-table">
               <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
@@ -1348,7 +1358,7 @@ async function propertyPopup(node, x, y)
     
     <div class="row px-4  align-items-center justify-content-center">
       <a style=" margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[13]},${node[14]}">Google</a>
+      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
     </div>
     `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -1381,13 +1391,11 @@ async function propertyPopup(node, x, y)
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      // const popup_ps = new PerfectScrollbar(`#popup-info`, {
-      //   wheelSpeed: 2,
-      //   wheelPropagation: false,
-      //   minScrollbarLength: 20
-      // })
-
-      // ps_object['popup-info']=popup_ps
+      new PerfectScrollbar(`.carousel-inner`, {
+        wheelSpeed: 2,
+        wheelPropagation: false,
+        minScrollbarLength: 20
+      })
 
       //let position = $(`#${this.getId()}`).offset()
       let screen_width = window.innerWidth

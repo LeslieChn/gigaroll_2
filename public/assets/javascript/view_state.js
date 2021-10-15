@@ -56,7 +56,17 @@ const html_sub = {
   '>': "&gt",
 };
 const popup_width = 300
+
+var iLat = null, iLng = null
 /*******************************************************************************/
+function shallow_copy(obj)
+{
+  let copy = {}
+  for (let k of Object.keys(obj))
+    copy[k] = obj[k]
+  
+  return copy
+}
 
 function Comma_Sep(a,vs_id) {
   var s = "";
@@ -96,11 +106,9 @@ function reqParamsToString(params)
     return s
 }
   
-async function serverRequest(params) 
+async function serverRequest(req_str) 
 {
-    p = reqParamsToString(params)
-
-    const api_url = `gserver/${p}`;
+    const api_url = `gserver/${req_str}`;
 
     var request = new Request(api_url, { method: "POST" });
 
@@ -170,6 +178,7 @@ class View_State
     this.obj_instance=null
     this.server_js=null
     this.maximized=false
+    this.last_req_str = ''
   }
   createRequestParams()
   { 
@@ -198,7 +207,12 @@ class View_State
   async serverRequest()
   {
     let params=this.createRequestParams();
-    let server_result = await serverRequest(params);
+    let req_str = reqParamsToString(params)
+    if (req_str == this.last_req_str)
+      return
+    
+    this.last_req_str = req_str
+    let server_result = await serverRequest(req_str);
     if (params.qid == "MD_RETR")
     {
       this.server_js = server_result
@@ -321,7 +335,7 @@ class View_State
       case 'treemap':
       case 'countymap':
       case 'scatterChart':
-        this.createContent()
+        this.createContent('refresh')
         break
     }
   }
@@ -501,7 +515,7 @@ class View_State
   propDetailsFormat(node) 
   {
     let headers = this.server_js.headers
-    let fields = ['prop_type', 'beds', 'baths', 'size', 'price', 'year_built', 'elevation', 'flood_zone']
+    let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
     let indices = fields.map (f => headers.indexOf(f))
     
     let html = ''
@@ -515,7 +529,9 @@ class View_State
   }
    propInfoFormat(data) 
    {
-    let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
+    let html = `<table class="popup-table"><thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;">
+    <b>${data.title}</b></p></thead>`;
+
     for (let i=0; i < data.headers.length; i++)
     {
       let header = data.headers[i].replaceAll('_', ' ')
@@ -530,7 +546,7 @@ class View_State
    {
     if(x==null||x==undefined)
       x=20
-    if(x==null||x==undefined)
+    if(y==null||y==undefined)
       y=20
     let address, img_url = "";
 
@@ -545,15 +561,15 @@ class View_State
 
     for (let [key, value] of Object.entries(prop_info_params)) 
     {
-      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      let req_str = reqParamsToString({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key] = await serverRequest (req_str)
       prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
     }
 
       address = `
-      <div class="row">
-        <div class="col-11">
-        </div>
-          <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+      <div class="row" id="popup-header">
+      <div class="row justify-content-end">
+          <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
       </div>
       <div class="row">
         <div class="col-12 align-content-center" style="height:200px;">
@@ -563,20 +579,20 @@ class View_State
 
       <div class="row">
         <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-          <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+          <p class="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
-
-      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+      </div>
+      <div id="popup-info" class="row px-4 d-flex">
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-          <div class="carousel-inner px-3">
+          <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2">
             <div class="carousel-item active">
               <table class="popup-table">
-                <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
+                <thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;"><b>Property Details</b></p></thead>
                 ${this.propDetailsFormat(node)}
               </table>
             </div>
-            <div class="carousel-item" id="state_info">
+            <div class="carousel-item" id="state_info" >
               ${this.propInfoFormat(prop_info_data.state_code)}
             </div>
             <div class="carousel-item" id="county_info">
@@ -597,9 +613,9 @@ class View_State
         </div>
       </div>
       
-      <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[13]},${node[14]}">Google</a>
+      <div class="row px-4 d-flex align-items-center justify-content-center">
+        <a style="margin: 6px 6px 6px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 6px 0px 6px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -628,7 +644,7 @@ class View_State
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      const popup_ps = new PerfectScrollbar(`#popup-info`, {
+      const popup_ps = new PerfectScrollbar(`.carousel-inner`, {
         wheelSpeed: 2,
         wheelPropagation: false,
         minScrollbarLength: 20
@@ -645,8 +661,7 @@ class View_State
       x += offset
       let right_edge = x + popup_width + position.left
       let bottom_edge = y + popup_height + position.top 
-      console.log(y)
-      console.log(bottom_edge + '= bottom_edge')
+
       if (right_edge >= screen_width)
         x = Math.max(x - popup_width - 2 * offset, 0)
       if (bottom_edge >= screen_height)
@@ -656,6 +671,7 @@ class View_State
       .style("left", x + "px")
       .style("top", y + "px")
       .style("z-index", 999)
+      .style("background-color", "f0f8ff")
       
   }
 
@@ -683,6 +699,10 @@ class View_State
      }
  
      let server_js=this.server_js
+
+     iLat = server_js.headers.indexOf('latitude')
+     iLng = server_js.headers.indexOf('longitude')
+
      let coords = []
      let lat, lng, markers;
      let markerColor = "#9b001f"
@@ -692,14 +712,14 @@ class View_State
      let data_index = 0
      for (const data of server_js.data)
      {
-       lat = parseInt(data[13]) /1e6
-       lng = parseInt(data[14]) /1e6
+       lat = parseInt(data[iLat]) /1e6
+       lng = parseInt(data[iLng]) /1e6
        max_lat = (lat>max_lat)? lat : max_lat
        max_lng = (lng>max_lng)? lng : max_lng
        min_lat = (lat<min_lat)? lat : min_lat
        min_lng = (lng<min_lng)? lng : min_lng
-       data[12] = lat
-       data[13] = lng
+       data[iLat] = lat
+       data[iLng] = lng
        coords.push([lat,lng,data_index++])
      }
      this.numcoords = coords.length
@@ -1090,10 +1110,12 @@ class View_State
     {
       return 
     } 
+ 
+    let server_js = this.server_js
+    iLat = server_js.headers.indexOf('latitude')
+    iLng = server_js.headers.indexOf('longitude')
 
     let vs_id=this.getId()
-
-    let server_js = this.server_js
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
@@ -1179,6 +1201,15 @@ class View_State
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
 
+    const regression = d3.regressionLinear()
+    .x(d => d.x)
+    .y(d => d.y)
+
+    let reg = regression(points)
+    let r2 = Math.round(reg.rSquared*100)/100
+
+    yRange[1] = Math.max( yRange[1], reg.predict(xRange[1]) );
+
     var xScale = d3.scaleLinear()
       .domain([xRange[0] * 0.9, xRange[1] *1.05])
       .range([0, width]);
@@ -1221,15 +1252,13 @@ class View_State
     canvas.call(zoomBehaviour);
 
     var context = canvas.node().getContext('2d');
-    var r = regression.linear(points.map((i)=>([i.x,i.y]))),
-    m = r.equation[0], b = r.equation[1];
 
     svg.append("text")
     .attr("class", "x label")
     .attr("text-anchor", "end")
     .attr("x", width)
     .attr("y", height - 6)
-    .text(meas1);
+    .text(this.alias(meas1));
 
     svg.append("text")
     .attr("class", "y label")
@@ -1237,7 +1266,7 @@ class View_State
     .attr("y", 6)
     .attr("dy", ".75em")
     .attr("transform", "rotate(-90)")
-    .text(meas2);
+    .text(this.alias(meas2));
 
   draw();
 
@@ -1489,8 +1518,8 @@ class View_State
     let x = d3.event.x- position.left
     let y = d3.event.y- position.top
     let node = selected_vs.server_js.data[closest.i].slice()
-    node[13] *= 1e-6
-    node[14] *= 1e-6
+    node[iLat] *= 1e-6
+    node[iLng] *= 1e-6
     selected_vs.propertyPopup(node, x, y)
   }
 
@@ -1528,7 +1557,6 @@ class View_State
     {
       rect_anchor = d3.mouse(this);
     }
-    console.log('mousedown')
   }
   
 
@@ -1581,7 +1609,7 @@ class View_State
         z = server_js.data[closest.i][i3]
       selected_vs.tooltipDiv
       .style("opacity", 1)
-      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}${z? ',' + meas3 + ':' + z : ''} `)
+      .html(`${selected_vs.alias(meas1)}:${closest.x}, ${selected_vs.alias(meas2)}:${closest.y}${z? ',' + selected_vs.alias(meas3) + ':' + z : ''} `)
       .style("left", (pos_x + 10) + "px")
       .style("top", (pos_y + 10) + "px");
     }
@@ -1680,14 +1708,18 @@ class View_State
         drawPoint(points[selectedPoint], pointRadius);
         context.fillStyle = 'steelblue';
     }
+    let
+      x1 = xRange[0],
+      x2 = xRange[1];
 
-    let rp = [[
-      new_xScale(xRange[0]),
-        new_yScale(m * xRange[0] + b)
-    ], [
-      new_xScale(xRange[1]),
-      new_yScale(m * xRange[1] + b)
-    ]];
+     let rp = [[
+       new_xScale(x1),
+         new_yScale(reg.predict(x1))
+     ], [
+       new_xScale(x2),
+       new_yScale(reg.predict(x2))
+     ]];    
+    
 
     var lineGenerator = d3.line()
       .context(context);
@@ -1696,7 +1728,19 @@ class View_State
     context.lineWidth = 1 
     context.beginPath();
     lineGenerator(rp);
-    context.stroke();
+    context.stroke()
+ 
+    
+    context.font = '20px arial';
+    context.fillStyle = 'red';
+    context.textAlign = 'end'
+    context.textBaseline = 'bottom'
+
+    x2 = new_xScale.invert(rp[1][0] - 100)
+    let y2 = reg.predict(x2)
+    
+
+    context.fillText( `R² = ${r2}`, new_xScale(x2) , new_yScale(y2));
   }
 
   function drawPoint(point, r) 
@@ -1747,10 +1791,8 @@ function euclideanDistance(x1, y1, x2, y2)
   }
 
   
-  async getTreeMapData()
+  getTreeMapData()
   {
-    await this.serverRequest()
-
     let server_js=this.server_js
 
     let vs_id=this.getId();
@@ -1792,10 +1834,16 @@ function euclideanDistance(x1, y1, x2, y2)
   }
   async treemap()
   {
+    await this.serverRequest()
+
+    if (selected_vs && this!==selected_vs)
+    {
+      return 
+    } 
+
     let treemap_div = `${this.getId()}-treemap`
     let ttdiv_id = `${this.getId()}-tooltip`
     let ttlegend_id = `${this.getId()}-legend`
-
 
     $(`#${ttlegend_id}`).remove()
 
@@ -1804,14 +1852,7 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr("id", ttdiv_id)
     .style("display", "none")
 
-    this.legendDiv = d3.select(`.card-body`).append("div")
-    .attr("class", "treemapLegend")
-    .attr("id", ttlegend_id)
-    .style("opacity", 1)
-    .style("width", "200px")
-    .style("height", "500px")
-    .style("background-color", "#fff")
-    .style("z-index", "999")
+   
 
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
@@ -1819,6 +1860,20 @@ function euclideanDistance(x1, y1, x2, y2)
     var width = Math.round(parent_width*0.85);
     var height = Math.round(ht);
     var margin = Math.round((parent_width - width)/2)
+    
+    var card_width = $(`#${this.getId()}-card`).width();
+    var card_height = $(`#${this.getId()}-card`).height();
+    var legend_width = Math.round(card_width*0.15);
+    var legend_height = card_height;
+
+    this.legendDiv = d3.select(`#${this.getId()}-card`).append("div")
+    .attr("class", "treemapLegend")
+    .attr("id", ttlegend_id)
+    .style("opacity", 1)
+    .style("background-color", "#fff")
+    .style("z-index", "999")
+    .style('width', legend_width + 'px')
+    .style('height', legend_height + 'px')
 
     var format = d3.format(",d");
 
@@ -1834,13 +1889,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .padding(1)
       .round(true);
 
-    let data = await this.getTreeMapData();
+    let data = this.getTreeMapData();
   
-    
-    if (selected_vs && this!==selected_vs)
-    {
-      return 
-    } 
 
     var root = stratify(data)
         .sum(function(d) { return d.value; })
@@ -1885,8 +1935,8 @@ function euclideanDistance(x1, y1, x2, y2)
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
-        .style("background", function(d) { while (d.depth > 1) d = d.parent; return selected_vs.color(d.id); })
-        .style("border", function(d) { while (d.depth > 1) d = d.parent; return  `${selected_vs.color(d.id)} solid 3px` })
+        .style("background", function(d) { while (d.depth > 1) d = d.parent;  let c = selected_vs.color(d.id); return c; })
+        .style("box-shadow", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; return  `0 0 0 4px ${rgba} inset` })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
@@ -1950,6 +2000,7 @@ function euclideanDistance(x1, y1, x2, y2)
       let value=$(this).attr('value')
       let idx = data.indexOf("\n")
       let gby = data.slice(0,idx).split('.')
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
       let html = function () {
         let str = ''
         gby.forEach((g) => {
@@ -1965,15 +2016,17 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("left", (e.originalEvent.x + 20) + "px")
       .style("top", (e.originalEvent.y + 20) + "px");
 
+      d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
       let line = d3.select(`#line_${rect_id}`)
       line.attr('stroke-width', '2')
     }
 
     function onMouseOut()
     {
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
       let title=$(this).attr('id')
       d3.select(`#${ttdiv_id}`).style("opacity", 0)
-
+      d3.select(`#caption`).html(`<center>${text}</center>`)
       let rect_id = selected_vs.data_map[title]
 
       let line = d3.select(`#line_${rect_id}`)
@@ -2008,38 +2061,42 @@ function euclideanDistance(x1, y1, x2, y2)
 
     function showLegend(instance)
     {
+        let ht=$(`#${instance.getId()}`).height();
+        let parent_width = $(`#${instance.getId()}`).width();
+        let legend_width = Math.round(parent_width*0.15);
+        let legend_height = Math.round((ht-50)*0.90);
         let n_divs = data.length;
-        var client_width = document.getElementById(ttlegend_id).clientWidth
-        let legend_width = client_width
         let margin = legend_width / 12
         let rect_width = legend_width - 2 * margin
         let rect_idx = 0;
         let rect_id = 0;
-        var client_height = document.getElementById(ttlegend_id).clientHeight
-        let legend_height = client_height * 0.8 
-        let top_margin = client_height * 0.05
+        let top_margin = legend_height * 0.05
         let rect_height = Math.min(legend_height / (n_divs + 1), 20)
   
         let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
 
+        instance.legendDiv.html('')
+
         d3.select(`#${ttlegend_id}`).append("div")
           .html('')
           .attr("id", "caption")
+          .style("height", "50px")
           .attr("fill", "#000")
           .attr("text-anchor", "start")
           .attr("font-weight", "bold")
-          .attr("class", "text-center")
+          .attr("class", "mt-2 text-center")
           .html(`<center>${text}</center>`);
     
         var xScale = d3.scaleLinear()
         .domain([Math.cbrt(data[0].value), 0]) //Math.cbrt(data.at(-1).value)])
         .range([rect_width, 5]);
 
+     
         var svg
         svg =  d3.select(`#${ttlegend_id}`)
         .append("svg")
-        .attr("width", client_width)
-        .attr("height", client_height);
+        .attr("width", legend_width)
+        .attr("height", legend_height);
         // let rectPos = (i) => left_margin + i * rect_width;
         let rectPos = (i) => top_margin + i * rect_height;
 
@@ -2095,17 +2152,15 @@ function euclideanDistance(x1, y1, x2, y2)
     }
   }
 
-  async getCountyData(){
+  getCountyData()
+  {
     let state_code_from_name =
     { CT: "09", NY: "36", NJ: "34", MA: "25" }
-
-
-    await this.serverRequest()
     let server_js = this.server_js
-
     let value_idx = 0
     let min = Infinity, max = -Infinity
     let lut = {}
+
     for (let row of server_js)
     {
         let c = row[0][0]
@@ -2127,12 +2182,14 @@ function euclideanDistance(x1, y1, x2, y2)
 
   async setCountymap(mapDiv,legendDiv)
   {
-    let result = await this.getCountyData();
-
+  
+    await this.serverRequest()
     if (selected_vs && this!==selected_vs)
     {
       return 
     }
+
+    let result = this.getCountyData();
 
     let instance = this
 
@@ -2535,8 +2592,8 @@ function euclideanDistance(x1, y1, x2, y2)
     function mapReset(){}
 
   }
-  async countymap(){
-    
+  async countymap()
+  {
     let container = this.getId()
     let legendDiv = container + "Legend"
     let mapDiv = container + "Map"

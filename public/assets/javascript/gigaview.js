@@ -8,7 +8,7 @@ let aliases = {
   'state_code'     : 'State',
   'city'           : 'City',
   'postal_code'    : 'Zip Code',
-  'elevation:avg'  : 'Average Elevation',
+  'elevation:avg'  : 'Elevation, Average ',
   'year_built:min' : 'Earliest Construction (Year)',
   'pop 2019'       : 'Population 2019',
   'city:New York-NY' : 'New York City, NY',
@@ -18,6 +18,8 @@ let aliases = {
   'city:New Canaan-CT' : 'New Canaan, CT',
   'city:Greenwich-CT' : 'Greenwich, CT',
   'state_code:NY' : 'New York State',
+  'state_code:CT' : 'Connecticut',
+  'state_code:NJ' : 'New Jersey',
   'size' : 'Size',
   'price' : 'Price',
   'beds' : 'Beds',
@@ -28,7 +30,15 @@ let aliases = {
   'flood_zone' : 'Flood Zone',
   'range(property:year_built;1600;10;200)' : 'Year Built' , 
   'range(county:Median_Income_2019;0;1000;200)' : 'County Median Income 2019',
-  '' : 'All (No Filter)'
+  '' : 'All (No Filter)',
+  ' ' : 'None',
+  'building_size:avg'  : 'Building Size, Average',
+  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
+  'building_size'  : 'Building Size, sqft',
+  'price_per_sqft' : 'Price Per Square Feet',
+  'assessment_building' : 'Assessed Building Value',
+  'assessment_land' : 'Assessed Land Value',
+  'assessment_total' : 'Assessed Total Value',
 }
 
 let req1 =
@@ -45,7 +55,7 @@ let req2 =
   qid: "MD_AGG",
   base_dim: 'property',
   groupbys: ["state_code"],
-  measures: ["beds:count", "size:avg"],
+  measures: ["beds:count", "building_size:avg"],
   filters: []
 }
 
@@ -91,6 +101,7 @@ let req_scatter =
   qid: "MD_RETR",
   base_dim: 'property',
   dim_filters: ["?dim_filter_option"],
+  val_filters: ["property:building_size>0,property:beds>0,property:baths>0,property:assessment_land>0,property:assessment_building>0"]
 }
 
 let chart_def = [
@@ -125,14 +136,14 @@ let dropdowns = {
   //},
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count','building_size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-left',
     // knob_position:'left'
   },
 
   val_option2:{
     name:'Value',
-    contents: ['price:avg', 'beds:count','size:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['price:avg', 'beds:count','building_size:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
@@ -159,7 +170,7 @@ let treemap_dropdowns = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'price_per_sqft:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
@@ -181,7 +192,7 @@ let dropdowns2 = {
   },
   val_option:{
     name:'Value',
-    contents: ['beds:count','size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
+    contents: ['beds:count', 'building_size:avg', 'price_per_sqft:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'right'
   },
@@ -196,7 +207,7 @@ let dropdowns2 = {
 let geodropdowns = {
   val_filter_option:{
     name:'Filters',
-    contents: ['', 'property:price>1000000', 'property:price<200000', 'property:size<1500', 'property:size>5000', 'property:year_built<=1970', 'property:year_built>=1985', 'property:elevation>600'],
+    contents: ['', 'property:price>1000000', 'property:price<200000', 'property:building_size<1500', 'property:building_size>5000', 'property:year_built<=1970', 'property:year_built>=1985', 'property:elevation>600'],
     position:'bottom-left',
     // knob_position:'right'
   },
@@ -211,25 +222,25 @@ let geodropdowns = {
 let scatterdropdowns = {
   x_axis_option:{
     name:'X-Axis',
-    contents: ['size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['building_size', 'price_per_sqft', 'price', 'assessment_building', 'assessment_land', 'assessment_total', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-middle',
     // knob_position:'right'
   },
   y_axis_option:{
     name:'Y-Axis',
-    contents: ['price', 'size', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: ['price', 'building_size', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-left',
     // knob_position:'right'
   },
   z_axis_option:{
     name:'Z-Axis',
-    contents: ['','size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
+    contents: [' ', 'building_size', 'price', 'beds', 'baths', 'year_built', 'elevation'],
     position:'bottom-right',
     // knob_position:'right'
   },
   dim_filter_option:{
     name:'City',
-    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['state_code:CT', 'state_code:NY', 'state_code:NJ', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
@@ -322,13 +333,8 @@ function createVsKnob(labels)
 
 function refreshTiles(){
   // createVsKnob(this.labels)
-  selected_vs.createControls()
   resizeContent()
-  // console.log('resizing knobs')
   selected_vs.refresh()
-  $(".p1").on("change", controlsKnobChangeCallback)
-  $(".p2").on("change", viewKnobChangeCallback)
-  $(".controls-select").on("change", controlsDropdownCallBack)
   main_ps.update()
 }
 

@@ -139,7 +139,7 @@ ul {
   opacity: 0.2;
 }
 
-#popup-info{
+.carousel-inner{
   overflow: hidden !important;
 }
 
@@ -186,18 +186,17 @@ div.treemapLegend {
   width: 80px;                    
   height: 28px;
   */    
-  top: 50px;
-  right:15px;
+  top: 0px;
+  right:0px;
   z-index:999;               
-  padding: 8px;               
-  color:black;             
-  padding: 8px;               
+  padding: 0px;               
+  color:black;                           
   font: 13px sans-serif; 
   font-weight: bold;     
-  border: 0px;        
-  border-radius: 4px;      
+  border-left: 7px solid rgb(155, 0, 31);      
+  border-radius: 0rem 1rem 1rem 0rem;
   pointer-events: none;   
-  box-shadow: 4px 4px 10px rgba(0,0,0,.4);         
+  /* box-shadow: 4px 4px 10px rgba(0,0,0,.4);          */
 }
 
 #logo{
@@ -210,9 +209,9 @@ div.treemapLegend {
 
 
 @media only screen and (max-width: 812px) {
-  #caption {
+  /* #caption {
     display: none;
-  }
+  } */
   #no-data {
     display: none;
   }
