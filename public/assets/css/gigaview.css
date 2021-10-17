@@ -116,6 +116,11 @@ ul {
   box-shadow: 4px 4px 10px rgba(0,0,0,.4);        
 }
 
+#popup-info{
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+}
+
 .plot {
   position: absolute;
 }
@@ -206,6 +211,17 @@ div.treemapLegend {
   font-family: Arial;
   color: black;
 }
+
+.carousel-control-prev{
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+}
+
+.carousel-control-next{
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+}
+
 
 
 @media only screen and (max-width: 812px) {

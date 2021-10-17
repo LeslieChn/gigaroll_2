@@ -58,6 +58,8 @@ body { height: 100%;margin: 0;padding: 0;}
 
 #popup-info{
   overflow: hidden !important;
+  font-family: "Open Sans"!important;
+  color: #656164;
 }
 
 .popup-table{
@@ -231,6 +233,8 @@ body { height: 100%;margin: 0;padding: 0;}
   background-color: #999;
   width: 11px;
 }
+
+
 
 /* MS supports */
 @supports (-ms-overflow-style: none) {

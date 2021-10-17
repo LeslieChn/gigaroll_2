@@ -1331,7 +1331,7 @@ async function propertyPopup(node, x, y)
         <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2;">
           <div class="carousel-item active">
             <table class="popup-table">
-              <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
+              <thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;">Property Details</p></thead>
               ${this.propDetailsFormat(node)}
             </table>
           </div>
@@ -1356,9 +1356,9 @@ async function propertyPopup(node, x, y)
       </div>
     </div>
     
-    <div class="row px-4  align-items-center justify-content-center">
-      <a style=" margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
+    <div class="row px-4 d-flex align-items-center justify-content-center">
+        <a style="margin: 6px 6px 6px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 6px 0px 6px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
     </div>
     `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`

@@ -33,7 +33,7 @@ let aliases = {
   '' : 'All (No Filter)',
   ' ' : 'None',
   'building_size:avg'  : 'Building Size, Average',
-  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
+  'price_per_sqft:avg' : 'Price Per Square Foot, Average',
   'building_size'  : 'Building Size, sqft',
   'price_per_sqft' : 'Price Per Square Feet',
   'assessment_building' : 'Assessed Building Value',
@@ -150,7 +150,7 @@ let dropdowns = {
 
   dim_filter_option:{
     name:'City',
-    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'state_code:CT', 'state_code:NJ', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
