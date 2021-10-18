@@ -1916,6 +1916,15 @@ function euclideanDistance(x1, y1, x2, y2)
     d3.select(`#${treemap_div}`)
       .html("")
 
+    var xScale = d3.scaleLinear()
+    .domain([0, width])
+    .range([0, width]);
+    var yScale = d3.scaleLinear()
+    .domain([height, 0])
+    .range([height, 0]);
+
+    var new_xScale = xScale, new_yScale = yScale;
+
     var svg
     svg =  d3.select(`#${treemap_div}`)
     .append("svg")
@@ -1929,23 +1938,28 @@ function euclideanDistance(x1, y1, x2, y2)
     g.selectAll("rect")
     .data(root.leaves())
     .enter().append("rect")
-    .attr("height", function(d) { return d.y1 - d.y0; })
-    .attr("width", function(d) { return d.x1 - d.x0 ; })
-    .attr("x", function(d) { return d.x0; })
-    .attr("y", function(d) { return d.y0; })
+    .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
+    .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
+    .attr("x", function(d) { return new_xScale(d.x0);})
+    .attr("y", function(d) { return new_yScale(d.y0);})
     .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
       return  `fill:${c};stroke:${rgba};stroke-width:3;`})
 
-    g.selectAll("text")
-    .data(root.leaves())
-    .enter().append("text")  
-    .attr("height", function(d) { return d.y1 - d.y0; })
-    .attr("width", function(d) { return d.x1 - d.x0 ; })
-    .attr("x", function(d) { return d.x0 + 10; })
-    .attr("y", function(d) { return d.y0 + 10; })
-    .html(`xxx`)
+    // g.selectAll("text")
+    // .data(root.leaves())
+    // .enter().append("text")  
+    // .attr("height", function(d) { return d.y1 - d.y0; })
+    // .attr("width", function(d) { return d.x1 - d.x0 ; })
+    // .attr("x", function(d) { return d.x0 + 10; })
+    // .attr("y", function(d) { return d.y0 + 10; })
+    // .html(`xxx`)
 
-    
+    var zoomBehaviour = d3.zoom()
+    .scaleExtent([0.5, 200])
+    .on("zoom", onZoom)
+    // .on("end", onZoomEnd);
+
+    svg.call(zoomBehaviour);
 
     /*d3.select(`#${treemap_div}`)
       .selectAll(".node")
@@ -1985,6 +1999,31 @@ function euclideanDistance(x1, y1, x2, y2)
       return d;
     }
     */
+    function draw()
+    {
+      d3.select(`#${treemap_div}`)
+      .html("")
+
+      g.selectAll("rect")
+      .data(root.leaves())
+      .enter().append("rect")
+      .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
+      .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
+      .attr("x", function(d) { return new_xScale(d.x0);})
+      .attr("y", function(d) { return new_yScale(d.y0);})
+      .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
+        return  `fill:${c};stroke:${rgba};stroke-width:3;`});
+    };
+
+    function onZoom() 
+    {
+      console.log('zooming')
+      // zoomed = true
+      let currentTransform = d3.event.transform;
+      new_xScale = currentTransform.rescaleX(xScale)
+      new_yScale = currentTransform.rescaleY(yScale)
+      draw();
+    };
 
     showLegend(this)
     
