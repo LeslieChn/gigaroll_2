@@ -1852,7 +1852,6 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr("id", ttdiv_id)
     .style("display", "none")
 
-   
 
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
@@ -1885,8 +1884,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
     var treemap = d3.treemap()
-      .size([width, height])
-      .padding(2)
+      .size([width*100, height*100])
+      .padding(16)
       .round(true);
 
     let data = this.getTreeMapData();
@@ -1917,10 +1916,10 @@ function euclideanDistance(x1, y1, x2, y2)
       .html("")
 
     var xScale = d3.scaleLinear()
-    .domain([0, width])
+    .domain([0, 100*width])
     .range([0, width]);
     var yScale = d3.scaleLinear()
-    .domain([height, 0])
+    .domain([100*height, 0])
     .range([height, 0]);
 
     var new_xScale = xScale, new_yScale = yScale;
@@ -1931,19 +1930,21 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr("width", width)
     .attr("height", height);
 
-    var g = svg.append("g")
-        .attr("class", "tmap")
-        .attr("transform", "translate(0,0)");
+    draw()
+    // var g = svg.append("g")
+    //     .attr("class", "tmap")
+    //     .attr("transform", "translate(0,0)");
 
-    g.selectAll("rect")
-    .data(root.leaves())
-    .enter().append("rect")
-    .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
-    .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
-    .attr("x", function(d) { return new_xScale(d.x0);})
-    .attr("y", function(d) { return new_yScale(d.y0);})
-    .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
-      return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+    
+    // g.selectAll("rect")
+    // .data(root.leaves())
+    // .enter().append("rect")
+    // .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
+    // .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
+    // .attr("x", function(d) { return new_xScale(d.x0);})
+    // .attr("y", function(d) { return new_yScale(d.y0);})
+    // .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
+    //   return  `fill:${c};stroke:${rgba};stroke-width:3;`})
 
     // g.selectAll("text")
     // .data(root.leaves())
@@ -1957,7 +1958,7 @@ function euclideanDistance(x1, y1, x2, y2)
     var zoomBehaviour = d3.zoom()
     .scaleExtent([0.5, 200])
     .on("zoom", onZoom)
-    // .on("end", onZoomEnd);
+    .on("end", onZoomEnd);
 
     svg.call(zoomBehaviour);
 
@@ -2001,32 +2002,49 @@ function euclideanDistance(x1, y1, x2, y2)
     */
     function draw()
     {
-      d3.select(`#${treemap_div}`)
-      .html("")
+      svg.html("")
+
+      var g = svg.append("g")
+          .attr("class", "tmap")
+          .attr("transform", "translate(0,0)");
 
       g.selectAll("rect")
       .data(root.leaves())
       .enter().append("rect")
-      .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
-      .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
+      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
+      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
       .attr("x", function(d) { return new_xScale(d.x0);})
       .attr("y", function(d) { return new_yScale(d.y0);})
       .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
-        return  `fill:${c};stroke:${rgba};stroke-width:3;`});
+        return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+      .on("mouseover", onMouseOver)
+      .on("mousemove", onMouseMove)
+      .on("mouseout", onMouseOut)
     };
+
+    var currentTransform =  d3.zoomIdentity
+    var zooming = false
 
     function onZoom() 
     {
-      console.log('zooming')
-      // zoomed = true
-      let currentTransform = d3.event.transform;
+      zooming = true
+      currentTransform = d3.event.transform;
       new_xScale = currentTransform.rescaleX(xScale)
       new_yScale = currentTransform.rescaleY(yScale)
       draw();
-    };
+    }
+
+    function onZoomEnd()
+    {
+      zooming = false
+    } 
+  
+    var legend_g, legend_line;
+    var linePos;
 
     showLegend(this)
-    
+
+
     function onClick()
     {
       let data=$(this).attr('data')
@@ -2062,11 +2080,14 @@ function euclideanDistance(x1, y1, x2, y2)
       window.open('./details.html', '_blank');
     }
 
-    function onMouseOver(e)
+    function onMouseOver(d)
     {
-      let data=$(this).attr('data')
-      let title=$(this).attr('id')
-      let value=$(this).attr('value')
+      if (zooming)
+        return
+
+      let data =  d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value);
+      let title = d.id
+      let value = d.value
       let idx = data.indexOf("\n")
       let gby = data.slice(0,idx).split('.')
       let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
@@ -2082,18 +2103,25 @@ function euclideanDistance(x1, y1, x2, y2)
       d3.select(`#${ttdiv_id}`).style("opacity", 1)
       .html(html)
       .style("display", "inline")
-      .style("left", (e.originalEvent.x + 20) + "px")
-      .style("top", (e.originalEvent.y + 20) + "px");
+      .style("left", (d3.event.x + 20) + "px")
+      .style("top", (d3.event.y + 20) + "px");
 
       d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
-      let line = d3.select(`#line_${rect_id}`)
-      line.attr('stroke-width', '2')
+      
+      legend_line
+        .attr('stroke-width', '2')
+        .attr('y1', linePos(rect_id))
+        .attr('y2', linePos(rect_id))
+
     }
 
-    function onMouseOut()
+    function onMouseOut(d)
     {
+      if (zooming)
+        return
+
       let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
-      let title=$(this).attr('id')
+      let title = d.id
       d3.select(`#${ttdiv_id}`).style("opacity", 0)
       d3.select(`#caption`).html(`<center>${text}</center>`)
       let rect_id = selected_vs.data_map[title]
@@ -2109,12 +2137,15 @@ function euclideanDistance(x1, y1, x2, y2)
       // rect.attr('fill', c)
     }
 
-    function onMouseMove(e)
+    function onMouseMove(d)
     {
+      if (zooming)
+        return
+
       d3.select(`#${ttdiv_id}`)
       .style("z-index", 999)
-      .style("left", (e.originalEvent.x + 20) + "px")
-      .style("top", (e.originalEvent.y + 20) + "px");
+      .style("left", (d3.event.x + 20) + "px")
+      .style("top", (d3.event.y + 20) + "px");
     }
 
     if (!this.registered_listener)
@@ -2166,14 +2197,15 @@ function euclideanDistance(x1, y1, x2, y2)
         .append("svg")
         .attr("width", legend_width)
         .attr("height", legend_height);
-        // let rectPos = (i) => left_margin + i * rect_width;
+        
         let rectPos = (i) => top_margin + i * rect_height;
+        linePos = i => rectPos(i) + 0.5 * rect_height;
 
-        var g = svg.append("g")
+        legend_g = svg.append("g")
             .attr("class", "key")
             .attr("transform", "translate(0,0)");
     
-        g.selectAll("rect")
+            legend_g.selectAll("rect")
             .data(data.map((d) => rect_idx++ ) )
             .enter().append("rect")
             .attr("height", rect_height)
@@ -2201,9 +2233,9 @@ function euclideanDistance(x1, y1, x2, y2)
         let line_idx = 0, 
             line_id = 0
 
-        g.selectAll("line")
-        .data(data.map((d) => line_idx++ ) )
-        .enter().append("line")
+        legend_line = legend_g.append("line")
+        //.data(data.map((d) => line_idx++ ) )
+        //.enter().append("line")
         // .attr("width", function (d)
         // { 
         //   let width = xScale(Math.cbrt(data[d].value))
@@ -2211,12 +2243,12 @@ function euclideanDistance(x1, y1, x2, y2)
         // }
         // )
         .attr("x1", 0)
-        .attr("y1", d => { return rectPos(d) + 0.5 * rect_height})
+        //.attr("y1", d => { return rectPos(d) + 0.5 * rect_height})
         .attr("x2", legend_width - margin)
-        .attr("y2", d => { return rectPos(d) + 0.5 * rect_height})
+        //.attr("y2", d => { return rectPos(d) + 0.5 * rect_height})
         .attr("stroke", "rgb(155, 0, 31)")
         .attr("stroke-width", "0")
-        .attr("id", d => `line_${line_id++}`)   
+        //.attr("id", d => `line_${line_id++}`)   
       
     }
   }
