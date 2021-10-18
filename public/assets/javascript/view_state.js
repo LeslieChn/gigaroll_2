@@ -1886,7 +1886,7 @@ function euclideanDistance(x1, y1, x2, y2)
 
     var treemap = d3.treemap()
       .size([width, height])
-      .padding(1)
+      .padding(2)
       .round(true);
 
     let data = this.getTreeMapData();
@@ -1916,8 +1916,38 @@ function euclideanDistance(x1, y1, x2, y2)
     d3.select(`#${treemap_div}`)
       .html("")
 
+    var svg
+    svg =  d3.select(`#${treemap_div}`)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-    d3.select(`#${treemap_div}`)
+    var g = svg.append("g")
+        .attr("class", "tmap")
+        .attr("transform", "translate(0,0)");
+
+    g.selectAll("rect")
+    .data(root.leaves())
+    .enter().append("rect")
+    .attr("height", function(d) { return d.y1 - d.y0; })
+    .attr("width", function(d) { return d.x1 - d.x0 ; })
+    .attr("x", function(d) { return d.x0; })
+    .attr("y", function(d) { return d.y0; })
+    .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
+      return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+
+    g.selectAll("text")
+    .data(root.leaves())
+    .enter().append("text")  
+    .attr("height", function(d) { return d.y1 - d.y0; })
+    .attr("width", function(d) { return d.x1 - d.x0 ; })
+    .attr("x", function(d) { return d.x0 + 10; })
+    .attr("y", function(d) { return d.y0 + 10; })
+    .html(`xxx`)
+
+    
+
+    /*d3.select(`#${treemap_div}`)
       .selectAll(".node")
       .data(root.leaves())
       .enter().append("div")
@@ -1954,7 +1984,7 @@ function euclideanDistance(x1, y1, x2, y2)
       d.value = +d.value;
       return d;
     }
-    
+    */
 
     showLegend(this)
     
