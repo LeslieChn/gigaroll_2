@@ -2017,9 +2017,11 @@ function euclideanDistance(x1, y1, x2, y2)
       .attr("y", function(d) { return new_yScale(d.y0);})
       .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
         return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+      .attr("class", "node")
       .on("mouseover", onMouseOver)
       .on("mousemove", onMouseMove)
       .on("mouseout", onMouseOut)
+      .on("click", onClick)
     };
 
     var currentTransform =  d3.zoomIdentity
@@ -2045,9 +2047,9 @@ function euclideanDistance(x1, y1, x2, y2)
     showLegend(this)
 
 
-    function onClick()
+    function onClick(d)
     {
-      let data=$(this).attr('data')
+      let data = d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value);
       let params = selected_vs.createRequestParams()
 
       let idx = data.indexOf("\n")
@@ -2148,17 +2150,6 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("top", (d3.event.y + 20) + "px");
     }
 
-    if (!this.registered_listener)
-    {
-
-      $(document).on("click",".node", onClick)
-      .on('mouseover', '.node', onMouseOver)
-      .on('mousemove', '.node', onMouseMove)
-      .on('mouseout', '.node', onMouseOut)
-      this.registered_listener = true
-      
-    }
-
     function showLegend(instance)
     {
         let ht=$(`#${instance.getId()}`).height();
@@ -2251,6 +2242,157 @@ function euclideanDistance(x1, y1, x2, y2)
         //.attr("id", d => `line_${line_id++}`)   
       
     }
+
+  if(this.resetDiv)
+  {
+    $("#reset-button-div").remove()
+  }
+
+  if (this.detailDiv)
+    $("#detail-button-div").remove()
+
+  if (this.selectDiv)
+  $("#select-button-div").remove()
+
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-1 p-1"  style="height:35px; z-index:1000;">
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
+
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
+
+  $('#reset-button').on('click', resetZoom)
+  $('#details-button').on('click', zoomQuadrant)
+  $('#select-button').on('click', startSelect)
+
+  function updateButtonIcons()
+  {
+    if (interface_mode == 'zoom')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon-bw.svg');
+    }
+    else if (interface_mode == 'select')
+    {
+      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon_disabled.svg');
+    }
+  }
+
+  function startSelect()
+  {
+    let selected = $('#select-button').attr('value');
+    if(selected == "Off")
+    {
+      $('#select-button').attr('value', "On" );
+      interface_mode = 'select'
+      updateButtonIcons()
+      canvas.on('.zoom', null)
+    }
+    else
+    {
+      $('#select-button').attr('value', "Off" )
+      interface_mode = 'zoom'
+      rect_anchor = null
+      rect_select.style('display', 'none')
+      updateButtonIcons()
+      canvas.call(zoomBehaviour)
+    }
+  }
+
+  function resetZoom()
+  {
+    let num = root.children.length
+    if ('children' in root.children[0])
+      {
+        num *= root.children[0].children.length
+      }
+    
+    if (num < 2000)
+    {
+      svg
+      .transition()
+      .duration(500)
+      .call(zoomBehaviour.transform, d3.zoomIdentity);
+    }
+    else
+      svg.call(zoomBehaviour.transform, d3.zoomIdentity);
+
+    new_xScale = xScale;
+    new_yScale = yScale;
+  }
+
+  function zoomQuadrant()
+  {
+    let num = root.children.length
+    if ('children' in root.children[0])
+      {
+        num *= root.children[0].children.length
+      }
+    
+    if (num < 2000)
+    {
+      svg
+      .transition()
+      .duration(500)
+      .call(zoomBehaviour.transform, d3.zoomIdentity);
+    }
+    else
+      svg.call(zoomBehaviour.transform, d3.zoomIdentity);
+
+    new_xScale = xScale;
+    new_yScale = yScale;
+  }
+
+
+  function openDetails()
+  {
+    let self = selected_vs
+    let req = self.state.request
+    sessionStorage.setItem("type", 'data')
+
+    let  xLeft, xRight, yTop, yBottom;
+
+    if (rect_select.style('display') != 'none')
+    {
+      let x = parseFloat(rect_select.attr('x'))
+      let y = parseFloat(rect_select.attr('y'))
+      let width = parseFloat(rect_select.attr('width'))
+      let height = parseFloat(rect_select.attr('height'))
+
+      xLeft = new_xScale.invert(x)
+      xRight = new_xScale.invert (x + width)
+      yTop = new_yScale.invert (y)
+      yBottom = new_yScale.invert (y + height)
+    }
+    else
+    {
+      xLeft = new_xScale.domain()[0],
+      xRight = new_xScale.domain()[1],
+      yTop = new_yScale.domain()[1],
+      yBottom = new_yScale.domain()[0];
+    }
+
+    let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
+    if (indices.length == 0)
+      return;
+
+    let server_data = {}
+    server_data.headers = selected_vs.server_js.headers
+    server_data.data = []
+    
+    for (let i of indices)
+    {
+      server_data.data.push(selected_vs.server_js.data[i])
+    }
+
+    sessionStorage.setItem("server_data", JSON.stringify(server_data) )
+
+    window.open('./details.html', '_blank');
+  }
+
   }
 
   getCountyData()
