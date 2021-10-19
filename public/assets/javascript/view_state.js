@@ -2022,6 +2022,28 @@ function euclideanDistance(x1, y1, x2, y2)
       .on("mousemove", onMouseMove)
       .on("mouseout", onMouseOut)
       .on("click", onClick)
+
+      g.selectAll("foreignObject")
+      .data(root.leaves())
+      .enter().append("foreignObject")
+			.attr("class","foreignobj")
+      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
+      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
+      .attr("x", function(d) { return new_xScale(d.x0);})
+      .attr("y", function(d) { return new_yScale(d.y0);})
+			.append("xhtml:div") 
+			.attr("dy", ".75em")
+      .attr("class","node-value")
+			.html(function(d) { return '' +
+				' <p class="node-label"> ' + d.id + '</p>' + 
+				d.value
+				})
+      .on("mouseover", onMouseOver)
+      .on("mousemove", onMouseMove)
+      .on("mouseout", onMouseOut)
+      .on("click", onClick)
+			 //tex
+
     };
 
     var currentTransform =  d3.zoomIdentity
@@ -2326,24 +2348,17 @@ function euclideanDistance(x1, y1, x2, y2)
 
   function zoomQuadrant()
   {
-    let num = root.children.length
-    if ('children' in root.children[0])
-      {
-        num *= root.children[0].children.length
-      }
-    
-    if (num < 2000)
-    {
-      svg
-      .transition()
-      .duration(500)
-      .call(zoomBehaviour.transform, d3.zoomIdentity);
-    }
-    else
-      svg.call(zoomBehaviour.transform, d3.zoomIdentity);
+    let xDomain = new_xScale.domain()
+    let yDomain = new_yScale.domain()
 
-    new_xScale = xScale;
-    new_yScale = yScale;
+    let deltaX = (new_xScale(xDomain[0]) - new_xScale(xDomain[1]) )/2
+    let deltaY = (new_yScale(yDomain[1]) - new_yScale(yDomain[0]) )/2
+
+    let k = 2*d3.zoomTransform(svg.node()).k
+  
+    zoomBehaviour.scaleBy(svg, 2)
+    zoomBehaviour.translateBy(svg, deltaX/k, deltaY/k)
+    
   }
 
 
