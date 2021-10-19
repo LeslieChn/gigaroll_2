@@ -2008,8 +2008,31 @@ function euclideanDistance(x1, y1, x2, y2)
           .attr("class", "tmap")
           .attr("transform", "translate(0,0)");
 
+      //filter out all offscreen rectangles
+      // let leaves = root.leaves().filter(function(d)
+      // {
+      //   let x1 = new_xScale(d.x0),
+      //       y1 = new_yScale(d.y0),
+      //       x2 = new_xScale(d.x1),
+      //       y2 = new_yScale(d.y1)
+
+      //       return  x2 > 0 && x1 < width && y2 > 0 && y1 < height
+      //   })      
+      
+      let w1 = new_xScale.invert(width)
+      let w0 = new_xScale.invert(0)
+      let h1 = new_yScale.invert(height)
+      let h0 = new_yScale.invert(0)
+
+      let leaves = root.leaves().filter(function(d)
+      {
+            return  d.x1 > w0 && d.x0 < w1 && d.y1 > h0 && d.y0 < h1
+        })
+      
+      console.log(leaves.length)
+      
       g.selectAll("rect")
-      .data(root.leaves())
+      .data(leaves)
       .enter().append("rect")
       .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
       .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
@@ -2023,25 +2046,32 @@ function euclideanDistance(x1, y1, x2, y2)
       .on("mouseout", onMouseOut)
       .on("click", onClick)
 
+      leaves = leaves.filter(function(d)
+      {
+        return (new_xScale(d.x1) - new_xScale(d.x0)) > 50 
+      })
+
+
       g.selectAll("foreignObject")
-      .data(root.leaves())
+      .data(leaves)
       .enter().append("foreignObject")
 			.attr("class","foreignobj")
       .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
       .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
       .attr("x", function(d) { return new_xScale(d.x0);})
       .attr("y", function(d) { return new_yScale(d.y0);})
-			.append("xhtml:div") 
+			.on("mouseover", onMouseOver)
+      .on("mousemove", onMouseMove)
+      .on("mouseout", onMouseOut)
+      .on("click", onClick)
+      .append("xhtml:div") 
 			.attr("dy", ".75em")
       .attr("class","node-value")
 			.html(function(d) { return '' +
 				' <p class="node-label"> ' + d.id + '</p>' + 
 				d.value
 				})
-      .on("mouseover", onMouseOver)
-      .on("mousemove", onMouseMove)
-      .on("mouseout", onMouseOut)
-      .on("click", onClick)
+      
 			 //tex
 
     };
@@ -2326,13 +2356,7 @@ function euclideanDistance(x1, y1, x2, y2)
 
   function resetZoom()
   {
-    let num = root.children.length
-    if ('children' in root.children[0])
-      {
-        num *= root.children[0].children.length
-      }
-    
-    if (num < 2000)
+    if (root.leaves().length < 2000)
     {
       svg
       .transition()
@@ -2359,53 +2383,6 @@ function euclideanDistance(x1, y1, x2, y2)
     zoomBehaviour.scaleBy(svg, 2)
     zoomBehaviour.translateBy(svg, deltaX/k, deltaY/k)
     
-  }
-
-
-  function openDetails()
-  {
-    let self = selected_vs
-    let req = self.state.request
-    sessionStorage.setItem("type", 'data')
-
-    let  xLeft, xRight, yTop, yBottom;
-
-    if (rect_select.style('display') != 'none')
-    {
-      let x = parseFloat(rect_select.attr('x'))
-      let y = parseFloat(rect_select.attr('y'))
-      let width = parseFloat(rect_select.attr('width'))
-      let height = parseFloat(rect_select.attr('height'))
-
-      xLeft = new_xScale.invert(x)
-      xRight = new_xScale.invert (x + width)
-      yTop = new_yScale.invert (y)
-      yBottom = new_yScale.invert (y + height)
-    }
-    else
-    {
-      xLeft = new_xScale.domain()[0],
-      xRight = new_xScale.domain()[1],
-      yTop = new_yScale.domain()[1],
-      yBottom = new_yScale.domain()[0];
-    }
-
-    let indices = search(quadTree, xLeft, yBottom, xRight, yTop)
-    if (indices.length == 0)
-      return;
-
-    let server_data = {}
-    server_data.headers = selected_vs.server_js.headers
-    server_data.data = []
-    
-    for (let i of indices)
-    {
-      server_data.data.push(selected_vs.server_js.data[i])
-    }
-
-    sessionStorage.setItem("server_data", JSON.stringify(server_data) )
-
-    window.open('./details.html', '_blank');
   }
 
   }
