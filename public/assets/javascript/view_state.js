@@ -2065,16 +2065,14 @@ function euclideanDistance(x1, y1, x2, y2)
       .on("mouseout", onMouseOut)
       .on("click", onClick)
       .append("xhtml:div") 
-			.attr("dy", ".75em")
-      .attr("class","node-value")
-			.html(function(d) { return '' +
-				' <p class="node-label"> ' + d.id + '</p>' + 
-				d.value
+			// .attr("dy", ".75em")
+      .attr("class","node-label")
+			.html(function(d) 
+      {    
+        let s = d.id.substring(d.id.indexOf(".") + 1).replace(/\./g, "\n")//.split(/(?=[A-Z][^A-Z])/g).join("\n"); 
+        return `<span>${s}</span><br><span class="node-value">${d.value}</span>`  
 				})
-      
-			 //tex
-
-    };
+      };
 
     var currentTransform =  d3.zoomIdentity
     var zooming = false
