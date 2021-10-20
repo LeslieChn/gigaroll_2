@@ -1809,7 +1809,7 @@ function euclideanDistance(x1, y1, x2, y2)
 
     let n_rows = server_js.length
 
-    let ng = server_js[0][0].length - 1
+    let ng = n_gbys - 1
 
     for (let r = 0; r < n_rows; ++r )
     {
@@ -1878,14 +1878,14 @@ function euclideanDistance(x1, y1, x2, y2)
 
     this.color = d3.scaleOrdinal()
     .range(d3.schemeCategory20
-        .map(function(c) { c = d3.rgb(c); c.opacity = 0.40; return c; }));
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.5; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
     var treemap = d3.treemap()
       .size([width*100, height*100])
-      .padding(16)
+      .padding(10)
       .round(true);
 
     let data = this.getTreeMapData();
@@ -2009,16 +2009,7 @@ function euclideanDistance(x1, y1, x2, y2)
           .attr("transform", "translate(0,0)");
 
       //filter out all offscreen rectangles
-      // let leaves = root.leaves().filter(function(d)
-      // {
-      //   let x1 = new_xScale(d.x0),
-      //       y1 = new_yScale(d.y0),
-      //       x2 = new_xScale(d.x1),
-      //       y2 = new_yScale(d.y1)
-
-      //       return  x2 > 0 && x1 < width && y2 > 0 && y1 < height
-      //   })      
-      
+  
       let w1 = new_xScale.invert(width)
       let w0 = new_xScale.invert(0)
       let h1 = new_yScale.invert(height)
@@ -2028,24 +2019,23 @@ function euclideanDistance(x1, y1, x2, y2)
       {
             return  d.x1 > w0 && d.x0 < w1 && d.y1 > h0 && d.y0 < h1
         })
-      
-      console.log(leaves.length)
+    
       
       g.selectAll("rect")
       .data(leaves)
       .enter().append("rect")
-      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
-      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
-      .attr("x", function(d) { return new_xScale(d.x0);})
-      .attr("y", function(d) { return new_yScale(d.y0);})
+      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) -3);})
+      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) -3);})
+      .attr("x", function(d) { return 3+new_xScale(d.x0);})
+      .attr("y", function(d) { return 3+new_yScale(d.y0);})      
       .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
-        return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+        return  `fill:${c};stroke-width:2;stroke:${rgba}`})
       .attr("class", "node")
       .on("mouseover", onMouseOver)
       .on("mousemove", onMouseMove)
       .on("mouseout", onMouseOut)
       .on("click", onClick)
-
+        
       leaves = leaves.filter(function(d)
       {
         return (new_xScale(d.x1) - new_xScale(d.x0)) > 50 
@@ -2056,8 +2046,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .data(leaves)
       .enter().append("foreignObject")
 			.attr("class","foreignobj")
-      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) - 6);})
-      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) - 6);})
+      .attr("height", function(d) { return Math.min(70, new_yScale(d.y1) - new_yScale(d.y0) );})
+      .attr("width", function(d) { return Math.min(100, new_xScale(d.x1) - new_xScale(d.x0) );})
       .attr("x", function(d) { return new_xScale(d.x0);})
       .attr("y", function(d) { return new_yScale(d.y0);})
 			.on("mouseover", onMouseOver)
@@ -2077,18 +2067,23 @@ function euclideanDistance(x1, y1, x2, y2)
     var currentTransform =  d3.zoomIdentity
     var zooming = false
 
+    var count = 0
     function onZoom() 
     {
       zooming = true
       currentTransform = d3.event.transform;
       new_xScale = currentTransform.rescaleX(xScale)
       new_yScale = currentTransform.rescaleY(yScale)
-      draw();
+     
+      if (++count % 2 )
+        draw();
     }
 
     function onZoomEnd()
     {
       zooming = false
+      if (++count % 2 == 0)
+        draw();
     } 
   
     var legend_g, legend_line;
@@ -2333,27 +2328,15 @@ function euclideanDistance(x1, y1, x2, y2)
 
   function startSelect()
   {
-    let selected = $('#select-button').attr('value');
-    if(selected == "Off")
-    {
-      $('#select-button').attr('value', "On" );
-      interface_mode = 'select'
-      updateButtonIcons()
-      canvas.on('.zoom', null)
-    }
-    else
-    {
-      $('#select-button').attr('value', "Off" )
-      interface_mode = 'zoom'
-      rect_anchor = null
-      rect_select.style('display', 'none')
-      updateButtonIcons()
-      canvas.call(zoomBehaviour)
-    }
+ 
+    
+    d3.select(".tmap")
+    .attr("transform", "translate(100,100)");
   }
 
   function resetZoom()
   {
+    count = 0
     if (root.leaves().length < 2000)
     {
       svg
