@@ -2024,6 +2024,7 @@ function euclideanDistance(x1, y1, x2, y2)
       g.selectAll("rect")
       .data(leaves)
       .enter().append("rect")
+      .attr("id", (d) => `${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
       .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) -3);})
       .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) -3);})
       .attr("x", function(d) { return 3+new_xScale(d.x0);})
@@ -2050,9 +2051,9 @@ function euclideanDistance(x1, y1, x2, y2)
       .attr("width", function(d) { return Math.min(100, new_xScale(d.x1) - new_xScale(d.x0) );})
       .attr("x", function(d) { return new_xScale(d.x0);})
       .attr("y", function(d) { return new_yScale(d.y0);})
-			.on("mouseover", onMouseOver)
+			.on("mouseover", onFOMouseOver)
       .on("mousemove", onMouseMove)
-      .on("mouseout", onMouseOut)
+      .on("mouseout", onFOMouseOut)
       .on("click", onClick)
       .append("xhtml:div") 
 			// .attr("dy", ".75em")
@@ -2075,15 +2076,15 @@ function euclideanDistance(x1, y1, x2, y2)
       new_xScale = currentTransform.rescaleX(xScale)
       new_yScale = currentTransform.rescaleY(yScale)
      
-      if (++count % 2 )
+      // if (++count % 2 )
         draw();
     }
 
     function onZoomEnd()
     {
       zooming = false
-      if (++count % 2 == 0)
-        draw();
+      // if (++count % 2 == 0)
+        // draw();
     } 
   
     var legend_g, legend_line;
@@ -2162,26 +2163,33 @@ function euclideanDistance(x1, y1, x2, y2)
 
     }
 
+    function onFOMouseOver(d)
+    {
+      d3.select(`#${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
+        .style("opacity", 0.75)
+      onMouseOver(d)
+    }
+    
+    function onFOMouseOut(d)
+    {
+      d3.select(`#${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
+        .style("opacity", "")
+      onMouseOut(d)
+    }
+
+
     function onMouseOut(d)
     {
       if (zooming)
         return
 
       let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
-      let title = d.id
+ 
       d3.select(`#${ttdiv_id}`).style("opacity", 0)
       d3.select(`#caption`).html(`<center>${text}</center>`)
-      let rect_id = selected_vs.data_map[title]
 
-      let line = d3.select(`#line_${rect_id}`)
-      line.attr('stroke-width', '0')
-    
-      // let a = selected_vs.data[rect_id].id.split('.');
-      // let c = selected_vs.color(`${a[0]}.${a[1]}`)
+      legend_line.attr('stroke-width', '0')
 
-      // console.log(`${a[0]}.${a[1]}`)
-
-      // rect.attr('fill', c)
     }
 
     function onMouseMove(d)
@@ -2329,9 +2337,9 @@ function euclideanDistance(x1, y1, x2, y2)
   function startSelect()
   {
  
-    
-    d3.select(".tmap")
-    .attr("transform", "translate(100,100)");
+      d3.select(".tmap")
+      .attr("transform", `translate(0,0) scale(2 2)`);
+
   }
 
   function resetZoom()

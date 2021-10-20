@@ -53,9 +53,9 @@ body
 
 .node:hover
 {
-	border: ridge  4px;
-	opacity: 0.3;
+	opacity: 0.75; 
 }
+
 .node-label {
   font: 13px sans-serif;
   padding: 4px;
