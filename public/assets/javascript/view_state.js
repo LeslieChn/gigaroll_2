@@ -434,10 +434,10 @@ class View_State
     $(cfg.parent_div).empty()
     $(cfg.parent_div).html(`<div id="${this.getId()}-box" class="col-lg-${cfg.width} mx-auto">
       <div class="row">
-          <div class="col-sm-1 col-2 align-self-center">
+          <div class="col-1 align-self-center" style="max-width:75px;">
             <div id="side-controls" class="d-flex flex-column align-items-center"></div>
           </div>
-          <div class="col-sm-11 col-10">
+          <div class="col-11 ps-1">
             <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
                 <div class="card-body p-1">
                   <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
@@ -447,7 +447,7 @@ class View_State
           </div>
         </div>
       <div id="bottom-controls" class="row mt-3"> 
-        <div class="col-sm-1"></div>
+        <div class="col col-sm-1 d-none d-sm-block" style="max-width:75px;"></div>
         <div class="col d-flex justify-content-start controls" id="bl-controls"></div>
         <div class="col d-flex justify-content-center controls" id="bm-controls"></div>
         <div class="col d-flex justify-content-end controls" id="br-controls"></div>
@@ -1351,13 +1351,13 @@ class View_State
   if (this.selectDiv)
   $("#select-button-div").remove()
 
-  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-1 p-1"  style="height:35px; z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
@@ -1816,6 +1816,9 @@ function euclideanDistance(x1, y1, x2, y2)
       let row = server_js[r]
       let gby = row[0]
       let val = row[1][0]
+      if (val <= 0) 
+        continue
+
       let str = root
       for (let i = 0; i< n_gbys; ++i)
       {
@@ -2155,7 +2158,10 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("top", (d3.event.y + 20) + "px");
 
       d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
-      
+
+      console.log(rect_id)
+      console.log(linePos(rect_id))
+
       legend_line
         .attr('stroke-width', '2')
         .attr('y1', linePos(rect_id))
@@ -2208,14 +2214,14 @@ function euclideanDistance(x1, y1, x2, y2)
         let ht=$(`#${instance.getId()}`).height();
         let parent_width = $(`#${instance.getId()}`).width();
         let legend_width = Math.round(parent_width*0.15);
-        let legend_height = Math.round((ht-50)*0.90);
+        let legend_height = Math.round((ht-40));
         let n_divs = data.length;
         let margin = legend_width / 12
         let rect_width = legend_width - 2 * margin
         let rect_idx = 0;
         let rect_id = 0;
         let top_margin = legend_height * 0.05
-        let rect_height = Math.min(legend_height / (n_divs + 1), 20)
+        let rect_height = Math.min((legend_height - top_margin * 2) / (n_divs), 20)
   
         let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
 
@@ -2252,7 +2258,7 @@ function euclideanDistance(x1, y1, x2, y2)
             legend_g.selectAll("rect")
             .data(data.map((d) => rect_idx++ ) )
             .enter().append("rect")
-            .attr("height", rect_height)
+            .attr("height", Math.max(rect_height, 1))
             .attr("width", function (d)
             { 
               let width = xScale(Math.cbrt(data[d].value))
@@ -2307,13 +2313,13 @@ function euclideanDistance(x1, y1, x2, y2)
   if (this.selectDiv)
   $("#select-button-div").remove()
 
-  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-1 p-1"  style="height:35px; z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-1 p-1"  style="height:35px;z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)

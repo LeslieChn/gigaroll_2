@@ -72,6 +72,10 @@ body
   margin-top: 1px;
 }
 
+.foreignobj {
+  cursor: pointer;
+}
+
 tspan:last-child {
   font-size: 9px;
   fill-opacity: 0.8;
