@@ -1340,24 +1340,15 @@ class View_State
     window.open('./details.html', '_blank');
   }
 
-  if(this.resetDiv)
-  {
-    $("#reset-button-div").remove()
-  }
+  $('.control-button').remove()
 
-  if (this.detailDiv)
-    $("#detail-button-div").remove()
-
-  if (this.selectDiv)
-    $("#select-button-div").remove()
-
-  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
   <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
@@ -2304,34 +2295,21 @@ function euclideanDistance(x1, y1, x2, y2)
       
     }
 
-  if(this.resetDiv)
-  {
-    $("#reset-button-div").remove()
-  }
+  $('.control-button').remove()
 
-  if (this.detailDiv)
-    $("#detail-button-div").remove()
-
-  if (this.selectDiv)
-    $("#select-button-div").remove()
-
-  if (this.backDiv)
-    $("#back-button-div").remove()
-
-  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
   // this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   // <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
   
-  this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
   <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon_disabled.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
-  $('#details-button').on('click', zoomQuadrant)
   $('#select-button').on('click', startSelect)
   $('#back-button').on('click', onBack)
 
@@ -2358,20 +2336,6 @@ function euclideanDistance(x1, y1, x2, y2)
     }
   }
 
-  function updateButtonIcons()
-  {
-    if (interface_mode == 'zoom')
-    {
-      $('#select-button').attr('src','../assets/images/select_icon.svg');
-      $('#reset-button').attr('src','../assets/images/reset_icon-bw.svg');
-    }
-    else if (interface_mode == 'select')
-    {
-      $('#select-button').attr('src','../assets/images/select_icon_colored.svg');
-      $('#reset-button').attr('src','../assets/images/reset_icon_disabled.svg');
-    }
-  }
-
   const num_overlay_divs = 3
   var showing_overlay = false
   var transform_stack = []
@@ -2379,11 +2343,14 @@ function euclideanDistance(x1, y1, x2, y2)
   function enableZoom()
   {
     svg.call(zoomBehaviour)
+    $('#select-button').attr('src','../assets/images/grid_icon.svg');
   }
 
   function disableZoom()
   {
     svg.on('.zoom', null)
+    $('#select-button').attr('src','../assets/images/grid_icon_active.svg');
+
   }
 
   
@@ -2403,6 +2370,7 @@ function euclideanDistance(x1, y1, x2, y2)
 
     let rects = []
     let dw = width / num_overlay_divs, dh = height / num_overlay_divs
+    
 
     for (let i = 0; i < num_overlay_divs; ++i)
       for (let j = 0; j < num_overlay_divs; ++j)
@@ -2414,6 +2382,8 @@ function euclideanDistance(x1, y1, x2, y2)
       .append("feGaussianBlur")
       .attr("stdDeviation", 3);
     
+    const border_width = 4;
+    
     g.selectAll('.overlay-rect')
     .data(rects)
     .enter().append('rect')
@@ -2423,8 +2393,8 @@ function euclideanDistance(x1, y1, x2, y2)
     .attr('width', dw)
     .attr('height', dh)
     .attr('fill', '#80808040')
-    .attr('stroke', 'black')
-    .attr('stroke-width', 4)
+    .attr('stroke', '#424242')
+    .attr('stroke-width', border_width)
     .on('click', onClickOverlayRect)
 
   }
@@ -2476,22 +2446,6 @@ function euclideanDistance(x1, y1, x2, y2)
     new_xScale = xScale;
     new_yScale = yScale;
   }
-
-  function zoomQuadrant()
-  {
-    let xDomain = new_xScale.domain()
-    let yDomain = new_yScale.domain()
-
-    let deltaX = (new_xScale(xDomain[0]) - new_xScale(xDomain[1]) )/2
-    let deltaY = (new_yScale(yDomain[1]) - new_yScale(yDomain[0]) )/2
-
-    let k = 2*d3.zoomTransform(svg.node()).k
-  
-    zoomBehaviour.scaleBy(svg, 2)
-    zoomBehaviour.translateBy(svg, deltaX/k, deltaY/k)
-    
-  }
-
   }
 
   getCountyData()
