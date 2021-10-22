@@ -1096,7 +1096,12 @@ function clearMap(){
 function setMarkers() 
 {
   if (markers)
+  {
     osMap.removeLayer(markers)
+    if (lcontrol)
+      lcontrol.removeLayer(markers)
+  }
+
   markers = L.featureGroup()
   for (let coord of coords) 
   {
@@ -1123,11 +1128,11 @@ function setMarkers()
   markers.addTo(osMap);
   if (lcontrol)
   {
-	lcontrol.addOverlay(markers,"Markers");
-	if (heatmap)
-		lcontrol.removeLayer(heatmap);
-	if (cluMarkers)
-		lcontrol.removeLayer(cluMarkers);
+    lcontrol.addOverlay(markers,"Markers");
+    if (heatmap)
+      lcontrol.removeLayer(heatmap);
+    if (cluMarkers)
+      lcontrol.removeLayer(cluMarkers);
   }
   markers.bringToFront();
 }
