@@ -2328,18 +2328,31 @@ function euclideanDistance(x1, y1, x2, y2)
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
   
   this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
-  <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon.svg"/></div>`)
+  <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon_disabled.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', zoomQuadrant)
   $('#select-button').on('click', startSelect)
   $('#back-button').on('click', onBack)
 
+  function pushTransform()
+  {
+    transform_stack.push(currentTransform)
+    if (transform_stack.length == 1)
+    {
+      $('#back-button').attr('src','../assets/images/back_icon.svg');
+    }
+  }
+
   function onBack()
   {
     if (transform_stack.length > 0)
     {
       let t = transform_stack.pop()
+      if (transform_stack.length == 0)
+      {
+        $('#back-button').attr('src','../assets/images/back_icon_disabled.svg');
+      }
       svg.call(zoomBehaviour.transform, t);
       startSelect()
     }
@@ -2363,6 +2376,17 @@ function euclideanDistance(x1, y1, x2, y2)
   var showing_overlay = false
   var transform_stack = []
 
+  function enableZoom()
+  {
+    svg.call(zoomBehaviour)
+  }
+
+  function disableZoom()
+  {
+    svg.on('.zoom', null)
+  }
+
+  
   function startSelect()
   {    
     g.selectAll('.overlay-rect')
@@ -2371,9 +2395,10 @@ function euclideanDistance(x1, y1, x2, y2)
     if (showing_overlay)
     {
       showing_overlay = false
+      enableZoom()
       return
     }
-
+    disableZoom()
     showing_overlay = true
 
     let rects = []
@@ -2410,19 +2435,19 @@ function euclideanDistance(x1, y1, x2, y2)
     let i = parseInt (rect.attr('x'))
     let j = parseInt (rect.attr('y'))
    
-    let x1 = new_xScale.invert(i) 
-    let y1 = new_yScale.invert(j)
+    let x = new_xScale.invert(i) 
+    let y = new_yScale.invert(j)
 
-    transform_stack.push(currentTransform)
+    pushTransform()
 
     zoomBehaviour.scaleBy(svg, num_overlay_divs)
 
-    let ti1 = new_xScale(x1) 
-    let tj1 = new_yScale(y1) 
+    let ti = new_xScale(x) 
+    let tj = new_yScale(y) 
 
     let k = d3.zoomTransform(svg.node()).k
    
-    zoomBehaviour.translateBy(svg, -ti1/k, -tj1/k)
+    zoomBehaviour.translateBy(svg, -ti/k, -tj/k)
 
     startSelect()
   }
@@ -2430,6 +2455,14 @@ function euclideanDistance(x1, y1, x2, y2)
   function resetZoom()
   {
     count = 0
+    if (showing_overlay)
+    {
+      showing_overlay = false;
+      enableZoom()
+      $(document).ready( resetZoom );
+      return
+    }
+
     if (root.leaves().length < 2000)
     {
       svg
