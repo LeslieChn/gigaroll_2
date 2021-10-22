@@ -1872,7 +1872,7 @@ function euclideanDistance(x1, y1, x2, y2)
 
     this.color = d3.scaleOrdinal()
     .range(d3.schemeCategory20
-        .map(function(c) { c = d3.rgb(c); c.opacity = 0.5; return c; }));
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.15; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
@@ -2028,7 +2028,7 @@ function euclideanDistance(x1, y1, x2, y2)
       .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) -3);})
       .attr("x", function(d) { return 3+new_xScale(d.x0);})
       .attr("y", function(d) { return 3+new_yScale(d.y0);})      
-      .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
+      .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},0.8)`; 
         return  `fill:${c};stroke-width:2;stroke:${rgba}`})
       .attr("class", "node")
       .on("mouseover", onMouseOver)
@@ -2268,9 +2268,13 @@ function euclideanDistance(x1, y1, x2, y2)
             .attr("y", d => { return rectPos(d)})
             .attr("rx", "1")
             .attr("ry", "1")
-            .attr("fill", function (d) { 
+            .attr("fill", function (d) 
+            { 
               let a = data[d].id.split('.');
-              return instance.color(`${a[0]}.${a[1]}`) })
+              let c = d3.rgb(instance.color(`${a[0]}.${a[1]}`))
+              c.opacity = 0.5
+              return c
+            })
             .attr("id", d => `rect_${rect_id++}`)
         
         let line_idx = 0, 
