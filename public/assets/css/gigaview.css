@@ -89,6 +89,12 @@ tspan:last-child {
   stroke: #000;
 }
 
+.overlay-rect:hover
+{
+  fill:red  !important;
+  opacity: 0.2;
+}
+
 ul {
   list-style: none;
   padding: 0;

@@ -1349,7 +1349,7 @@ class View_State
     $("#detail-button-div").remove()
 
   if (this.selectDiv)
-  $("#select-button-div").remove()
+    $("#select-button-div").remove()
 
   this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
@@ -1927,13 +1927,18 @@ function euclideanDistance(x1, y1, x2, y2)
 
     var new_xScale = xScale, new_yScale = yScale;
 
-    var svg
-    svg =  d3.select(`#${treemap_div}`)
+    var svg =  d3.select(`#${treemap_div}`)
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
+    let g=  svg.append("g")
+      .attr("class", "zoom-overlay")
+      .attr("transform", "translate(0,0)")
+
     draw()
+
+
     // var g = svg.append("g")
     //     .attr("class", "tmap")
     //     .attr("transform", "translate(0,0)");
@@ -2005,11 +2010,11 @@ function euclideanDistance(x1, y1, x2, y2)
     */
     function draw()
     {
-      svg.html("")
-
-      var g = svg.append("g")
-          .attr("class", "tmap")
-          .attr("transform", "translate(0,0)");
+      g.html("")
+      showing_overlay = false
+      // var g = svg.append("g")
+      //     .attr("class", "tmap")
+      //     .attr("transform", "translate(0,0)");
 
       //filter out all offscreen rectangles
   
@@ -2158,9 +2163,6 @@ function euclideanDistance(x1, y1, x2, y2)
       .style("top", (d3.event.y + 20) + "px");
 
       d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
-
-      console.log(rect_id)
-      console.log(linePos(rect_id))
 
       legend_line
         .attr('stroke-width', '2')
@@ -2311,20 +2313,37 @@ function euclideanDistance(x1, y1, x2, y2)
     $("#detail-button-div").remove()
 
   if (this.selectDiv)
-  $("#select-button-div").remove()
+    $("#select-button-div").remove()
+
+  if (this.backDiv)
+    $("#back-button-div").remove()
 
   this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button m-0 p-1"  style="height:35px; z-index:1000;">
   <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+  // this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  // <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
   this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
-  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
+  
+  this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', zoomQuadrant)
   $('#select-button').on('click', startSelect)
+  $('#back-button').on('click', onBack)
+
+  function onBack()
+  {
+    if (transform_stack.length > 0)
+    {
+      let t = transform_stack.pop()
+      svg.call(zoomBehaviour.transform, t);
+      startSelect()
+    }
+  }
 
   function updateButtonIcons()
   {
@@ -2340,12 +2359,72 @@ function euclideanDistance(x1, y1, x2, y2)
     }
   }
 
-  function startSelect()
-  {
- 
-      d3.select(".tmap")
-      .attr("transform", `translate(0,0) scale(2 2)`);
+  const num_overlay_divs = 3
+  var showing_overlay = false
+  var transform_stack = []
 
+  function startSelect()
+  {    
+    g.selectAll('.overlay-rect')
+      .remove()
+
+    if (showing_overlay)
+    {
+      showing_overlay = false
+      return
+    }
+
+    showing_overlay = true
+
+    let rects = []
+    let dw = width / num_overlay_divs, dh = height / num_overlay_divs
+
+    for (let i = 0; i < num_overlay_divs; ++i)
+      for (let j = 0; j < num_overlay_divs; ++j)
+        rects.push([i*dw,j*dh])
+
+      svg.append("defs")
+      .append("filter")
+      .attr("id", "blur")
+      .append("feGaussianBlur")
+      .attr("stdDeviation", 3);
+    
+    g.selectAll('.overlay-rect')
+    .data(rects)
+    .enter().append('rect')
+    .attr('class', 'overlay-rect')
+    .attr('x', d => d[0])
+    .attr('y', d => d[1])
+    .attr('width', dw)
+    .attr('height', dh)
+    .attr('fill', '#80808040')
+    .attr('stroke', 'black')
+    .attr('stroke-width', 4)
+    .on('click', onClickOverlayRect)
+
+  }
+
+  function onClickOverlayRect()
+  {
+    let rect = d3.select(this)
+    let i = parseInt (rect.attr('x'))
+    let j = parseInt (rect.attr('y'))
+   
+    let x1 = new_xScale.invert(i) 
+    let y1 = new_yScale.invert(j)
+
+    transform_stack.push(currentTransform)
+
+    zoomBehaviour.scaleBy(svg, num_overlay_divs)
+
+    let ti1 = new_xScale(x1) 
+    let tj1 = new_yScale(y1) 
+
+    let k = d3.zoomTransform(svg.node()).k
+   
+    zoomBehaviour.translateBy(svg, -ti1/k, -tj1/k)
+
+    startSelect()
   }
 
   function resetZoom()
