@@ -446,11 +446,11 @@ class View_State
               </div>
           </div>
         </div>
-      <div id="bottom-controls" class="row mt-3"> 
-        <div class="col col-sm-1 d-none d-sm-block" style="max-width:75px;"></div>
-        <div class="col d-flex justify-content-start controls" id="bl-controls"></div>
-        <div class="col d-flex justify-content-center controls" id="bm-controls"></div>
-        <div class="col d-flex justify-content-end controls" id="br-controls"></div>
+      <div id="bottom-controls" class="row my-2"> 
+        <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
+        <div class="col d-flex justify-content-start align-items-center controls" id="bl-controls"></div>
+        <div class="col d-flex justify-content-center align-items-center controls" id="bm-controls"></div>
+        <div class="col d-flex justify-content-end align-items-center controls" id="br-controls"></div>
       </div>
      </div>`);
      this.createControls()
