@@ -213,7 +213,7 @@ let geodropdowns = {
   },
   dim_filter_option:{
     name:'City',
-    contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'flood_zone:AE,VE,AO'],
+    contents: ['state_code:CT', 'state_code:NJ', 'state_code:NY', '', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT', 'flood_zone:AE,VE,AO', ''],
     position:'bottom-right',
     // knob_position:'right'
   }
