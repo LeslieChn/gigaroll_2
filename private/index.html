@@ -50,20 +50,29 @@
   <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/d3map.css"/>
 </head>
 </body>
-    <div id='main-container' class="container-fluid">
+    <div id='main-container' class="container-fluid px-1 px-lg-4">
       <div id="main-header" class="row g-0">
           <!-- <div id='logo-div'>
             <a id="logotext" class="mx-auto" href="/"></a>
                 <span id="logo-text" class="align-middle">GigaRoll</span>
             </a>
           </div> -->
-            <div class="col col-sm-1 d-none d-sm-block"></div>
-            <div id='tl-controls' class='col mt-4 justify-content-start controls'>
+            <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
+            <div id='tl-controls' class='col d-flex align-items-center justify-content-start'>
             </div>
-            <div class="col d-flex align-items-center justify-content-center"><h2 id="logo">GigaRoll</h2></div>
+            <div class="col d-flex align-items-center justify-content-center"><h3 id="logo">GigaRoll</h3></div>
             <div id='vs-column' class="col d-flex align-items-center justify-content-end">
                 <!-- <h6 class="mb-1 text-white">Views</h6> -->
-                <select id='view-select' class="form-select form-select-sm text-center my-4 pt-0" data-tile-id="" aria-label="view select"></select>
+                <select id='view-select' class="form-select form-select-sm text-center pt-0 mx-1" data-tile-id="" aria-label="view select"></select>
+                <div class="dropdown float-end ps-3 pt-1">
+                  <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.5rem;">
+                    <i class="fa fa-ellipsis-v fa-3x" aria-hidden="true" style="color:white;line-height:2;"></i>
+                  </a>
+                    <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable">
+                      <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>
+                      <li><a class="dropdown-item border-radius-md" href="./explore.html">Explore</a></li>
+                    </ul>
+                </div>
             </div>
               <!-- <div id='vs-knob-column' class='col-2 d-flex justify-content-center mt-1 px-0 me-sm-0 me-n4'>
               </div> -->
