@@ -277,16 +277,16 @@ selected_vs=view_states[0]
 createVsKnob(labels)
 
 selected_vs.state.tile_config.height = `${getContentHeight()}px`
-
 console.log('content height is :'+selected_vs.state.tile_config.height)
-selected_vs.createTile()
+selected_vs.createTile()  
 
 resizeContent()
 
 function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
-  let row_height = $('#vs-column').height()
+  let row_height = 52 //$('#main-header').outerHeight()
+  console.log(client_height - 2 * row_height) 
   return client_height - 2 * row_height 
 }
 
