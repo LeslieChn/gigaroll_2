@@ -7,7 +7,7 @@ var records = [
   { id: 5, "username":"apascarella","password":"816c725694a63793932d24e58b0b7784","displayName":"Aldo"},
   { id: 6, "username":"rlau","password":"773803507eff16125ab83b0a2ff01023","displayName":"Rhea"},
   { id: 7, "username":"jweiner","password":"4f170a276dee2378096ff93e6a6c8f6c","displayName":"Jonathan"},
-  { id: 8, "username":"lreiss","password":"98a0b3016b635871c08599dc33698669","displayName":"Lisa"},
+  { id: 8, "username":"lreiss","password":"98a0b3016b635871c08599dc33698669","displayName":"Liza"},
 ];
 
 exports.findById = function(id, cb) {
