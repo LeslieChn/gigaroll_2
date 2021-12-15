@@ -234,6 +234,18 @@ body { height: 100%;margin: 0;padding: 0;}
   width: 11px;
 }
 
+#logo {
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #000000;
+  font-weight: 400;
+  font-family: Arial;
+  color: black;
+}
+
+a {
+  text-decoration:none;
+}
+
 
 
 /* MS supports */

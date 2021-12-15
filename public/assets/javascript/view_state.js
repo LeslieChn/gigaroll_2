@@ -169,6 +169,30 @@ function getKnob(id)
   else
     return knob_objects[`${id}`]
 }
+
+function getTextWidth(text, font) 
+{
+  // re-use canvas object for better performance
+  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+  context.font = font;
+  const metrics = context.measureText(text);
+  return metrics.width;
+}
+
+function getCssStyle(element, prop) 
+{
+  return window.getComputedStyle(element, null).getPropertyValue(prop);
+}
+
+function getElementFont(el = document.body) 
+{
+const fontWeight = getCssStyle(el, 'font-weight') || 'normal';
+const fontSize = getCssStyle(el, 'font-size') || '16px';
+const fontFamily = getCssStyle(el, 'font-family') || 'Arial';
+
+return `${fontWeight} ${fontSize} ${fontFamily}`;
+}
 /*******************************************************************************/
 class View_State 
 {
@@ -342,10 +366,29 @@ class View_State
   createDropdownList(contents)
   {
     let list=''
+    let separator = ''
+    if (contents.includes('<separator>'))
+    {
+      let font = getElementFont(document.getElementById('view-select'))
+      let width = Math.round(getTextWidth('─', font) + 0.9) + 1
+      console.log(width)
+      let parent_width = document.getElementById('view-select').clientWidth
+      console.log(parent_width)
+      let num = parent_width / width; 
+      for (let i = 0; i < num; i++)
+      {
+        separator += '─'
+      }
+    }
     for (let i = 0; i<contents.length; ++i)
     {
       let item = contents[i]
-      list += `<option ${i==0?'selected':''} value="${item}">${this.alias(item)}</option>`
+      if (item=='<separator>')
+      {
+        list += `<option disabled>${separator}</option>`
+      }
+      else
+        list += `<option ${i==0?'selected':''} value="${item}">${this.alias(item)}</option>`
     }
     return list
   }
