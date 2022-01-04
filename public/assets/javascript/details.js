@@ -13,32 +13,59 @@ var osMap = null
 var tileLayer
 var layerGroup = null
 var mapZoom
-var markerColor = "red"
+var markerColor = "#9b001f"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
+var iLat = null, iLng = null
 
 let aliases = {
   'beds:count'     : 'Number of Properties',
-  'price:avg'      : 'Average Price',
-  'size:avg'       : 'Average Size',
+  'price:avg'      : 'Price, Average',
+  'size:avg'       : 'Size, Average',
   'prop_type'      : 'Property Type',
   'county'         : 'County',
   'state_code'     : 'State',
   'city'           : 'City',
   'postal_code'    : 'Zip Code',
-  'elevation:avg'  : 'Average Elevation',
+  'elevation:avg'  : 'Elevation, Average', 
   'year_built:min' : 'Earliest Construction (Year)',
-  'pop 2019'       : 'Population 2019'
+  'pop_2019'       : 'Population 2019',
+  'prop_status'    : 'Status',
+  'elevation'      : 'Elevation',
+  'flood_zone'     : 'Flood Zone',
+  'beds'           : 'Beds',
+  'baths'          : 'Baths',
+  'size'           : 'Size',
+  'price'          : 'Price',
+  'year_built'     : 'Year Built',
+  'latitude'       : 'Latitude',
+  'longitude'      : 'Longitude',
+  'address'        : 'Address',
+  'assessment_building:avg' : 'Assessed Building Value, Average',
+  'assessment_land:avg' : 'Assessed Land Value, Average',
+  'assessment_total:avg' : 'Assessed Total Value, Average',
+  'building_size:avg'  : 'Building Size, Average',
+  'price_per_sqft:avg' : 'Price Per Square Feet, Average',
 }
 
-var overlay_colors = [{id: 0, text: 'Yellow-Orange-Red', d3: d3.interpolateYlOrRd, null_color: "black"},
-                    {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
-                    {id: 2, text: 'Yellow-Green', d3: d3.interpolateYlGn, null_color: "black"},
-                    {id: 3, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"}]
+var overlay_colors = [
+  {id: 0, text: 'Greys', d3: d3.interpolateGreys, null_color: "wheat"},
+  {id: 1, text: 'Blues', d3: d3.interpolateBlues, null_color: "black"},
+  {id: 2, text: 'Greens', d3: d3.interpolateGreens, null_color: "black"},
+  {id: 3, text: 'Orange', d3: d3.interpolateOranges, null_color: "black"},
+  {id: 4, text: 'Yellow-Brown', d3: d3.interpolateYlOrBr, null_color: "black"},
+        ]
 
-let overlay_measures = ['beds:count', 'price:avg', 'size:avg', 'elevation:avg', 'year_built:avg']
-
+let county_measures =  [
+  "Housing_Units_2019",
+  "Median_Income_2019",
+  "Occupied_2019",
+  "pop_2019",
+  "Vacant_2019"
+];
+let agg_measures = ['beds:count', 'price:avg', 'price_per_sqft:avg', 'building_size:avg', 'assessment_building:avg', 'assessment_land:avg', 'assessment_total:avg', 'elevation:avg']
+let overlay_measures = agg_measures.concat(county_measures)
 let overlays = overlay_measures.map(function(measure, i){return{id:i, text:alias(measure), measure:measure}})
 
 var baseMaps
@@ -55,6 +82,7 @@ function alias(name)
   {
     aliased_name = aliases[name]
   }
+  aliased_name = aliased_name.replaceAll('_', ' ')
   return aliased_name.replace(/(<|>)/g, matched => html_sub[matched]);
 }
 
@@ -92,12 +120,37 @@ async function getCountyData()
     qid: 'MD_AGG',
     dim: 'property',
     gby : 'county',
-    val: overlay_measures.join(',')
+    val: agg_measures.join(',')
   }
-
+  let county_measure_indices = null;
   if (county_data == null)
   {
     county_data = await serverRequest(params)
+    let js = await serverRequest( {qid: "MD_RETR", dim: "county", include_member_name: 'true'})
+    let county_headers = js.headers;
+    if (!county_measure_indices)
+    {
+      county_measure_indices = county_measures.map(e => county_headers.indexOf(e))
+    }
+    let mem_name_idx = county_headers.indexOf("Member_Name")
+    let county_dict = {}, row_num = 0;
+    for (let row of js.data)
+    {
+      county_dict[row[mem_name_idx]] = row_num++
+    }
+
+    for (let row of county_data.data)
+    {
+      let county = row[0][0]
+      let measures = js.data[county_dict[county]]
+
+      for (let i of county_measure_indices)
+      {
+        row[1].push(measures[i])
+      }
+     
+    }
+
   }
 }
 
@@ -116,6 +169,8 @@ async function buildCountyDataLookup(value_idx)
     for (let row of county_data.data)
     {
         let c = row[0][0]
+        if (c == "Westchester-CT")
+          continue
         let state = c.substring(c.length - 2)
         let county = c.substring(0, c.length - 3)
         let code = state_code_from_name[state]
@@ -241,12 +296,12 @@ $(function () {
                 var bb = this.get("marker_color:" + item.selected);
                 return bb.text;
               },
-              selected: "red",
+              selected: "#9b001f",
               items: [
                 { id: "black", text: "Black"},
                 { id: "green", text: "Green"},
                 { id: "blue", text: "Blue"},
-                { id: "red", text: "Red"},
+                { id: "#9b001f", text: "Red"},
                 { id: "orange", text: "Orange"},
               ],
               onRefresh: function(event){
@@ -534,9 +589,15 @@ function updateGrid(server_js)
   {
     let col = headers[i]
     let type = typing[typeof(data[0][i])]
-    columns.push({field:col, text:col, sortable:true})
+    columns.push({field:col, text:alias(col), size: "120px", sortable:true})
     searches.push({field:col, text:col, label:col, type: type})
   }
+
+  columns[headers.indexOf('address')].size = "200px"
+  columns[headers.indexOf('beds')].size = "50px"
+  columns[headers.indexOf('baths')].size = "50px"
+  columns[headers.indexOf('state_code')].size = "50px"
+  columns[headers.indexOf('postal_code')].size = "50px"
 
   // w2ui.grid.searches=searches
   let count=1
@@ -551,14 +612,13 @@ function updateGrid(server_js)
   }
   */
   console.timeEnd("Prepare Data")
-  //console.log(columns)
-  //console.log(searches)
-  //console.log(records)
+
 
   console.time("Init Grid")
   //$('#grid').w2grid
   $().w2grid({
     name : 'grid',  
+
     show: {
       toolbar: true,
       footer: true,
@@ -570,9 +630,20 @@ function updateGrid(server_js)
           { type: 'break' },
           { type: 'html', id: 'launch-map',  
           html: 
-          '<button style="border:1px;padding:2px;font-weight:normal" onclick="JavaScript:launchMap()"> <img src="./assets/images/map-icon.png" style="height:24px;width:24px" /> Show on Map</button>',
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; padding:4px;font-weight:normal" onclick="JavaScript:launchMap()"> Show on Map</button>',
           disabled: true,
-          onClick: launchMap}
+          onClick: launchMap},
+          { type: 'spacer' },
+          { type: 'html', id: 'font-increase',  
+          html: 
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; margin: 0px 2px 0px 0px; padding:2px;font-weight:normal" onclick="JavaScript:increaseFontSize()"> <img src="./assets/images/font_size_increase.svg" style="height:20px;width:20px" /></button>',
+          disabled: false,
+          onClick: increaseFontSize},
+          { type: 'html', id: 'font-decrease',  
+          html: 
+          '<button style="background-color:white; border:1px solid #bfbfbf; border-radius: 3px; margin: 0px 2px 0px 0px; padding:2px;font-weight:normal" onclick="JavaScript:decreaseFontSize()"> <img src="./assets/images/font_size_decrease.svg" style="height:20px;width:20px" /></button>',
+          disabled: false,
+          onClick: decreaseFontSize},
       ],
     },
     multiSearch: true,
@@ -598,14 +669,17 @@ function updateGrid(server_js)
 
   })
 
-  for (let row of data){
-    let rec={recid:count++}
-    for (let i=0; i< headers.length; i++){
+  for (let row of data)
+  {
+    let rec={recid:count++, w2ui: {} }
+    for (let i=0; i< headers.length; i++)
+    {
       rec [headers[i]]= row[i]
     }
+    rec.w2ui.style = 'font-weight:600;'
     w2ui.grid.records.push(rec)
   }
-  console.timeEnd("Init Grid")
+
 
   w2ui.grid.refresh();
   $('#grid').w2render('grid');
@@ -617,10 +691,20 @@ var sever_js = null;
 function processResp(resp)
 {
   server_js = resp;
+  
+  iLat = server_js.headers.indexOf('latitude')
+  iLng = server_js.headers.indexOf('longitude')
+
   updateGrid(resp);
+  $(document).ready(function ()
+  {
+    w2ui.grid.selectAll();
+    launchMap(100);
+    maximizeMap();
+  });
 }
 
-function launchMap()
+function launchMap(percentage)
 {
   coords=[]
   rec_ids = []
@@ -657,8 +741,26 @@ function launchMap()
 
   map_center=[center_lat, center_lng]
   
-  showMap()
+  showMap(percentage)
 }
+
+function increaseFontSize()
+ {
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
+  font_size = parseInt(font_size.slice(0, -2)) + 1
+  if(font_size > 18)
+    font_size = 18
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
+ }
+
+ function decreaseFontSize()
+ {
+  let font_size= $('.w2ui-reset table tr td').css('font-size')
+  font_size = parseInt(font_size.slice(0, -2)) - 1
+  if(font_size < 10)
+    font_size = 10
+  $('.w2ui-reset table tr td').css('font-size', `${font_size}px`)
+ }
 
 function showLegend(color, min, max,)
 {
@@ -783,9 +885,11 @@ function showLegend(color, min, max,)
 }
 
 var legend_control = L.featureGroup();
-async function showMap()
+async function showMap(percentage)
 {
- 
+  if (!percentage)
+    percentage = 50
+    
   if (osMap==null) 
   {
     // try
@@ -836,63 +940,8 @@ async function showMap()
        
        createCountiesOverlay()
          
-      /* countiesOverlay = L.d3SvgOverlay(function(sel, proj){
-
-        var features = sel.selectAll('path')
-          .data(topojson.feature(counties, counties.objects.counties).features);
-      
-        features
-          .enter()
-          .append('path')
-          .attr('class', 'county-class')
-          .attr('id', function (d)
-            {
-              let state_code = d.properties.STATE;
-              let county_name = d.properties.NAME;
-              return state_code + '-' + county_name
-            })
-          .attr('stroke','white')
-          // .attr('fill', 'blue')
-          // .attr('fill-opacity', 0.2)
-          .attr("style", function (d)
-            {
-                let state_code = d.properties.STATE;
-                // let s = parseInt(code);
-                let county_name = d.properties.NAME;
-                let county_code = d.properties.COUNTY;
-                let value = county_lookup[state_code][county_name];
-
-                return `fill:${color(value)}; fill-opacity: 0.75`;
-
-            })
-          .attr('d', proj.pathFromGeojson)
-
-        features
-          .attr('stroke-width', 0.6 / proj.scale);
-      });
-      
-      
-      d3.json('topojson_counties.json', function(error, data){
-        counties = data;
-        countiesOverlay.addTo(osMap)
-      });
-
-      // L.DomEvent.on('.county-class', 'click', onClickCounty);
-      $('.county-class').on('click', onClickCounty)
-
-       this.object_instance = osMap
-     }
-    //  catch(e)
-    //  {
-    //    console.log(e)
-    //  }
-     L.control.layers(baseMaps, {"Counties": countiesOverlay}).addTo(osMap);
-     L.easyButton( 'fa-undo', function(){
-      osMap.fitBounds(bounds);
-      }).addTo(osMap);
-      */
+      }
     }
-  }
   
   clearMap()
   var selectedType = w2ui.layout.get('bottom').toolbar.get('map-type').selected
@@ -910,7 +959,7 @@ async function showMap()
   }
 
   
-  w2ui.layout.get('bottom').size = '50%'
+  w2ui.layout.get('bottom').size = percentage + '%'
   w2ui.layout.show('bottom', true)
 
 }
@@ -930,7 +979,7 @@ function createCountiesOverlay()
         let county_name = d.properties.NAME;
         let county_code = d.properties.COUNTY;
         let value = county_lookup[state_code][county_name];
-        return {fillColor:color(value), fillOpacity: 0.65, color:'white', weight:1};
+        return {fillColor:color(value), fillOpacity: 0.75, color:'white', weight:1};
       },
       onEachFeature: function(d, layer)
       {
@@ -947,7 +996,7 @@ function createCountiesOverlay()
     {
       lcontrol.remove();
     }
-    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay, "Markers": markers, "Legend": legend_control})
+    lcontrol = L.control.layers(baseMaps, {"Counties": countiesOverlay, "Legend": legend_control, "Markers": markers})
     lcontrol.addTo(osMap);
     countiesOverlay.bringToBack()
   })
@@ -975,12 +1024,17 @@ function autoZoom()
 
 function setClusterMap()
 {
+  if(cluMarkers)
+	  lcontrol.removeLayer(cluMarkers);
   cluMarkers = L.markerClusterGroup();
   for (let coord of coords) 
   {
     cluMarkers.addLayer(L.marker(coord[0]));
   }
   osMap.addLayer(cluMarkers);
+  if(heatmap)
+	  lcontrol.removeLayer(heatmap);
+  lcontrol.addOverlay(cluMarkers,"Markers")
   disableBn(["heat_gradient","heat_radius","heat_opacity","marker_type","marker_color"])
   autoZoom()
 }
@@ -1029,7 +1083,10 @@ function enableBn(buttons){
 
 function clearMap(){
   if (markers)
+  {
     osMap.removeLayer(markers);
+	lcontrol.removeLayer(markers);
+  }
   if (heatmap)
     osMap.removeLayer(heatmap);
   if (cluMarkers)
@@ -1039,7 +1096,12 @@ function clearMap(){
 function setMarkers() 
 {
   if (markers)
+  {
     osMap.removeLayer(markers)
+    if (lcontrol)
+      lcontrol.removeLayer(markers)
+  }
+
   markers = L.featureGroup()
   for (let coord of coords) 
   {
@@ -1049,7 +1111,7 @@ function setMarkers()
         stroke: true,
         color: 'white',
         weight: 1,
-        radius: 6
+        radius: 5
     }).addTo(markers)
     .on('click', onMapClick);
     
@@ -1057,12 +1119,21 @@ function setMarkers()
     {
       let x = e.originalEvent.x 
       let y = e.originalEvent.y 
-      let node = server_js.data[coord[1]]
+      let node = server_js.data[coord[1]].slice()
+      node[iLat] *= 1e-6
+      node[iLng] *= 1e-6
       propertyPopup(node, x, y)
     }
   }
-
   markers.addTo(osMap);
+  if (lcontrol)
+  {
+    lcontrol.addOverlay(markers,"Markers");
+    if (heatmap)
+      lcontrol.removeLayer(heatmap);
+    if (cluMarkers)
+      lcontrol.removeLayer(cluMarkers);
+  }
   markers.bringToFront();
 }
 
@@ -1078,6 +1149,11 @@ function setRegMap(){
 function setHeatMap()
 {
   let data = []
+  if (heatmap)
+	 lcontrol.removeLayer(heatmap);
+  if(cluMarkers)
+	 lcontrol.removeLayer(cluMarkers);
+
   for (let coord of coords)
     data.push(coord[0]);
   heatmap = L.heatLayer(data,{radius: radiusVal, blur: 0, max: 1, minOpacity: opacity, gradient:{
@@ -1087,6 +1163,7 @@ function setHeatMap()
     '0.75': 'rgb(255,255,0)',
     '1.00': 'rgb(255,0,0)'
   }});
+  lcontrol.addOverlay(heatmap,"Heat Map")
   heatmap.addTo(osMap)
   disableBn(["marker_type",,"marker_color"])
   enableBn(["heat_gradient","heat_radius","heat_opacity"])
@@ -1176,6 +1253,22 @@ async function InitPage()
 
 } //initPage
 
+function propDetailsFormat(node) 
+{
+  let headers = this.server_js.headers
+  let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
+  let indices = fields.map (f => headers.indexOf(f))
+  
+  let html = ''
+  for (let i of indices)
+  {
+      let header = headers[i]
+      let data =  node[i]
+      html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data}</b></td></tr>`
+  }
+  return html
+}
+
 function propInfoFormat(data) 
 {
   let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
@@ -1222,10 +1315,9 @@ async function propertyPopup(node, x, y)
     }
 
     address = `
-    <div class="row">
-      <div class="col-11">
-      </div>
-        <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+    <div class="row justify-content-center" id="popup-header">
+    <div class="row justify-content-end">
+        <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
     </div>
     <div class="row">
       <div class="col-12 align-content-center" style="height:200px;">
@@ -1235,23 +1327,17 @@ async function propertyPopup(node, x, y)
 
     <div class="row">
       <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-        <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+        <p class ="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
       </div>
     </div>
-
-    <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+    </div>
+    <div id="popup-info" class="row px-4 d-flex">
       <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-        <div class="carousel-inner px-3">
+        <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2;">
           <div class="carousel-item active">
             <table class="popup-table">
-              <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
-              <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
-              <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
-              <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
-              <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
-              <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
-              <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
-              <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+              <thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;">Property Details</p></thead>
+              ${this.propDetailsFormat(node)}
             </table>
           </div>
           <div class="carousel-item" id="state_info">
@@ -1275,9 +1361,9 @@ async function propertyPopup(node, x, y)
       </div>
     </div>
     
-    <div class="row px-4  align-items-center justify-content-center">
-      <a style=" margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-      <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+    <div class="row px-4 d-flex align-items-center justify-content-center">
+        <a style="margin: 6px 6px 6px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 6px 0px 6px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
     </div>
     `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -1310,13 +1396,11 @@ async function propertyPopup(node, x, y)
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      // const popup_ps = new PerfectScrollbar(`#popup-info`, {
-      //   wheelSpeed: 2,
-      //   wheelPropagation: false,
-      //   minScrollbarLength: 20
-      // })
-
-      // ps_object['popup-info']=popup_ps
+      new PerfectScrollbar(`.carousel-inner`, {
+        wheelSpeed: 2,
+        wheelPropagation: false,
+        minScrollbarLength: 20
+      })
 
       //let position = $(`#${this.getId()}`).offset()
       let screen_width = window.innerWidth

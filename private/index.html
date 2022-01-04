@@ -23,7 +23,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
   <!-- D3 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js"></script>
+  <script src="https://unpkg.com/d3-regression@1.3.9/dist/d3-regression.min.js"></script>
   <script src="https://d3js.org/d3-color.v1.min.js"></script>
   <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
@@ -50,29 +50,35 @@
   <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/d3map.css"/>
 </head>
 </body>
-    <div id='main-container' class="container-fluid">
+    <div id='main-container' class="container-fluid px-1 px-lg-4">
       <div id="main-header" class="row g-0">
-        <!-- <div id='logo-div'>
-          <a id="logotext" class="mx-auto" href="/"></a>
-              <span id="logo-text" class="align-middle">GigaRoll</span>
-          </a>
-        </div> -->
-          <div id='top-controls-column' class='col-6'>
-            <div id="top-controls" class="row justify-content-around"></div>
-          </div>
-          <div id='vs-column' class="col-6">
-            <div class='row justify-content-around'>
-              <div class='col-sm-4 col-4 px-sm-3 ms-sm-auto pe-1 mt-sm-3 mt-1 text-center'>
-                <h6 class="mb-1 text-white">Views</h6>
-                <select id='view-select' class="form-select form-select-sm pt-0" data-tile-id="" data-knob='view-knob' aria-label="view select"></select>
-              </div>
-              <div id='vs-knob-column' class='col-2 d-flex justify-content-center mt-1 px-0 me-sm-0 me-n4'>
-              </div>
+          <!-- <div id='logo-div'>
+            <a id="logotext" class="mx-auto" href="/"></a>
+                <span id="logo-text" class="align-middle">GigaRoll</span>
+            </a>
+          </div> -->
+            <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
+            <div id='tl-controls' class='col d-flex align-items-center justify-content-start'>
             </div>
-          </div>
+            <div class="col d-flex align-items-center justify-content-center"> <a id="logotext" class="mx-auto" href="/"><h3 id="logo">GigaRoll</h3></a></div>
+            <div id='vs-column' class="col d-flex align-items-center justify-content-end">
+                <!-- <h6 class="mb-1 text-white">Views</h6> -->
+                <select id='view-select' class="form-select form-select-sm text-center pt-0 mx-1" data-tile-id="" aria-label="view select"></select>
+                <div class="dropdown float-end ps-3 pt-1">
+                  <a class="cursor-pointer" id="dropdownTable" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.5rem;">
+                    <i class="fa fa-ellipsis-v fa-3x" aria-hidden="true" style="color:white;line-height:2;"></i>
+                  </a>
+                    <ul id="tile-functions" class="dropdown-menu px-2 py-3 " aria-labelledby="dropdownTable">
+                      <li><a class="dropdown-item border-radius-md" href="./home.html">About</a></li>
+                      <li><a class="dropdown-item border-radius-md" href="./explore.html">Explore</a></li>
+                    </ul>
+                </div>
+            </div>
+              <!-- <div id='vs-knob-column' class='col-2 d-flex justify-content-center mt-1 px-0 me-sm-0 me-n4'>
+              </div> -->
         </div>
       <div id="main-panel" class="row">
-      </div>
+        </div>
     </div>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBt1YAVs6NKSAMs35eLlxthP24i_r7nnhk&libraries=visualization,geometry,drawing&v=weekly"></script>
 <!-- Plugin for the charts, full documentation here: https://www.chartjs.org/ -->
@@ -86,61 +92,6 @@
 <script src="./assets/javascript/plugins/smooth-scrollbar.min.js"></script>
 <script type="text/javascript" src="./assets/javascript/view_state.js"></script>
 <script type="text/javascript" src="./assets/javascript/gigaview.js"></script>
-<svg>
-  <filter id="dropshadow" height="150%" width="150%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-      <feOffset dx="0" dy="3" result="offsetblur"/>
-      <feMerge>
-          <feMergeNode/>
-          <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-  </filter>
-  <filter id='inner-shadow'>
-
-      <!-- Shadow Offset -->
-      <feOffset
-              dx='0'
-              dy='5'
-              />
-
-      <!-- Shadow Blur -->
-      <feGaussianBlur
-              stdDeviation='5'
-              result='offset-blur'
-              />
-
-      <!-- Invert the drop shadow
-           to create an inner shadow -->
-      <feComposite
-              operator='out'
-              in='SourceGraphic'
-              in2='offset-blur'
-              result='inverse'
-              />
-
-      <!-- Color & Opacity -->
-      <feFlood
-              flood-color='black'
-              flood-opacity='0.75'
-              result='color'
-              />
-
-      <!-- Clip color inside shadow -->
-      <feComposite
-              operator='in'
-              in='color'
-              in2='inverse'
-              result='shadow'
-              />
-
-      <!-- Put shadow over original object -->
-      <feComposite
-              operator='over'
-              in='shadow'
-              in2='SourceGraphic'
-              />
-  </filter>
-</svg>
 </body>
 
 </html>

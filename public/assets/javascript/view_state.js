@@ -56,7 +56,17 @@ const html_sub = {
   '>': "&gt",
 };
 const popup_width = 300
+
+var iLat = null, iLng = null
 /*******************************************************************************/
+function shallow_copy(obj)
+{
+  let copy = {}
+  for (let k of Object.keys(obj))
+    copy[k] = obj[k]
+  
+  return copy
+}
 
 function Comma_Sep(a,vs_id) {
   var s = "";
@@ -96,11 +106,9 @@ function reqParamsToString(params)
     return s
 }
   
-async function serverRequest(params) 
+async function serverRequest(req_str) 
 {
-    p = reqParamsToString(params)
-
-    const api_url = `gserver/${p}`;
+    const api_url = `gserver/${req_str}`;
 
     var request = new Request(api_url, { method: "POST" });
 
@@ -161,6 +169,30 @@ function getKnob(id)
   else
     return knob_objects[`${id}`]
 }
+
+function getTextWidth(text, font) 
+{
+  // re-use canvas object for better performance
+  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+  context.font = font;
+  const metrics = context.measureText(text);
+  return metrics.width;
+}
+
+function getCssStyle(element, prop) 
+{
+  return window.getComputedStyle(element, null).getPropertyValue(prop);
+}
+
+function getElementFont(el = document.body) 
+{
+const fontWeight = getCssStyle(el, 'font-weight') || 'normal';
+const fontSize = getCssStyle(el, 'font-size') || '16px';
+const fontFamily = getCssStyle(el, 'font-family') || 'Arial';
+
+return `${fontWeight} ${fontSize} ${fontFamily}`;
+}
 /*******************************************************************************/
 class View_State 
 {
@@ -170,6 +202,7 @@ class View_State
     this.obj_instance=null
     this.server_js=null
     this.maximized=false
+    this.last_req_str = ''
   }
   createRequestParams()
   { 
@@ -198,7 +231,12 @@ class View_State
   async serverRequest()
   {
     let params=this.createRequestParams();
-    let server_result = await serverRequest(params);
+    let req_str = reqParamsToString(params)
+    if (req_str == this.last_req_str)
+      return
+    
+    this.last_req_str = req_str
+    let server_result = await serverRequest(req_str);
     if (params.qid == "MD_RETR")
     {
       this.server_js = server_result
@@ -210,9 +248,10 @@ class View_State
       alert("The data server returned "+ server_meta.status)
       return
     }
-    this.server_js = server_result["data"]
-    // if (server_meta.is_range)
-    //   server_range = server_result.range;
+    this.server_js = server_result.data
+    this.server_result = server_result
+    if (server_meta.is_range)
+      this.server_range = server_result.range;
   }
   getId()
   {
@@ -320,24 +359,42 @@ class View_State
       case 'treemap':
       case 'countymap':
       case 'scatterChart':
-        this.createContent()
+        this.createContent('refresh')
         break
     }
   }
   createDropdownList(contents)
   {
     let list=''
+    let separator = ''
+    if (contents.includes('<separator>'))
+    {
+      let font = getElementFont(document.getElementById('view-select'))
+      let width = Math.round(getTextWidth('─', font) + 0.9) + 1
+      console.log(width)
+      let parent_width = document.getElementById('view-select').clientWidth
+      console.log(parent_width)
+      let num = parent_width / width; 
+      for (let i = 0; i < num; i++)
+      {
+        separator += '─'
+      }
+    }
     for (let i = 0; i<contents.length; ++i)
     {
       let item = contents[i]
-      list += `<option ${i==0?'selected':''} value="${item}">${this.alias(item)}</option>`
+      if (item=='<separator>')
+      {
+        list += `<option disabled>${separator}</option>`
+      }
+      else
+        list += `<option ${i==0?'selected':''} value="${item}">${this.alias(item)}</option>`
     }
     return list
   }
   createControls()
   {
-    $('.dropdown-column').remove()
-    $('.knob-column').remove()
+    $('.controls').empty()
     if ('dropdowns' in this.state == false)
       return ''
     for (const [id, instance] of Object.entries(knob_objects))
@@ -348,8 +405,10 @@ class View_State
     let dropdowns=this.state.dropdowns
     for (const [id, def] of Object.entries(dropdowns))
     {
-      let top_controls=$(`#top-controls`)
-      let bottom_controls=$(`#bottom-controls`)
+      let tl_controls=$(`#tl-controls`)
+      let bl_controls=$(`#bl-controls`)
+      let bm_controls=$(`#bm-controls`)
+      let br_controls=$(`#br-controls`)
       let client_width = document.documentElement.clientWidth
       let client_height = document.documentElement.clientHeight
       let size = Math.min(client_width, client_height)
@@ -360,45 +419,51 @@ class View_State
         knob_height=75
         knob_width=75
       }
+      let name = def.name
       let position='position' in def? def.position:'bottom-right'
+      let knob_position='knob_position' in def? def.knob_position:''
+      let show_names = this.state.show_names || false
 
-      let dropdown_html = `<div id=${id}-${this.getId()}-column 
-        class="${position=='top-left'?' col-4 mt-sm-3 mt-1':'col-2 mt-sm-3 mt-1'} 
-        px-sm-3 text-center m${position=='bottom-right'?'s-sm-auto pe-1':'e-sm-auto ps-1'} dropdown-column">
-        <h6 class="mb-1 text-white">${def.name}</h6>
-        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select pt-0" 
-        data-tile-id="${this.getId()}" 
-        data-knob='${id}-${this.getId()}-knob' aria-label=".form-select-sm example">
+
+      let dropdown_html = 
+        `${name && show_names?`<h6 class="me-2 text-white">${name}</h6>`:''}
+        <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center  pt-0 mx-1" 
+        data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
-        </select></div>`
+        </select>`
 
-      let knob_html=`<div class="${position=='top-left'?'col-2 mt-1':'col-1 mt-sm-2 mt-1'} 
-        ${position=='bottom-right'?'me-sm-0':'ms-sm-0 '}
-        d-flex justify-content-center px-0 knob-column">
-        <input id='${id}-${this.getId()}-knob' class='p1' type="range" min="0" max="10" 
+      let knob_html = `<input id='${id}-${this.getId()}-knob' class='p1' type="range" min="0" max="10" 
         data-dropdown=${id}-${this.getId()} data-width="${knob_width}" data-height="${knob_height}" 
-        data-angleOffset="220" data-angleRange="280"></div>`
+        data-angleOffset="220" data-angleRange="280">`
+
+      let controls_html = knob_position=='left'?knob_html + dropdown_html+'</div>'
+        :knob_position=='right'?dropdown_html + knob_html + '</div>'
+        :dropdown_html+'</div>'
 
       if(position=='bottom-left')
       {
-        let bl_controls=knob_html+dropdown_html
-        bottom_controls.prepend(bl_controls)
+        bl_controls.html(controls_html)
+      }
+      else if(position=='bottom-middle')
+      {
+        bm_controls.html(controls_html)
       }
       else if(position=='top-left')
       {
-        let tl_controls=knob_html+dropdown_html
-        top_controls.prepend(tl_controls)
+        tl_controls.html(controls_html)
       }
       else
       {
-        let br_controls=dropdown_html+knob_html
-        bottom_controls.append(br_controls)
+        br_controls.html(controls_html)
       }
-      let input=document.getElementById(`${id}-${this.getId()}-knob`)
-      input.dataset.labels = (def.contents).map(()=>'.')
-      input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
-      // console.log('input value:'+ input.value)
-      knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
+
+      if(knob_position){
+        let input=document.getElementById(`${id}-${this.getId()}-knob`)
+        input.dataset.labels = (def.contents).map(()=>'.')
+        input.value =  $(`#${id}-${this.getId()}`).prop('selectedIndex');
+        // console.log('input value:'+ input.value)
+        knob_objects[`${id}-${this.getId()}-knob`]=new Knob(input, new Ui.P1({}))
+      }
     }
   }
   createTile()
@@ -411,14 +476,24 @@ class View_State
     }
     $(cfg.parent_div).empty()
     $(cfg.parent_div).html(`<div id="${this.getId()}-box" class="col-lg-${cfg.width} mx-auto">
-      <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
-        <div class="card-body p-1">
-          <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
+      <div class="row">
+          <div class="col-1 align-self-center" style="max-width:75px;">
+            <div id="side-controls" class="d-flex flex-column align-items-center"></div>
+          </div>
+          <div class="col-11 ps-1">
+            <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
+                <div class="card-body p-1">
+                  <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
+                  </div>
+                </div>
+              </div>
           </div>
         </div>
-      </div>
-      <div id="bottom-controls" class="row justify-content-between"> 
-        
+      <div id="bottom-controls" class="row my-2"> 
+        <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
+        <div class="col d-flex justify-content-start align-items-center controls" id="bl-controls"></div>
+        <div class="col d-flex justify-content-center align-items-center controls" id="bm-controls"></div>
+        <div class="col d-flex justify-content-end align-items-center controls" id="br-controls"></div>
       </div>
      </div>`);
      this.createControls()
@@ -426,10 +501,18 @@ class View_State
   }
   getColorScheme()
   {
-    var color_schemes = {"red": [d3.interpolateYlOrRd, "black"],
-                        "blue": [d3.interpolateBlues, "black"],
-                        "green": [d3.interpolateYlGn, "black"],
-                        "grey": [d3.interpolateGreys, "wheat"]}
+    var color_schemes = {//"red": [d3.interpolateYlOrRd, "black"],
+                        "Blues": [d3.interpolateBlues, "black"],
+                        "Yellow Green": [d3.interpolateYlGn, "black"],
+                        "Greys": [d3.interpolateGreys, "#9b001f"],
+                        "Greens" : [d3.interpolateGreens, "black"],
+                        "Oranges" : [d3.interpolateOranges, "black"],
+                        "Inferno" : [d3.interpolateInferno, "black"],
+                        "Purple Red" : [d3.interpolatePuRd, "black"],
+                        "Yellow Brown" : [d3.interpolateYlOrBr, "black"],
+                        'Cool' :  [d3.interpolateCool, "black"],
+                      
+                      }
 
     let color_scheme = this.state.color_scheme
     let color = ""
@@ -471,9 +554,27 @@ class View_State
      $(this.getId()).ready( callback.bind(null, this));
    }
 
+
+  propDetailsFormat(node) 
+  {
+    let headers = this.server_js.headers
+    let fields = ['prop_type', 'beds', 'baths', 'building_size', 'price', 'price_per_sqft', 'assessment_building', 'assessment_land', 'assessment_total', 'year_built', 'elevation', 'flood_zone']
+    let indices = fields.map (f => headers.indexOf(f))
+    
+    let html = ''
+    for (let i of indices)
+    {
+        let header = headers[i]
+        let data =  node[i]
+        html += `<tr><td>${this.alias(header)}:</td><td>&nbsp</td><td><b>${data}</b></td></tr>`
+    }
+    return html
+  }
    propInfoFormat(data) 
    {
-    let html = `<table class="popup-table"><thead><h6 style="text-align: center;">${data.title}</h6></thead>`
+    let html = `<table class="popup-table"><thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;">
+    <b>${data.title}</b></p></thead>`;
+
     for (let i=0; i < data.headers.length; i++)
     {
       let header = data.headers[i].replaceAll('_', ' ')
@@ -488,7 +589,7 @@ class View_State
    {
     if(x==null||x==undefined)
       x=20
-    if(x==null||x==undefined)
+    if(y==null||y==undefined)
       y=20
     let address, img_url = "";
 
@@ -503,15 +604,15 @@ class View_State
 
     for (let [key, value] of Object.entries(prop_info_params)) 
     {
-      prop_info_data[key] = await serverRequest ({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      let req_str = reqParamsToString({'qid':'MD_RETR', 'dim':key, 'dim_filters':`${key}:${value}` })
+      prop_info_data[key] = await serverRequest (req_str)
       prop_info_data[key].title = `<b>${this.alias(key)}</b> : ${value}`
     }
 
       address = `
-      <div class="row">
-        <div class="col-11">
-        </div>
-          <button type="button" class="btn-close col-1 d-inline-flex p-0" aria-label="Close" onclick="hideMapTooltip()"></button>
+      <div class="row" id="popup-header">
+      <div class="row justify-content-end">
+          <button type="button" class="btn-close" aria-label="Close" onclick="hideMapTooltip()"></button>
       </div>
       <div class="row">
         <div class="col-12 align-content-center" style="height:200px;">
@@ -521,26 +622,20 @@ class View_State
 
       <div class="row">
         <div class="col-12 px-2 d-flex align-items-center justify-content-center">
-          <p style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
+          <p class="my-2" style="font-size:0.75em; color:black; font-weight:bold; text-align: center;">${node[0]}<br>${node[1].replaceAll('-',', ')}, ${node[2]}</p>
         </div>
       </div>
-
-      <div id="popup-info" class="row px-4 d-flex" style="height:200px;">
+      </div>
+      <div id="popup-info" class="row px-4 d-flex">
         <div id="carouselExampleControls" class="carousel carousel-dark slide" data-bs-ride="carousel" data-interval="false">
-          <div class="carousel-inner px-3">
+          <div class="carousel-inner px-3 pb-1" style="height:200px;background-color:#e4ebf2">
             <div class="carousel-item active">
               <table class="popup-table">
-                <thead><h6 style="text-align: center;"><b>Property Details</b></h6></thead>
-                <tr><td>Property type:</td> <td>&nbsp</td> <td><b>${node[5]}</b></td></tr>
-                <tr><td>Bedrooms:</td> <td>&nbsp</td><td><b> ${node[7]}</b></td></tr>
-                <tr><td>Bathrooms:</td> <td>&nbsp</td><td> <b>${node[8]}</b></td></tr>
-                <tr><td>Size:</td> <td>&nbsp</td> <td><b>${node[9]} sqft</b></td></tr>
-                <tr><td>Price:</td>  <td>&nbsp</td> <td><b>$${node[10].toLocaleString("en")}</b></td></tr>
-                <tr><td>Year built:</td> <td>&nbsp</td> <td><b>${node[11]}</b></td></tr>
-                <tr><td>Elevation:</td> <td>&nbsp</td> <td><b>${node[14]}</b></td></tr>
+                <thead><p class="my-1" style="text-align: center; font-size:0.85rem; color:black;"><b>Property Details</b></p></thead>
+                ${this.propDetailsFormat(node)}
               </table>
             </div>
-            <div class="carousel-item" id="state_info">
+            <div class="carousel-item" id="state_info" >
               ${this.propInfoFormat(prop_info_data.state_code)}
             </div>
             <div class="carousel-item" id="county_info">
@@ -561,9 +656,9 @@ class View_State
         </div>
       </div>
       
-      <div class="row px-4  align-items-center justify-content-center">
-        <a style="margin: 0px 6px 12px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
-        <a style="margin: 0px 0px 12px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[12]},${node[13]}">Google</a>
+      <div class="row px-4 d-flex align-items-center justify-content-center">
+        <a style="margin: 6px 6px 6px 0px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.zillow.com/homes/${node[0]},${node[1].replaceAll('-',', ')}, ${node[2]}_rb">Zillow</a>
+        <a style="margin: 6px 0px 6px 6px; background-color: rgb(155, 0, 31); text-align: center;" target="_blank" class="btn py-1 px-0 col-4 text-nowrap text-white infobuttons" href="https://www.google.com/maps/search/${node[iLat]},${node[iLng]}">Google</a>
       </div>
       `
       let p = `${node[0].replaceAll(' ','-')}-${node[1].replaceAll(' ','-')}-${node[2].replaceAll(' ','-')}_rb`
@@ -592,7 +687,7 @@ class View_State
 
       $('#carouselExampleControls').carousel({pause: true, interval: false });
 
-      const popup_ps = new PerfectScrollbar(`#popup-info`, {
+      const popup_ps = new PerfectScrollbar(`.carousel-inner`, {
         wheelSpeed: 2,
         wheelPropagation: false,
         minScrollbarLength: 20
@@ -609,8 +704,7 @@ class View_State
       x += offset
       let right_edge = x + popup_width + position.left
       let bottom_edge = y + popup_height + position.top 
-      console.log(y)
-      console.log(bottom_edge + '= bottom_edge')
+
       if (right_edge >= screen_width)
         x = Math.max(x - popup_width - 2 * offset, 0)
       if (bottom_edge >= screen_height)
@@ -620,6 +714,7 @@ class View_State
       .style("left", x + "px")
       .style("top", y + "px")
       .style("z-index", 999)
+      .style("background-color", "f0f8ff")
       
   }
 
@@ -647,23 +742,27 @@ class View_State
      }
  
      let server_js=this.server_js
+
+     iLat = server_js.headers.indexOf('latitude')
+     iLng = server_js.headers.indexOf('longitude')
+
      let coords = []
      let lat, lng, markers;
-     let markerColor = "red"
+     let markerColor = "#9b001f"
      var boostType = "balloon"
      let max_lat = -999, max_lng = -999
      let min_lat =  999, min_lng =  999
      let data_index = 0
      for (const data of server_js.data)
      {
-       lat = parseInt(data[12]) /1e6
-       lng = parseInt(data[13]) /1e6
+       lat = parseInt(data[iLat]) /1e6
+       lng = parseInt(data[iLng]) /1e6
        max_lat = (lat>max_lat)? lat : max_lat
        max_lng = (lng>max_lng)? lng : max_lng
        min_lat = (lat<min_lat)? lat : min_lat
        min_lng = (lng<min_lng)? lng : min_lng
-       data[12] = lat
-       data[13] = lng
+       data[iLat] = lat
+       data[iLng] = lng
        coords.push([lat,lng,data_index++])
      }
      this.numcoords = coords.length
@@ -730,7 +829,7 @@ class View_State
              boostType: boostType,
              boostScale: 1,
              boostExp: 0,
-             radius: 6
+             radius: 4
          })
          .addTo(markers)
         //  .bindPopup("Loading element data, please wait...")
@@ -786,13 +885,22 @@ class View_State
     let count=1
     let records=[]
 
+    let is_range = this.server_result.meta.is_range
+
     for (let row of server_js)
     {
       let rec={recid:count++}
       let n_gbys=gby_headers.length
       for (let i=0; i<n_gbys; i++)
       {
-        rec [gby_headers[i]]=row[0][i]
+        if (i == 0 && is_range)
+        {
+          let interval = this.server_range[row[0][0]]
+          let interval_str = `[${interval[0]} – ${interval[1]})`
+          rec [gby_headers[i]] = interval_str
+        }
+        else
+          rec [gby_headers[i]] = row[0][i]
       }
       for (let i=0; i<val_headers.length; i++){
         rec[val_headers[i]]=row[1][i]
@@ -877,10 +985,22 @@ class View_State
 
     let labels=[]
 
-    for (let row of this.server_js){
-      labels.push(row[0][0])
-      //to do: handle multiple group bys
+    if (this.server_result.meta.is_range)
+    {
+      for (let row of this.server_js)
+      {
+        let interval = this.server_range[row[0][0]]
+        labels.push(`[${interval[0]} – ${interval[1]})`)
+      }
     }
+    else
+    {
+       for (let row of this.server_js)
+      {
+        labels.push(row[0][0])
+      }
+    }
+
 
     let ds = []
 
@@ -943,6 +1063,14 @@ class View_State
                 lineHeight: 2
               },
             }
+          },
+          'left': {
+            type: 'linear',
+            position: 'left'
+          },
+          'right': {
+            type: 'linear',
+            position: 'right' 
           },
         },
       },
@@ -1025,10 +1153,12 @@ class View_State
     {
       return 
     } 
+ 
+    let server_js = this.server_js
+    iLat = server_js.headers.indexOf('latitude')
+    iLng = server_js.headers.indexOf('longitude')
 
     let vs_id=this.getId()
-
-    let server_js = this.server_js
 
     let n_vals = 2
     let meas1 = Comma_Sep([this.state.x_axis], vs_id),
@@ -1114,6 +1244,15 @@ class View_State
     var xRange = d3.extent(points, function(d) { return d.x });
     var yRange = d3.extent(points, function(d) { return d.y });
 
+    const regression = d3.regressionLinear()
+    .x(d => d.x)
+    .y(d => d.y)
+
+    let reg = regression(points)
+    let r2 = Math.round(reg.rSquared*100)/100
+
+    yRange[1] = Math.max( yRange[1], reg.predict(xRange[1]) );
+
     var xScale = d3.scaleLinear()
       .domain([xRange[0] * 0.9, xRange[1] *1.05])
       .range([0, width]);
@@ -1156,15 +1295,13 @@ class View_State
     canvas.call(zoomBehaviour);
 
     var context = canvas.node().getContext('2d');
-    var r = regression.linear(points.map((i)=>([i.x,i.y]))),
-    m = r.equation[0], b = r.equation[1];
 
     svg.append("text")
     .attr("class", "x label")
     .attr("text-anchor", "end")
     .attr("x", width)
     .attr("y", height - 6)
-    .text(meas1);
+    .text(this.alias(meas1));
 
     svg.append("text")
     .attr("class", "y label")
@@ -1172,7 +1309,7 @@ class View_State
     .attr("y", 6)
     .attr("dy", ".75em")
     .attr("transform", "rotate(-90)")
-    .text(meas2);
+    .text(this.alias(meas2));
 
   draw();
 
@@ -1246,24 +1383,15 @@ class View_State
     window.open('./details.html', '_blank');
   }
 
-  if(this.resetDiv)
-  {
-    $("#reset-button-div").remove()
-  }
+  $('.control-button').remove()
 
-  if (this.detailDiv)
-    $("#detail-button-div").remove()
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
-  if (this.selectDiv)
-  $("#detail-button-div").remove()
+  this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
+  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
-  this.resetDiv = $(`#${this.getId()}`).prepend(`<div id="reset-button-div" class="m-1"  style="width:25px; position:absolute; z-index:1000;">
-  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon.svg"/></div>`)
-
-  this.detailDiv = $(`#${this.getId()}`).append(`<div id="detail-button-div" class="m-1"  style="width:25px; position:absolute; top:40px; z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon-colored.svg"/></div>`)
-
-  this.selectDiv = $(`#${this.getId()}`).append(`<div id="select-button-div" class="m-1"  style="width:25px; position:absolute; top:80px; z-index:1000;">
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
   <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
@@ -1275,7 +1403,7 @@ class View_State
     if (interface_mode == 'zoom')
     {
       $('#select-button').attr('src','../assets/images/select_icon.svg');
-      $('#reset-button').attr('src','../assets/images/reset_icon.svg');
+      $('#reset-button').attr('src','../assets/images/reset_icon-bw.svg');
     }
     else if (interface_mode == 'select')
     {
@@ -1424,8 +1552,8 @@ class View_State
     let x = d3.event.x- position.left
     let y = d3.event.y- position.top
     let node = selected_vs.server_js.data[closest.i].slice()
-    node[12] *= 1e-6
-    node[13] *= 1e-6
+    node[iLat] *= 1e-6
+    node[iLng] *= 1e-6
     selected_vs.propertyPopup(node, x, y)
   }
 
@@ -1463,7 +1591,6 @@ class View_State
     {
       rect_anchor = d3.mouse(this);
     }
-    console.log('mousedown')
   }
   
 
@@ -1516,7 +1643,7 @@ class View_State
         z = server_js.data[closest.i][i3]
       selected_vs.tooltipDiv
       .style("opacity", 1)
-      .html(`${meas1}:${closest.x}, ${meas2}:${closest.y}${z? ',' + meas3 + ':' + z : ''} `)
+      .html(`${selected_vs.alias(meas1)}:${closest.x}, ${selected_vs.alias(meas2)}:${closest.y}${z? ',' + selected_vs.alias(meas3) + ':' + z : ''} `)
       .style("left", (pos_x + 10) + "px")
       .style("top", (pos_y + 10) + "px");
     }
@@ -1615,14 +1742,18 @@ class View_State
         drawPoint(points[selectedPoint], pointRadius);
         context.fillStyle = 'steelblue';
     }
+    let
+      x1 = xRange[0],
+      x2 = xRange[1];
 
-    let rp = [[
-      new_xScale(xRange[0]),
-        new_yScale(m * xRange[0] + b)
-    ], [
-      new_xScale(xRange[1]),
-      new_yScale(m * xRange[1] + b)
-    ]];
+     let rp = [[
+       new_xScale(x1),
+         new_yScale(reg.predict(x1))
+     ], [
+       new_xScale(x2),
+       new_yScale(reg.predict(x2))
+     ]];    
+    
 
     var lineGenerator = d3.line()
       .context(context);
@@ -1631,7 +1762,19 @@ class View_State
     context.lineWidth = 1 
     context.beginPath();
     lineGenerator(rp);
-    context.stroke();
+    context.stroke()
+ 
+    
+    context.font = '20px arial';
+    context.fillStyle = 'red';
+    context.textAlign = 'end'
+    context.textBaseline = 'bottom'
+
+    x2 = new_xScale.invert(rp[1][0] - 100)
+    let y2 = reg.predict(x2)
+    
+
+    context.fillText( `R² = ${r2}`, new_xScale(x2) , new_yScale(y2));
   }
 
   function drawPoint(point, r) 
@@ -1682,20 +1825,16 @@ function euclideanDistance(x1, y1, x2, y2)
   }
 
   
-  async getTreeMapData()
+  getTreeMapData()
   {
-    await this.serverRequest()
-
     let server_js=this.server_js
 
     let vs_id=this.getId();
     let req=this.state.request;
     let gby_headers = this.itemSubstitute(req.groupbys, vs_id);
-    // let val_headers = this.itemSubstitute(req.measures, vs_id);
-
   
     let root = gby_headers[0]
-    let data = [{id:root, value:0}]
+    let data = [{id:root, value:0, extra:true}]
     let nodes = new Set()
     let n_gbys = gby_headers.length
     
@@ -1704,13 +1843,16 @@ function euclideanDistance(x1, y1, x2, y2)
 
     let n_rows = server_js.length
 
-    let ng = server_js[0][0].length - 1
+    let ng = n_gbys - 1
 
     for (let r = 0; r < n_rows; ++r )
     {
       let row = server_js[r]
       let gby = row[0]
       let val = row[1][0]
+      if (val <= 0) 
+        continue
+
       let str = root
       for (let i = 0; i< n_gbys; ++i)
       {
@@ -1718,69 +1860,170 @@ function euclideanDistance(x1, y1, x2, y2)
         str += '.' + g2
         if (i < ng && !nodes.has(str))
         {
-          data.push( { id:str , value: 0});
+          data.push( { id:str , value: 0, extra:true});
           nodes.add(str);
         } 
       }
-      data.push( { id:str , value: val});
+      data.push( { id:str , value: val, extra:false});
     }
   
     return data;
   }
   async treemap()
   {
+    await this.serverRequest()
+
+    if (selected_vs && this!==selected_vs)
+    {
+      return 
+    } 
+
     let treemap_div = `${this.getId()}-treemap`
+    let ttdiv_id = `${this.getId()}-tooltip`
+    let ttlegend_id = `${this.getId()}-legend`
+
+    $(`#${ttlegend_id}`).remove()
+
+    this.toolTipDiv = d3.select(`#${this.getId()}-box`).append("div")
+    .attr("class", "treemapTooltip")
+    .attr("id", ttdiv_id)
+    .style("display", "none")
+
+
     $(`#${this.getId()}`).html(`<div id="${treemap_div}" style="position:absolute;"></div>`)
     let ht=$(`#${this.getId()}`).height();
     var parent_width = $(`#${this.getId()}`).width();
-    var width = Math.round(parent_width*0.67);
+    var width = Math.round(parent_width*0.85);
     var height = Math.round(ht);
     var margin = Math.round((parent_width - width)/2)
+    
+    var card_width = $(`#${this.getId()}-card`).width();
+    var card_height = $(`#${this.getId()}-card`).height();
+    var legend_width = Math.round(card_width*0.15);
+    var legend_height = card_height;
+
+    this.legendDiv = d3.select(`#${this.getId()}-card`).append("div")
+    .attr("class", "treemapLegend")
+    .attr("id", ttlegend_id)
+    .style("opacity", 1)
+    .style("background-color", "#fff")
+    .style("z-index", "999")
+    .style('width', legend_width + 'px')
+    .style('height', legend_height + 'px')
 
     var format = d3.format(",d");
 
-    var color = d3.scaleOrdinal()
-      .range(d3.schemeCategory20
-          .map(function(c) { c = d3.rgb(c); c.opacity = 0.8; return c; }));
+    this.color = d3.scaleOrdinal()
+    .range(d3.schemeCategory20
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.15; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
     var treemap = d3.treemap()
-      .size([width, height])
-      .padding(1)
+      .size([width*100, height*100])
+      .padding(10)
       .round(true);
 
-    let data = await this.getTreeMapData();
-
-    
-    if (selected_vs && this!==selected_vs)
-    {
-      return 
-    } 
+    let data = this.getTreeMapData();
+  
 
     var root = stratify(data)
         .sum(function(d) { return d.value; })
         .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
 
     treemap(root);
+    data = data.filter(a => a.extra == false)
+    data = data.sort(function (a,b)
+    {
+      return b.value - a.value  
+    })
+
+    this.data = data 
+    
+    this.data_map = {}
+
+    for (let i = 0 ; i < data.length ; ++i)
+    {
+      this.data_map [data[i].id] = i
+    }
+
+
     d3.select(`#${treemap_div}`)
       .html("")
 
-    d3.select(`#${treemap_div}`)
+    var xScale = d3.scaleLinear()
+    .domain([0, 100*width])
+    .range([0, width]);
+    var yScale = d3.scaleLinear()
+    .domain([100*height, 0])
+    .range([height, 0]);
+
+    var new_xScale = xScale, new_yScale = yScale;
+
+    var svg =  d3.select(`#${treemap_div}`)
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+    let g=  svg.append("g")
+      .attr("class", "zoom-overlay")
+      .attr("transform", "translate(0,0)")
+
+    draw()
+
+
+    // var g = svg.append("g")
+    //     .attr("class", "tmap")
+    //     .attr("transform", "translate(0,0)");
+
+    
+    // g.selectAll("rect")
+    // .data(root.leaves())
+    // .enter().append("rect")
+    // .attr("height", function(d) { return new_yScale(d.y1 - d.y0);})
+    // .attr("width", function(d) { return new_xScale( d.x1 - d.x0);})
+    // .attr("x", function(d) { return new_xScale(d.x0);})
+    // .attr("y", function(d) { return new_yScale(d.y0);})
+    // .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; 
+    //   return  `fill:${c};stroke:${rgba};stroke-width:3;`})
+
+    // g.selectAll("text")
+    // .data(root.leaves())
+    // .enter().append("text")  
+    // .attr("height", function(d) { return d.y1 - d.y0; })
+    // .attr("width", function(d) { return d.x1 - d.x0 ; })
+    // .attr("x", function(d) { return d.x0 + 10; })
+    // .attr("y", function(d) { return d.y0 + 10; })
+    // .html(`xxx`)
+
+    var zoomBehaviour = d3.zoom()
+    .scaleExtent([0.5, 200])
+    .on("zoom", onZoom)
+    .on("end", onZoomEnd);
+
+    svg.call(zoomBehaviour);
+
+    /*d3.select(`#${treemap_div}`)
       .selectAll(".node")
       .data(root.leaves())
       .enter().append("div")
         .attr("class", "node")
-        .attr("title", function(d) 
+        .attr("id", function(d) 
+        { 
+          return d.id
+        })
+        .attr("value", (d) => d.value)
+        .attr("data", function(d) 
         { 
           return d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value); 
         })
-        .style("left", function(d) { return d.x0 + margin + "px"; })
+        .style("left", function(d) { return d.x0  + "px"; })
         .style("top", function(d) { return d.y0 + "px"; })
         .style("width", function(d) { return d.x1 - d.x0 + "px"; })
         .style("height", function(d) { return d.y1 - d.y0 + "px"; })
-        .style("background", function(d) { while (d.depth > 1) d = d.parent; return color(d.id); })
+        .style("background", function(d) { while (d.depth > 1) d = d.parent;  let c = selected_vs.color(d.id); return c; })
+        .style("box-shadow", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},1)`; return  `0 0 0 4px ${rgba} inset` })
       .append("div")
         .attr("class", "node-label")
         .text(function(d) 
@@ -1793,24 +2036,474 @@ function euclideanDistance(x1, y1, x2, y2)
         .text(function(d) { return format(d.value); });
       
 
-    function type(d) {
-    d.value = +d.value;
-    return d;
+    function type(d) 
+    {
+      d.value = +d.value;
+      return d;
     }
+    */
+    function draw()
+    {
+      g.html("")
+      showing_overlay = false
+      // var g = svg.append("g")
+      //     .attr("class", "tmap")
+      //     .attr("transform", "translate(0,0)");
+
+      //filter out all offscreen rectangles
+  
+      let w1 = new_xScale.invert(width)
+      let w0 = new_xScale.invert(0)
+      let h1 = new_yScale.invert(height)
+      let h0 = new_yScale.invert(0)
+
+      let leaves = root.leaves().filter(function(d)
+      {
+            return  d.x1 > w0 && d.x0 < w1 && d.y1 > h0 && d.y0 < h1
+        })
+    
+      
+      g.selectAll("rect")
+      .data(leaves)
+      .enter().append("rect")
+      .attr("id", (d) => `${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
+      .attr("height", function(d) { return Math.max(1, new_yScale(d.y1) - new_yScale(d.y0) -3);})
+      .attr("width", function(d) { return Math.max(1, new_xScale(d.x1) - new_xScale(d.x0) -3);})
+      .attr("x", function(d) { return 3+new_xScale(d.x0);})
+      .attr("y", function(d) { return 3+new_yScale(d.y0);})      
+      .attr("style", function(d) { while (d.depth > 1) d = d.parent; let c = selected_vs.color(d.id); let rgba = `rgb(${c.r},${c.g},${c.b},0.8)`; 
+        return  `fill:${c};stroke-width:2;stroke:${rgba}`})
+      .attr("class", "node")
+      .on("mouseover", onMouseOver)
+      .on("mousemove", onMouseMove)
+      .on("mouseout", onMouseOut)
+      .on("click", onClick)
+        
+      leaves = leaves.filter(function(d)
+      {
+        return (new_xScale(d.x1) - new_xScale(d.x0)) > 50 
+      })
+
+
+      g.selectAll("foreignObject")
+      .data(leaves)
+      .enter().append("foreignObject")
+			.attr("class","foreignobj")
+      .attr("height", function(d) { return Math.min(70, new_yScale(d.y1) - new_yScale(d.y0) );})
+      .attr("width", function(d) { return Math.min(100, new_xScale(d.x1) - new_xScale(d.x0) );})
+      .attr("x", function(d) { return new_xScale(d.x0);})
+      .attr("y", function(d) { return new_yScale(d.y0);})
+			.on("mouseover", onFOMouseOver)
+      .on("mousemove", onMouseMove)
+      .on("mouseout", onFOMouseOut)
+      .on("click", onClick)
+      .append("xhtml:div") 
+			// .attr("dy", ".75em")
+      .attr("class","node-label")
+			.html(function(d) 
+      {    
+        let s = d.id.substring(d.id.indexOf(".") + 1).replace(/\./g, "\n")//.split(/(?=[A-Z][^A-Z])/g).join("\n"); 
+        return `<span>${s}</span><br><span class="node-value">${d.value}</span>`  
+				})
+      };
+
+    var currentTransform =  d3.zoomIdentity
+    var zooming = false
+
+    var count = 0
+    function onZoom() 
+    {
+      zooming = true
+      currentTransform = d3.event.transform;
+      new_xScale = currentTransform.rescaleX(xScale)
+      new_yScale = currentTransform.rescaleY(yScale)
+     
+      // if (++count % 2 )
+        draw();
+    }
+
+    function onZoomEnd()
+    {
+      zooming = false
+      // if (++count % 2 == 0)
+        // draw();
+    } 
+  
+    var legend_g, legend_line;
+    var linePos;
+
+    showLegend(this)
+
+
+    function onClick(d)
+    {
+      let data = d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value);
+      let params = selected_vs.createRequestParams()
+
+      let idx = data.indexOf("\n")
+      let gby = data.slice(0,idx).split('.')
+      let n_gby = gby.length
+
+      let params_dim_filters = params.dim_filters.split(';')
+      let params_gby = params.gby.split(',')
+
+      let dim_filters = []
+      for (let i = 0; i < n_gby; ++i)
+      {
+        dim_filters.push(`${params_gby[i]}:${gby[i]}`)
+      }
+
+      for (let df of params_dim_filters)
+      {
+          let dim = df.substring(0, df.indexOf(":"))
+          if ( (params.gby).includes(dim) )
+            continue;
+          
+          dim_filters.push(df)
+      }
+
+      sessionStorage.setItem("type", 'request')
+      sessionStorage.setItem("base_dim", params.dim)
+      sessionStorage.setItem("dim_filters", dim_filters.join(';'))
+      sessionStorage.setItem("val_filters", '')
+      
+      window.open('./details.html', '_blank');
+    }
+
+    function onMouseOver(d)
+    {
+      if (zooming)
+        return
+
+      let data =  d.id.substring(d.id.indexOf(".") + 1) + "\n" + format(d.value);
+      let title = d.id
+      let value = d.value
+      let idx = data.indexOf("\n")
+      let gby = data.slice(0,idx).split('.')
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
+      let html = function () {
+        let str = ''
+        gby.forEach((g) => {
+          str += g + '<br>'
+        }) 
+        str += value
+        return str
+      } 
+      let rect_id = selected_vs.data_map[title]
+      d3.select(`#${ttdiv_id}`).style("opacity", 1)
+      .html(html)
+      .style("display", "inline")
+      .style("left", (d3.event.x + 20) + "px")
+      .style("top", (d3.event.y + 20) + "px");
+
+      d3.select(`#caption`).html(`<center>${text+'<br>'+html()}</center>`)
+
+      legend_line
+        .attr('stroke-width', '2')
+        .attr('y1', linePos(rect_id))
+        .attr('y2', linePos(rect_id))
+
+    }
+
+    function onFOMouseOver(d)
+    {
+      d3.select(`#${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
+        .style("opacity", 0.75)
+      onMouseOver(d)
+    }
+    
+    function onFOMouseOut(d)
+    {
+      d3.select(`#${d.id}`.replaceAll('.', '_').replaceAll(' ', '_'))
+        .style("opacity", "")
+      onMouseOut(d)
+    }
+
+
+    function onMouseOut(d)
+    {
+      if (zooming)
+        return
+
+      let text = selected_vs.alias(Comma_Sep(selected_vs.state.request.measures,selected_vs.state.id))
+ 
+      d3.select(`#${ttdiv_id}`).style("opacity", 0)
+      d3.select(`#caption`).html(`<center>${text}</center>`)
+
+      legend_line.attr('stroke-width', '0')
+
+    }
+
+    function onMouseMove(d)
+    {
+      if (zooming)
+        return
+
+      d3.select(`#${ttdiv_id}`)
+      .style("z-index", 999)
+      .style("left", (d3.event.x + 20) + "px")
+      .style("top", (d3.event.y + 20) + "px");
+    }
+
+    function showLegend(instance)
+    {
+        let ht=$(`#${instance.getId()}`).height();
+        let parent_width = $(`#${instance.getId()}`).width();
+        let legend_width = Math.round(parent_width*0.15);
+        let legend_height = Math.round((ht-40));
+        let n_divs = data.length;
+        let margin = legend_width / 12
+        let rect_width = legend_width - 2 * margin
+        let rect_idx = 0;
+        let rect_id = 0;
+        let top_margin = legend_height * 0.05
+        let rect_height = Math.min((legend_height - top_margin * 2) / (n_divs), 20)
+  
+        let text = instance.alias(Comma_Sep(instance.state.request.measures,instance.state.id))
+
+        instance.legendDiv.html('')
+
+        d3.select(`#${ttlegend_id}`).append("div")
+          .html('')
+          .attr("id", "caption")
+          .style("height", "50px")
+          .attr("fill", "#000")
+          .attr("text-anchor", "start")
+          .attr("font-weight", "bold")
+          .attr("class", "mt-2 text-center")
+          .html(`<center>${text}</center>`);
+    
+        var xScale = d3.scaleLinear()
+        .domain([Math.cbrt(data[0].value), 0]) //Math.cbrt(data.at(-1).value)])
+        .range([rect_width, 5]);
+
+     
+        var svg
+        svg =  d3.select(`#${ttlegend_id}`)
+        .append("svg")
+        .attr("width", legend_width)
+        .attr("height", legend_height);
+        
+        let rectPos = (i) => top_margin + i * rect_height;
+        linePos = i => rectPos(i) + 0.5 * rect_height;
+
+        legend_g = svg.append("g")
+            .attr("class", "key")
+            .attr("transform", "translate(0,0)");
+    
+            legend_g.selectAll("rect")
+            .data(data.map((d) => rect_idx++ ) )
+            .enter().append("rect")
+            .attr("height", Math.max(rect_height, 1))
+            .attr("width", function (d)
+            { 
+              let width = xScale(Math.cbrt(data[d].value))
+              return width
+            }
+            )
+            .attr("x", function (d)
+            { 
+              let width = xScale(Math.cbrt(data[d].value))
+              //return margin
+              return legend_width - margin - width
+            }
+            )
+            .attr("y", d => { return rectPos(d)})
+            .attr("rx", "1")
+            .attr("ry", "1")
+            .attr("fill", function (d) 
+            { 
+              let a = data[d].id.split('.');
+              let c = d3.rgb(instance.color(`${a[0]}.${a[1]}`))
+              c.opacity = 0.5
+              return c
+            })
+            .attr("id", d => `rect_${rect_id++}`)
+        
+        let line_idx = 0, 
+            line_id = 0
+
+        legend_line = legend_g.append("line")
+        //.data(data.map((d) => line_idx++ ) )
+        //.enter().append("line")
+        // .attr("width", function (d)
+        // { 
+        //   let width = xScale(Math.cbrt(data[d].value))
+        //   return width
+        // }
+        // )
+        .attr("x1", 0)
+        //.attr("y1", d => { return rectPos(d) + 0.5 * rect_height})
+        .attr("x2", legend_width - margin)
+        //.attr("y2", d => { return rectPos(d) + 0.5 * rect_height})
+        .attr("stroke", "rgb(155, 0, 31)")
+        .attr("stroke-width", "0")
+        //.attr("id", d => `line_${line_id++}`)   
       
     }
 
-  async getCountyData(){
+  $('.control-button').remove()
+
+  this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
+  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
+
+  // this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
+  // <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+
+  this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
+  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
+  
+  this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
+  <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon_disabled.svg"/></div>`)
+
+  $('#reset-button').on('click', resetZoom)
+  $('#select-button').on('click', startSelect)
+  $('#back-button').on('click', onBack)
+
+  function pushTransform()
+  {
+    transform_stack.push(currentTransform)
+    if (transform_stack.length == 1)
+    {
+      $('#back-button').attr('src','../assets/images/back_icon.svg');
+    }
+  }
+
+  function onBack()
+  {
+    if (transform_stack.length > 0)
+    {
+      let t = transform_stack.pop()
+      if (transform_stack.length == 0)
+      {
+        $('#back-button').attr('src','../assets/images/back_icon_disabled.svg');
+      }
+      svg.call(zoomBehaviour.transform, t);
+      startSelect()
+    }
+  }
+
+  const num_overlay_divs = 3
+  var showing_overlay = false
+  var transform_stack = []
+
+  function enableZoom()
+  {
+    svg.call(zoomBehaviour)
+    $('#select-button').attr('src','../assets/images/grid_icon.svg');
+  }
+
+  function disableZoom()
+  {
+    svg.on('.zoom', null)
+    $('#select-button').attr('src','../assets/images/grid_icon_active.svg');
+
+  }
+
+  
+  function startSelect()
+  {    
+    g.selectAll('.overlay-rect')
+      .remove()
+
+    if (showing_overlay)
+    {
+      showing_overlay = false
+      enableZoom()
+      return
+    }
+    disableZoom()
+    showing_overlay = true
+
+    let rects = []
+    let dw = width / num_overlay_divs, dh = height / num_overlay_divs
+    
+
+    for (let i = 0; i < num_overlay_divs; ++i)
+      for (let j = 0; j < num_overlay_divs; ++j)
+        rects.push([i*dw,j*dh])
+
+      svg.append("defs")
+      .append("filter")
+      .attr("id", "blur")
+      .append("feGaussianBlur")
+      .attr("stdDeviation", 3);
+    
+    const border_width = 4;
+    
+    g.selectAll('.overlay-rect')
+    .data(rects)
+    .enter().append('rect')
+    .attr('class', 'overlay-rect')
+    .attr('x', d => d[0])
+    .attr('y', d => d[1])
+    .attr('width', dw)
+    .attr('height', dh)
+    .attr('fill', '#80808040')
+    .attr('stroke', '#424242')
+    .attr('stroke-width', border_width)
+    .on('click', onClickOverlayRect)
+
+  }
+
+  function onClickOverlayRect()
+  {
+    let rect = d3.select(this)
+    let i = parseInt (rect.attr('x'))
+    let j = parseInt (rect.attr('y'))
+   
+    let x = new_xScale.invert(i) 
+    let y = new_yScale.invert(j)
+
+    pushTransform()
+
+    zoomBehaviour.scaleBy(svg, num_overlay_divs)
+
+    let ti = new_xScale(x) 
+    let tj = new_yScale(y) 
+
+    let k = d3.zoomTransform(svg.node()).k
+   
+    zoomBehaviour.translateBy(svg, -ti/k, -tj/k)
+
+    startSelect()
+  }
+
+  function resetZoom()
+  {
+    count = 0
+    if (showing_overlay)
+    {
+      showing_overlay = false;
+      enableZoom()
+      $(document).ready( resetZoom );
+      return
+    }
+
+    if (root.leaves().length < 2000)
+    {
+      svg
+      .transition()
+      .duration(500)
+      .call(zoomBehaviour.transform, d3.zoomIdentity);
+    }
+    else
+      svg.call(zoomBehaviour.transform, d3.zoomIdentity);
+
+    new_xScale = xScale;
+    new_yScale = yScale;
+  }
+  }
+
+  getCountyData()
+  {
     let state_code_from_name =
     { CT: "09", NY: "36", NJ: "34", MA: "25" }
-
-
-    await this.serverRequest()
     let server_js = this.server_js
-
     let value_idx = 0
     let min = Infinity, max = -Infinity
     let lut = {}
+
     for (let row of server_js)
     {
         let c = row[0][0]
@@ -1832,12 +2525,14 @@ function euclideanDistance(x1, y1, x2, y2)
 
   async setCountymap(mapDiv,legendDiv)
   {
-    let result = await this.getCountyData();
-
+  
+    await this.serverRequest()
     if (selected_vs && this!==selected_vs)
     {
       return 
     }
+
+    let result = this.getCountyData();
 
     let instance = this
 
@@ -2055,7 +2750,7 @@ function euclideanDistance(x1, y1, x2, y2)
             });
           }
 
-          function showLegend(color, min, max,)
+          function showLegend(color, min, max)
           {
                    
               let n_divs = color.range().length;
@@ -2240,8 +2935,8 @@ function euclideanDistance(x1, y1, x2, y2)
     function mapReset(){}
 
   }
-  async countymap(){
-    
+  async countymap()
+  {
     let container = this.getId()
     let legendDiv = container + "Legend"
     let mapDiv = container + "Map"

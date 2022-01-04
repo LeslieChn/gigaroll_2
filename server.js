@@ -177,11 +177,14 @@ app.post('/getimage/:query', async (request, response) => {
   });
 
   let data = server_response.body
-  let str = 'property="og:image" content="'
-  let start = data.indexOf(str) + str.length
-  let end = data.indexOf('"' , start)
-  img_url = data.substring(start,end)
-  console.log(img_url)
+  let str = 'https://photos.zillowstatic.com/fp/'
+
+  let pos = data.indexOf('.webp')
+  let end = pos + 5  
+  let start = data.lastIndexOf(str, pos)
+  let img_url = data.substring(start,end)
+  pos = end
+
   response.send(img_url)
   console.timeEnd(request.params.query)
 });
