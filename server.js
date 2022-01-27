@@ -16,6 +16,7 @@ const md5 = require('md5');
 const salt = 'cardamom'
 const flash = require ('connect-flash')
 const got = require('got');
+const chargebee = require("chargebee");
 
 var login_count = {}
 
@@ -187,6 +188,48 @@ app.post('/getimage/:query', async (request, response) => {
 
   response.send(img_url)
   console.timeEnd(request.params.query)
+});
+
+app.post('/subscribe', async (req, res) => {
+
+let data = req.body 
+
+console.log(data)
+
+var chargebee = require("chargebee");
+chargebee.configure({site : "gigaroll",
+  api_key : "live_SmUNlq0fvfZeF6vSTGaQ6nJnZJ7kv377"})
+chargebee.subscription.create({
+  plan_id : "no_trial",
+  auto_collection : "off",
+  billing_address : {
+    first_name : data.first_name,
+    last_name : data.last_name,
+    line1 : data.address,
+    city : data.city,
+    state : data.state,
+    zip : data.zip,
+    country : "US"
+    },
+  customer : {
+    first_name : data.first_name,
+    last_name : data.last_name,
+    email : data.email
+    }
+}).request(function(error,result) {
+  if(error){
+    //handle error
+    console.log(error);
+  }else{
+    console.log(result);
+    var subscription = result.subscription;
+    var customer = result.customer;
+    var card = result.card;
+    var invoice = result.invoice;
+    var unbilled_charges = result.unbilled_charges;
+  }
+}),
+  res.redirect('/');
 });
 
 app.get('/login',
