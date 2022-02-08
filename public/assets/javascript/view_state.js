@@ -422,11 +422,11 @@ class View_State
       let name = def.name
       let position='position' in def? def.position:'bottom-right'
       let knob_position='knob_position' in def? def.knob_position:''
-      let show_names = this.state.show_names || false
+      let show_names = this.state.show_names || true
 
 
       let dropdown_html = 
-        `${name && show_names?`<h6 class="me-2 text-white">${name}</h6>`:''}
+        `${name && show_names?`<h6 class="me-2 my-0 text-white">${name}</h6>`:''}
         <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center  pt-0 mx-1" 
         data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}
@@ -477,10 +477,10 @@ class View_State
     $(cfg.parent_div).empty()
     $(cfg.parent_div).html(`<div id="${this.getId()}-box" class="col-lg-${cfg.width} mx-auto">
       <div class="row">
-          <div class="col-1 align-self-center" style="max-width:75px;">
+          <div class="col align-self-center" style="max-width:50px;">
             <div id="side-controls" class="d-flex flex-column align-items-center"></div>
           </div>
-          <div class="col-11 ps-1">
+          <div class="col ps-1">
             <div id="${this.getId()}-card" class="card z-index-2" data-maximized="false">
                 <div class="card-body p-1">
                   <div id="${this.getId()}" class="content" style="width:100%; height:${cfg.height};">
@@ -489,12 +489,6 @@ class View_State
               </div>
           </div>
         </div>
-      <div id="bottom-controls" class="row my-2"> 
-        <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
-        <div class="col d-flex justify-content-start align-items-center controls" id="bl-controls"></div>
-        <div class="col d-flex justify-content-center align-items-center controls" id="bm-controls"></div>
-        <div class="col d-flex justify-content-end align-items-center controls" id="br-controls"></div>
-      </div>
      </div>`);
      this.createControls()
      this.createContent()

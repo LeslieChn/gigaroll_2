@@ -221,11 +221,10 @@ div.treemapLegend {
 }
 
 #logo{
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #000000;
   font-weight: 400;
   font-family: Arial;
-  color: black;
+  color:white;
+  margin: 0;
 }
 
 .carousel-control-prev{

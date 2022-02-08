@@ -50,14 +50,14 @@
   <link rel="stylesheet" type="text/css" media="screen" href="./assets/css/d3map.css"/>
 </head>
 </body>
-    <div id='main-container' class="container-fluid px-1 px-lg-4">
+    <div id='main-container' class="container-fluid p-0 px-lg-4">
       <div id="main-header" class="row g-0">
           <!-- <div id='logo-div'>
             <a id="logotext" class="mx-auto" href="/"></a>
                 <span id="logo-text" class="align-middle">GigaRoll</span>
             </a>
           </div> -->
-            <div class="col col-md-1 d-none d-md-block" style="max-width:75px;"></div>
+            <div class="col col-md-1 d-none d-md-block" style="max-width:50px;"></div>
             <div id='tl-controls' class='col d-flex align-items-center justify-content-start'>
             </div>
             <div class="col d-flex align-items-center justify-content-center"> <a id="logotext" class="mx-auto" href="/"><h3 id="logo">GigaRoll</h3></a></div>
@@ -74,8 +74,13 @@
                     </ul>
                 </div>
             </div>
-              <!-- <div id='vs-knob-column' class='col-2 d-flex justify-content-center mt-1 px-0 me-sm-0 me-n4'>
-              </div> -->
+            <div id="bottom-controls" class="row my-2"> 
+              <div class="col col-md-1 d-none d-md-block" style="max-width:50px;"></div>
+              <div class="col d-flex justify-content-start align-items-center controls" id="bl-controls"></div>
+              <div class="col d-flex justify-content-center align-items-center controls" id="bm-controls"></div>
+              <div class="col d-flex justify-content-end align-items-center controls" id="br-controls"></div>
+              <div class="col col-md-1 d-none d-md-block" style="max-width:25px;"></div>
+            </div>
         </div>
       <div id="main-panel" class="row">
         </div>

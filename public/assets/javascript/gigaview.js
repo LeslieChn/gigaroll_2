@@ -285,7 +285,7 @@ resizeContent()
 function getContentHeight()
 {
   let client_height = document.documentElement.clientHeight
-  let row_height = 52 //$('#main-header').outerHeight()
+  let row_height = 56 //$('#main-header').outerHeight()
   console.log(client_height - 2 * row_height) 
   return client_height - 2 * row_height 
 }
