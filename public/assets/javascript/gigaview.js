@@ -175,7 +175,7 @@ let treemap_dropdowns = {
     // knob_position:'left'
   },
   dim_filter_option:{
-    name:'City',
+    name:'Filter',
     contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT', '<separator>', 'state_code:NY', '<separator>', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
