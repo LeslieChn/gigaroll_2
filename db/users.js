@@ -1,3 +1,7 @@
+import * as records from './records.json';
+const {name} = records;
+console.log(name);
+
 var records = [
   // { id: 1, username: 'prestoncarey', password: 'password', displayName: 'Preston', emails: [ { value: 'pcarey1213@gmail.com' } ] },
   { id: 1, "username":"prestoncarey","password":"6ff2b2d724362e153b56519bcb7f28f8", "displayName":"Preston"},
