@@ -253,6 +253,7 @@ app.post("/confirm_payment", async (req, res) => {
           intent = intent.confirm();
       }
       res.json(generatePaymentResponse(intent));
+
     } catch(error) {
       res.json(error);
   }
@@ -556,6 +557,34 @@ function(req, res) {
   else {
     // Otherwise send back the user's username and id
    res.json(req.user);
+  }
+});
+
+
+app.post('/update_user', 
+function(req, res) {
+  if (!req.user) {
+    // The user is not logged in, send back an empty object
+    res.json(null);
+  }
+  else {
+    db.users.updateUserById(req.user.id, 'chargebee_acct_id', req.body.chargebee_acct_id)
+    // Otherwise send back the user's username and id
+    res.json(true);
+  }
+});
+
+app.post('/get_user_key', 
+function(req, res) {
+  if (!req.user) {
+    // The user is not logged in, send back an empty object
+    res.json(null);
+  }
+  else {
+    let value = db.users.findValueByKey(req.user.id, req.body.key)
+    // Otherwise send back the user's username and id
+    res.json({'value' : value});
+    console.log(res)
   }
 });
 

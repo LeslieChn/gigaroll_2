@@ -1,4 +1,5 @@
 var records = require('./records.json');
+const fs = require('fs');
 
 // var records = [
 //   // { id: 1, username: 'prestoncarey', password: 'password', displayName: 'Preston', emails: [ { value: 'pcarey1213@gmail.com' } ] },
@@ -33,4 +34,26 @@ exports.findByUsername = function(username, cb) {
     }
     return cb(null, null);
   });
+}
+
+exports.updateUserById = function(id, key, value) {
+  process.nextTick(function() {
+    var idx = id - 1;
+    if (records[idx]) {
+      records[idx][key] = value
+      fs.writeFileSync('db/records.json', JSON.stringify(records))
+    } else {
+      console.log (`user ${id} not found`)
+      return 
+    }
+  });
+}
+
+exports.findValueByKey = function(id, key) {
+    var idx = id - 1;
+    if (records[idx]) {
+      return records[idx][key] 
+    } else {
+      return null;
+    }
 }

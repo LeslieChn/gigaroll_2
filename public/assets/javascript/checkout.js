@@ -51,8 +51,17 @@ document
 
   .querySelector("#payment-form")
 
-  .addEventListener("submit", handleSubmit);        
+  .addEventListener("submit", handleSubmit);    
 
+initPage();
+
+async function initPage(){
+    
+
+  let sub_status = await getUserKeyVal('chargebee_acct_id')
+
+  console.log(`sub status: ${sub_status}`)
+}
 
 async function handleSubmit(e) {
 
@@ -86,6 +95,7 @@ async function handleSubmit(e) {
         let server_res = await res.json()
      
         handleServerResponse(server_res); 
+
       }
   });
 
@@ -148,7 +158,8 @@ function handleServerResponse(response) {
           })
       }).then(response => response.json()).then(function (responseJSON) {
         //   window.location.replace(responseJSON.forward);
-        console.log(responseJSON)
+        console.log(responseJSON) 
+        setUserKeyVal('chargebee_acct_id', responseJSON.customer.id);
       });
       
   }
@@ -181,6 +192,37 @@ function handleAction(response) {
   });
 }
 
+async function getUserKeyVal (key) 
+{
+  let res1 = await fetch('/get_user_key', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({key:key})
+  })
+  let json = await res1.json()
+  return json.value
+}
+
+async function setUserKeyVal(key, value) {
+  // let res1 = await fetch('/get_user_key', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: '{"key":"displayName"}'
+  // })
+  // let json = await res1.json()
+  // console.log(json)
+  let body = `{"${key}" : "${value}"}`
+
+  console.log(body)
+
+  let res = await fetch('/update_user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: body
+  })
+
+  let json = await res.json()
+}
 
 // Fetches the setup intent status after setup submission
 
