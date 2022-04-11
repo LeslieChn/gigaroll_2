@@ -21,6 +21,8 @@ const stripe = require('stripe')('sk_test_51KHqxAKquseRsK4mYoF4Nvf9PhzOcxJgxea49
 
 var login_count = {}
 
+var item_list = null
+
 function hashPassword (pass){
   return md5(salt+pass)
 }
@@ -232,7 +234,6 @@ app.post("/confirm_payment", async (req, res) => {
       let payment_intent_id = req.body.payment_intent_id
       
       if (payment_method_id) {
-          console.log('before')
           // Calling chargebee's create_subscription_estimate api
           let estimate = await getSubscriptionEstimate(req.body);
           console.log('chargebee estimate:' + estimate)
@@ -302,14 +303,11 @@ async function getSubscriptionEstimate(data) {
           else 
           {
             resolve(result.estimate)
-            console.log(result)
           }
         })
       });
     }
     function generatePaymentResponse(intent) {
-
-      console.log(intent);
 
       if ((intent.status == 'requires_source_action' || intent.status == 'requires_action') &&
           intent.next_action.type == 'use_stripe_sdk') {
@@ -391,7 +389,6 @@ app.post("/checkout", async (req, res) => {
           else 
           {
             resolve(result.customer)
-            console.log(result)
           }
         })
       });
@@ -454,7 +451,6 @@ app.post("/checkout", async (req, res) => {
             else 
             {
               resolve(result)
-              console.log(result)
             }
           })
         });
@@ -465,68 +461,7 @@ app.post("/checkout", async (req, res) => {
    * & the last name for the shipping address is got from the customer 
    * account information.
    */
-  function addShippingAddress(subscription, customer, data) {
-     /* 
-      * Adding address to the subscription for shipping product to the customer.
-      * Sends request to the ChargeBee server and adds the shipping address 
-      * for the given subscription Id.
-      */
-      let result = chargebee.address.update({
-                  subscription_id : subscription.id,
-                  label : "shipping_address",
-                  first_name: customer.firstName,
-                  last_name : customer.lastName,
-                  addr : data.addr,
-                  extended_addr: data.extended_addr,
-                  city : data.city,
-                  state : data.state,
-                  zip: data.zip_code
-                }).request(function(error,result) {
-                  if(error){
-                    //handle error
-                    console.log(error);
-                  }else{
-                    console.log(result);
-                    ;
-                  }
-                });
-      var address = result.address
-      return address
-}
 });
-
-// app.post('/signup', async (req, res) => {
-
-// let customer = req.body 
-
-// customer.payment_method = {
-//   gateway : "stripe",
-//   gateway_account_id : acct_1KHqxAKquseRsK4m,
-//   first_name : customer.first_name,
-//   last_name : customer.last_name,
-//   object : "payment_method",
-//   reference_id :`${customer_id}/${card_id}`,
-//   status : "valid",
-//   type: "card"
-// }
-
-// chargebee.configure({site : "gigaroll",
-//   api_key : "live_eXNaZ4dTg0AwM97wcdRvyDjzm08qZ2wTw"})
-// chargebee.customer.create(customer).request(function(error,result) {
-//   if(error){
-//     //handle error
-//     console.log(error);
-//   }else{
-//     console.log(result);
-//     var customer = result.customer;
-//     var card = result.card;
-
-//     console.log(customer)
-//     console.log(card)
-//   }
-// })
-
-// });
 
 
 app.get('/login',
@@ -574,6 +509,35 @@ function(req, res) {
   }
 });
 
+app.post('/cb_item_list', 
+  function(req, res) {
+    if (!item_list) 
+    {
+      // No item list, send back an empty object
+      chargebee.configure({site : "gigaroll-test",
+      api_key : "test_wrDdypdnRUyv9AGASEsZ6VQomgmjk5R4"})
+
+      chargebee.item.list({
+      }).request(function(error,result) {
+          if(error)
+          {
+            //handle error
+            console.log(error);
+          }
+          else
+          {
+            item_list=result.list
+            res.json(item_list);
+          }
+        }
+      );
+    }
+  else {
+    // Otherwise send back the item list
+   res.json(item_list);
+  }
+});
+
 app.post('/get_user_key', 
 function(req, res) {
   if (!req.user) {
@@ -584,7 +548,6 @@ function(req, res) {
     let value = db.users.findValueByKey(req.user.id, req.body.key)
     // Otherwise send back the user's username and id
     res.json({'value' : value});
-    console.log(res)
   }
 });
 

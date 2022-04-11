@@ -42,25 +42,65 @@ const stripe = Stripe("pk_test_51KHqxAKquseRsK4mDO8BjsJEmRVkNX7O0cCaQNJqW2rCgBPq
 
 // }
 
+  
 var elements = stripe.elements();
 
 var cardElement = elements.create('card');
 
 cardElement.mount('#payment-element');
+
 document
-
-  .querySelector("#payment-form")
-
-  .addEventListener("submit", handleSubmit);    
+.querySelector("#payment-form")
+.addEventListener("submit", handleSubmit);  
 
 initPage();
 
 async function initPage(){
-    
 
   let sub_status = await getUserKeyVal('chargebee_acct_id')
 
-  console.log(`sub status: ${sub_status}`)
+  // if (sub_status)
+  // {
+  //   alert(`you have already registered, redirecting to home page`)
+
+  //   window.location.replace('/');
+
+  //   return
+
+  // }
+
+  
+  let res = await fetch('/cb_item_list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+
+  let server_res = await res.json()
+
+  console.log(server_res)
+
+  fillItemList(server_res)
+}
+
+function fillItemList (items) {
+  let item_html = ''
+
+  for (let item of items)
+  {
+    item_html += `<li id=${item.item.id} class="list-group-item d-flex justify-content-between lh-sm px-3">
+    <div class="d-flex align-items-center">
+      <input class="form-check-input" type="checkbox" id="checkboxNoLabel" value="${item.item.id}" aria-label="...">
+    </div>
+    <div class="mx-3">
+        <h6 class="my-0">${item.item.name}</h6>
+        <small class="text-muted">${item.item.description}</small>
+    </div>
+    <span class="text-muted align-self-center">$12/mo</span>
+    </li>`
+  }
+  $('#item-list').html(item_html)
+  $('#items-length').html(items.length)
+  console.log(item_html)
 }
 
 async function handleSubmit(e) {
@@ -157,9 +197,8 @@ function handleServerResponse(response) {
               payment_intent_id: response.payment_intent_id,
           })
       }).then(response => response.json()).then(function (responseJSON) {
-        //   window.location.replace(responseJSON.forward);
-        console.log(responseJSON) 
         setUserKeyVal('chargebee_acct_id', responseJSON.customer.id);
+        window.location.replace('thankyou.html');
       });
       
   }
