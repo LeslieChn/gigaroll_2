@@ -1,7 +1,7 @@
 body
 {
     /* background-color: rgb(155, 0, 31); */
-    background-color:#F6EBD7;
+    background-color:#fdf5e6;
     overflow: hidden;
     color: #656164
 }
@@ -35,7 +35,7 @@ body
 
 #logo-text {
   font-family: 'Fira Sans', sans-serif;
-  color: white;
+  color: black;
   /* text-shadow: 1px 1px 2px rgb(182, 182, 182); */
   text-shadow: 1px 1px 3px gold;
   font-weight: bold;
@@ -230,7 +230,7 @@ div.treemapLegend {
 #logo{
   font-weight: 400;
   font:aharoni;
-  color:white;
+  color:black;
   margin: 0;
 }
 

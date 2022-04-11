@@ -426,7 +426,7 @@ class View_State
 
 
       let dropdown_html = 
-        `${name && show_names?`<h6 class="me-2 my-0 text-white">${name}</h6>`:''}
+        `${name && show_names?`<h6 class="me-2 my-0 text-black">${name}</h6>`:''}
         <select id=${id}-${this.getId()} class="form-select form-select-sm controls-select text-center  pt-0 mx-1" 
         data-tile-id="${this.getId()}" ${knob_position?`data-knob='${id}-${this.getId()}-knob'`:''} aria-label=".form-select-sm example">
         ${this.createDropdownList(def.contents)}

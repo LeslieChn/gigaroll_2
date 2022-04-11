@@ -212,7 +212,7 @@ let geodropdowns = {
     // knob_position:'right'
   },
   dim_filter_option:{
-    name:'City',
+    name:'Location',
     contents: ['state_code:CT', 'state_code:NJ', 'state_code:NY', '', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT', 'flood_zone:AE,VE,AO', ''],
     position:'bottom-right',
     // knob_position:'right'
@@ -239,7 +239,7 @@ let scatterdropdowns = {
     // knob_position:'right'
   },
   dim_filter_option:{
-    name:'City',
+    name:'Location',
     contents: ['state_code:CT', 'state_code:NY', 'state_code:NJ', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
