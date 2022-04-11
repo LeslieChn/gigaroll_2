@@ -1,6 +1,7 @@
 body
 {
-    background-color: rgb(155, 0, 31);
+    /* background-color: rgb(155, 0, 31); */
+    background-color:#F6EBD7;
     overflow: hidden;
     color: #656164
 }
@@ -16,6 +17,12 @@ body
     overflow: hidden!important;
     touch-action: auto;
 } 
+
+.card .card-body
+{
+  border-width: thick;
+  border-color: rgb(155, 0, 31)!important;
+}
 
 .navbar-expand-sm .navbar-nav .nav-link:hover {
   text-shadow: 0px 3px 5px rgba(255, 255, 0, 1);

@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/pcarey1213/gigaroll2#readme",
   "dependencies": {
+    "@stripe/stripe-js": "^1.22.0",
     "body-parser": "^1.19.0",
+    "chargebee": "^2.8.1",
     "compression": "^1.7.4",
     "connect-ensure-login": "^0.1.1",
     "connect-flash": "^0.1.1",
@@ -34,6 +36,7 @@
     "passport-http": "^0.3.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
-    "require": "^2.4.20"
+    "require": "^2.4.20",
+    "stripe": "^8.197.0"
   }
 }

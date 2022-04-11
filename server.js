@@ -16,8 +16,12 @@ const md5 = require('md5');
 const salt = 'cardamom'
 const flash = require ('connect-flash')
 const got = require('got');
+const chargebee = require('chargebee')
+const stripe = require('stripe')('sk_test_51KHqxAKquseRsK4mYoF4Nvf9PhzOcxJgxea49JEiLHA9NtJK0IYAyCWNd6j2Rug7rBlUKaxsT57v0k9Wuy60bero00BVAakyvH')
 
 var login_count = {}
+
+var item_list = null
 
 function hashPassword (pass){
   return md5(salt+pass)
@@ -160,6 +164,7 @@ app.post('/gserver/:query', async (request, response) => {
   console.timeEnd(request.params.query)
 });
 
+
 app.post('/getimage/:query', async (request, response) => {
     
   console.time(request.params.query);
@@ -189,6 +194,276 @@ app.post('/getimage/:query', async (request, response) => {
   console.timeEnd(request.params.query)
 });
 
+
+
+// app.get("/create-setup-intent", async (req, res) => {
+
+//   // Alternatively, set up a webhook to listen for the payment_intent.succeeded event
+
+//   // and attach the PaymentMethod to a new Customer
+
+//   const customer = await stripe.customers.create();
+
+//   // Create a SetupIntent 
+
+//   const setupIntent = await stripe.setupIntents.create({
+
+//     customer: customer.id,
+//     payment_method_types: ['card'],
+
+//   });
+
+//   console.log(setupIntent)
+
+
+//   res.send({
+
+//     clientSecret: setupIntent.client_secret,
+
+//   });
+
+// });
+
+app.post("/confirm_payment", async (req, res) => {
+
+  let intent = {}
+
+  try {
+
+      let payment_method_id = req.body.payment_method_id
+      let payment_intent_id = req.body.payment_intent_id
+      
+      if (payment_method_id) {
+          // Calling chargebee's create_subscription_estimate api
+          let estimate = await getSubscriptionEstimate(req.body);
+          console.log('chargebee estimate:' + estimate)
+          // Creating payment intent in Stripe
+          intent = await stripe.paymentIntents.create({
+            payment_method: payment_method_id,
+            amount: estimate.invoice_estimate.total,
+            currency : estimate.invoice_estimate.currency_code,
+            confirm : true,
+            confirmation_method : 'manual',
+            capture_method: 'manual',
+            setup_future_usage : 'off_session'
+          });
+
+      } else if (payment_intent_id) {
+          // Confirming the payment intent in stripe
+          intent = await stripe.paymentIntents.retrieve(payment_intent_id);
+          intent = intent.confirm();
+      }
+      res.json(generatePaymentResponse(intent));
+
+    } catch(error) {
+      res.json(error);
+  }
+
+async function getSubscriptionEstimate(data) {
+
+    chargebee.configure({site : "gigaroll-test",
+    api_key : "test_wrDdypdnRUyv9AGASEsZ6VQomgmjk5R4"})
+    
+    let ce = chargebee.estimate.create_sub_item_estimate({
+    billing_address : {
+      line1 : data.addr,
+      line2 : data.extended_addr,
+      city : data.city,
+      zip : data.zip,
+      country : data.country
+      },
+      customer : {
+        taxability : "taxable"
+      },
+      subscription_items : [
+        {
+          item_price_id : "cbdemo_basic-USD-monthly",
+          billing_cycles : 2,
+          quantity : 1
+        }
+      ]
+    });
+    // await ce.request(function(error,result) {
+    // if(error){
+    //   //handle error
+    //   console.log(error);
+    // }
+    // else{
+    //   console.log(result);
+    //   // estimate = result.estimate;
+    // }
+    // });
+    //   return await result.estimate;
+    return new Promise((resolve, reject) => {
+      ce.request(function(error,result)
+        {
+          if(error) {
+            reject(error)
+          }
+          else 
+          {
+            resolve(result.estimate)
+          }
+        })
+      });
+    }
+    function generatePaymentResponse(intent) {
+
+      if ((intent.status == 'requires_source_action' || intent.status == 'requires_action') &&
+          intent.next_action.type == 'use_stripe_sdk') {
+          // Inform the client to handle the action
+          return {
+              requires_action : true,
+              payment_intent_client_secret : intent.client_secret
+            }
+      }
+      else if (intent.status == 'requires_capture') {
+          // The payment didn’t need any additional actions it just needs to be captured
+          //  Now can pass this on to chargebee for creating subscription
+          return {
+              success: true,
+              payment_intent_id : intent.id
+          }
+      }
+      else {
+          //  Invalid status
+          return {
+              success : false,
+              error : intent.status
+          };
+      }
+  }
+  
+  
+})
+
+app.post("/checkout", async (req, res) => {
+  let result = {}
+  // validateParameters(req.body);
+    try {
+         let customer = await createCbCustomer(req.body);
+         result = await createSubscription(customer.id, req.body);
+        // addShippingAddress(result.subscription, result.customer, req.body);
+
+        /*
+         * Forwarding to success page after successful create subscription in ChargeBee.
+      */
+
+      res.json(result)
+      // res.redirect('/thankyou', '/url?' + querystring.stringify(result))
+        
+    } catch(e) {
+      res.json(e)
+      console.log(e)
+    }
+
+  async function createCbCustomer (data)
+  {
+    chargebee.configure({site : "gigaroll-test",
+    api_key : "test_wrDdypdnRUyv9AGASEsZ6VQomgmjk5R4"})
+
+    let cc = chargebee.customer.create({
+      first_name: data.customer.first_name,
+      last_name: data.customer.last_name,
+      email: data.customer.email,
+      phone: data.customer.phone,
+      locale : "en-US",
+      billing_address : {
+        first_name: data.customer.first_name,
+        last_name: data.customer.last_name,
+        line1 : data.addr,
+        line2 : data.extended_addr,
+        city : data.city,
+        zip : data.zip,
+        country : data.country
+        }
+    });
+
+    return new Promise((resolve, reject) => {
+      cc.request(function(error,result)
+        {
+          if(error) {
+            reject(error)
+            console.log(error)
+          }
+          else 
+          {
+            resolve(result.customer)
+          }
+        })
+      });
+  }
+
+    async function createSubscription(id, data) {
+    
+      /*
+       * Constructing a parameter array for create subscription api. 
+       * It will have account information, the payment intent got from Stripe and
+       * plan details.
+       * For demo purpose a plan with id 'basic' is hard coded.
+       * Other params are obtained from request object.
+       * Note : Here customer object received from client side is sent directly 
+       *        to ChargeBee.
+       *               
+       */
+      const customer_id = id
+
+      const createSubscriptionParams = {
+        subscription_items : [
+          {
+            item_price_id : "cbdemo_basic-USD-monthly",
+            billing_cycles : 2,
+            quantity : 1
+          }],
+          shipping_address : {
+            first_name: data.customer.first_name,
+            last_name: data.customer.last_name,
+            email: data.customer.email,
+            phone: data.customer.phone,
+            line1: data.addr,
+            line2: data.extended_addr,
+            city: data.city,
+            state: data.state,
+            zip: data.zip_code
+          },
+          payment_intent : {
+              gw_token : data.payment_intent_id,
+              gateway_account_id : 'gw_16CGg6SxXexRTG5X'
+            }
+      };
+  
+      /* 
+      * Sending request to the chargebee server to create the subscription from 
+      * the parameters received. The result will have customer,subscription and 
+      * card attributes.
+      */
+      chargebee.configure({site : "gigaroll-test",
+      api_key : "test_wrDdypdnRUyv9AGASEsZ6VQomgmjk5R4"})
+      let cs = chargebee.subscription.create_with_items(customer_id, createSubscriptionParams);
+
+      return new Promise((resolve, reject) => {
+        cs.request(function(error,result)
+          {
+            if(error) {
+              reject(error)
+              console.log(error)
+            }
+            else 
+            {
+              resolve(result)
+            }
+          })
+        });
+  }
+  
+  /*
+   * Adds the shipping address to an existing subscription. The first name
+   * & the last name for the shipping address is got from the customer 
+   * account information.
+   */
+});
+
+
 app.get('/login',
 function(req, res){
   res.sendFile(path.join(__dirname, "/public/login.html"))
@@ -217,6 +492,62 @@ function(req, res) {
   else {
     // Otherwise send back the user's username and id
    res.json(req.user);
+  }
+});
+
+
+app.post('/update_user', 
+function(req, res) {
+  if (!req.user) {
+    // The user is not logged in, send back an empty object
+    res.json(null);
+  }
+  else {
+    db.users.updateUserById(req.user.id, 'chargebee_acct_id', req.body.chargebee_acct_id)
+    // Otherwise send back the user's username and id
+    res.json(true);
+  }
+});
+
+app.post('/cb_item_list', 
+  function(req, res) {
+    if (!item_list) 
+    {
+      // No item list, send back an empty object
+      chargebee.configure({site : "gigaroll-test",
+      api_key : "test_wrDdypdnRUyv9AGASEsZ6VQomgmjk5R4"})
+
+      chargebee.item.list({
+      }).request(function(error,result) {
+          if(error)
+          {
+            //handle error
+            console.log(error);
+          }
+          else
+          {
+            item_list=result.list
+            res.json(item_list);
+          }
+        }
+      );
+    }
+  else {
+    // Otherwise send back the item list
+   res.json(item_list);
+  }
+});
+
+app.post('/get_user_key', 
+function(req, res) {
+  if (!req.user) {
+    // The user is not logged in, send back an empty object
+    res.json(null);
+  }
+  else {
+    let value = db.users.findValueByKey(req.user.id, req.body.key)
+    // Otherwise send back the user's username and id
+    res.json({'value' : value});
   }
 });
 
