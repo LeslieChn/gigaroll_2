@@ -749,8 +749,13 @@ class View_State
      let data_index = 0
      for (const data of server_js.data)
      {
-       lat = parseInt(data[iLat]) /1e6
-       lng = parseInt(data[iLng]) /1e6
+       lat = data[iLat]
+       lng = data[iLng]
+       if ((Math.abs(lat)) > 400)
+          lat *= 1e-6
+       if ((Math.abs(lng)) > 400)
+          lng *= 1e-6
+           
        max_lat = (lat>max_lat)? lat : max_lat
        max_lng = (lng>max_lng)? lng : max_lng
        min_lat = (lat<min_lat)? lat : min_lat
@@ -1907,9 +1912,14 @@ function euclideanDistance(x1, y1, x2, y2)
 
     var format = d3.format(",d");
 
+    let color_array = []
+    for (let i = 300; i > 0; i-=20)
+    {
+      color_array.push(d3.interpolateGreens(i/300) )
+    }
     this.color = d3.scaleOrdinal()
-    .range(d3.schemeCategory20
-        .map(function(c) { c = d3.rgb(c); c.opacity = 0.15; return c; }));
+    .range(color_array
+        .map(function(c) { c = d3.rgb(c); c.opacity = 0.50; return c; }));
 
     var stratify = d3.stratify()
       .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
