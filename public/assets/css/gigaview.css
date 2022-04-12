@@ -221,7 +221,7 @@ div.treemapLegend {
   color:black;                           
   font: 13px sans-serif; 
   font-weight: bold;     
-  border-left: 7px solid rgb(155, 0, 31);      
+  border-left: 7px solid #fdf5e6;      
   border-radius: 0rem 1rem 1rem 0rem;
   pointer-events: none;   
   /* box-shadow: 4px 4px 10px rgba(0,0,0,.4);          */
