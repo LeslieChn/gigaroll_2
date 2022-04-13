@@ -19,7 +19,10 @@ body{
 }
 
 #logo{
-  filter: drop-shadow(3px 3px 5px rgba(255, 255, 0, 0.8));
+  font-weight: 400;
+  font:aharoni;
+  color:black;
+  margin: 0;
 }
 
 #logo:hover{

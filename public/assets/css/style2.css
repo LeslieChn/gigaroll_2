@@ -1,7 +1,14 @@
 body {
   /* background-color: rgb(155, 0, 31); */
-  background-color: #f8f9fa; 
   overflow:hidden;
+  background-color:#eceff1;
+}
+
+#logo{
+  font-weight: 400;
+  font:aharoni !important;
+  color:black;
+  margin: 0;
 }
 /*
 .table-striped > tbody > tr:nth-child(2n+1) > td{
@@ -232,16 +239,6 @@ body { height: 100%;margin: 0;padding: 0;}
 .ps__rail-y.ps--clicking .ps__thumb-y {
   background-color: #999;
   width: 11px;
-}
-
-#logo {
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #000000;
-  font-weight: 400;
-  font-family: Arial;
-  color: black;
-  font-size: 1.875rem;
-  line-height: 1.375;
 }
 
 a {

@@ -742,7 +742,7 @@ class View_State
 
      let coords = []
      let lat, lng, markers;
-     let markerColor = "#9b001f"
+     let markerColor = "#125ca3" //"#9b001f" 
      var boostType = "balloon"
      let max_lat = -999, max_lng = -999
      let min_lat =  999, min_lng =  999
@@ -1915,7 +1915,7 @@ function euclideanDistance(x1, y1, x2, y2)
     let color_array = []
     for (let i = 300; i > 0; i-=20)
     {
-      color_array.push(d3.interpolateGreens(i/300) )
+      color_array.push(d3.interpolateBlues(i/300) )
     }
     this.color = d3.scaleOrdinal()
     .range(color_array

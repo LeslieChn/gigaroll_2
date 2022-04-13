@@ -1,7 +1,7 @@
 body
 {
     /* background-color: rgb(155, 0, 31); */
-    background-color:#fdf5e6;
+    background-color:#eceff1;
     overflow: hidden;
     color: #656164
 }
@@ -195,11 +195,11 @@ div.treemapTooltip {
   */    
   z-index:999;               
   padding: 8px;               
-  color:white;             
+  color:black;           
   padding: 8px;               
-  font: 13px sans-serif; 
+  font: 14px sans-serif; 
   font-weight: bold;     
-  background:  rgb(155, 0, 31);
+  background:  white; 
   border: 0px;        
   border-radius: 4px;      
   pointer-events: none;   
@@ -221,7 +221,7 @@ div.treemapLegend {
   color:black;                           
   font: 13px sans-serif; 
   font-weight: bold;     
-  border-left: 7px solid #fdf5e6;      
+  border-left: 7px solid #eceff1;      
   border-radius: 0rem 1rem 1rem 0rem;
   pointer-events: none;   
   /* box-shadow: 4px 4px 10px rgba(0,0,0,.4);          */
