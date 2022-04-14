@@ -13,7 +13,7 @@ var osMap = null
 var tileLayer
 var layerGroup = null
 var mapZoom
-var markerColor = "#9b001f"
+var markerColor = "#125ca3"
 var countiesOverlay = null
 var lcontrol = null
 var color = null
@@ -296,11 +296,11 @@ $(function () {
                 var bb = this.get("marker_color:" + item.selected);
                 return bb.text;
               },
-              selected: "#9b001f",
+              selected: "#125ca3",
               items: [
                 { id: "black", text: "Black"},
                 { id: "green", text: "Green"},
-                { id: "blue", text: "Blue"},
+                { id: "#125ca3", text: "Blue"},
                 { id: "#9b001f", text: "Red"},
                 { id: "orange", text: "Orange"},
               ],
