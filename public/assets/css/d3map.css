@@ -51,6 +51,7 @@ body
 }
 
 div.tooltip {   
+    color:black;
     position: absolute;         
     text-align: center;    
     /*     
@@ -60,7 +61,7 @@ div.tooltip {
     padding: 8px;               
     font: 16px sans-serif; 
     font-weight: bold;     
-    background: lightsteelblue; 
+    background: white; 
     border: 0px;        
     border-radius: 8px;      
     pointer-events: none;   

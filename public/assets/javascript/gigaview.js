@@ -121,11 +121,11 @@ let chart_def = [
 
 let dropdowns = {
   gby_option:{
-    name:'Groupby 1',
+    name:'Groupby',
     contents:['prop_type','state_code', 'postal_code', 'city', 'county', 'flood_zone', 
     'range(property:year_built;1600;10;200)', 
     'range(county:Median_Income_2019;0;1000;200)'],
-    position:'bottom-middle',
+    position:'bottom-left',
     // knob_position:'left'
   },
   // gby_option_2:{
@@ -135,26 +135,27 @@ let dropdowns = {
     // knob_position:'left'
   //},
   val_option:{
-    name:'Value',
+    name:'Value1',
     contents: ['beds:count','building_size:avg', 'price:avg', 'elevation:avg', 'year_built:min'],
-    position:'bottom-left',
+    position:'bottom-middle',
     // knob_position:'left'
   },
 
   val_option2:{
-    name:'Value',
+    name:'Value2',
     contents: ['price:avg', 'beds:count','building_size:avg', 'elevation:avg', 'year_built:min'],
     position:'bottom-right',
     // knob_position:'left'
   },
 
   dim_filter_option:{
-    name:'City',
+    name:'Location',
     contents: ['', 'city:Brooklyn-NY',  'city:Greenwich-CT', 'city:New Canaan-CT',  'city:Newark-NJ', 'city:New York-NY',  'city:Stamford-CT','state_code:NY', 'state_code:CT', 'state_code:NJ', 'flood_zone:AE,VE,AO'],
     position:'top-left',
     // knob_position:'right'
   }
 }
+
 let treemap_dropdowns = {
   gby_option:{
     name:'Groupby 1',
@@ -249,11 +250,11 @@ let scatterdropdowns = {
 
 let view_def=[
 // {id:'Chart', view_type:'chart',  view_subtype:'barChart', request: req3, dropdowns:dropdowns, aliases:aliases, chart_def: chart_def, tile_config: {header: `Line Chart`, subheader: `this is a Line Chart`, width:12}},
-// {id:'Grid', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}},
 {id:'Map', view_type:'geomap', request: req_geo, dropdowns:geodropdowns, aliases:aliases, tile_config: {header: `Map`, subheader: `Map of properties`, width:12}},
 {id:'CountyMap', view_type:'countymap', request: req5, dropdowns:dropdowns2, color_scheme:"?col_option", aliases:aliases,  tile_config: {header: `CountyMap`, subheader: `This is a CountyMap`, width:12}},
 {id:'ScatterChart', view_type:'scatterChart', request: req_scatter, dropdowns:scatterdropdowns, aliases:aliases, x_axis:'?x_axis_option', y_axis:'?y_axis_option', z_axis:'?z_axis_option', tile_config: {header: `ScatterChart`, subheader: `This is a Scatter Chart`, width:12}},
-{id:'TreeMap', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, width:12}}]
+{id:'TreeMap', view_type:'treemap', request: treemap_req, chart_def: chart_def, dropdowns:treemap_dropdowns, aliases:aliases, tile_config: {header: `Treemap`, subheader: `This is a Treemap`, width:12}},
+{id:'List', view_type:'grid', request: req3, dropdowns:dropdowns, aliases:aliases, tile_config: {header: `Grid`,  subheader: `This is a Grid`, height:'65vh', width:12}}]
 
 const main_ps = new PerfectScrollbar('#main-container',
   {suppressScrollX: true}
