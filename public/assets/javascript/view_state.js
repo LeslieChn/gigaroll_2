@@ -1385,13 +1385,13 @@ class View_State
   $('.control-button').remove()
 
   this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
-  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
+  <input title="Reset Zoom" id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
   this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
-  <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
+  <input title="Details Page" id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
   this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
-  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
+  <input title="Select Area" id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/select_icon.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#details-button').on('click', openDetails)
@@ -2349,16 +2349,16 @@ function euclideanDistance(x1, y1, x2, y2)
   $('.control-button').remove()
 
   this.resetDiv = $(`#side-controls`).prepend(`<div id="reset-button-div" class="control-button mt-1 p-1"  style="height:35px; z-index:1000;">
-  <input id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
+  <input title="Reset View" id="reset-button" width="25" height="25" type="image" src="../assets/images/reset_icon-bw.svg"/></div>`)
 
   // this.detailDiv = $(`#side-controls`).append(`<div id="detail-button-div" class="control-button m-0 p-1"  style="height:35px;z-index:1000;">
   // <input id="details-button" width="25" height="25" type="image" src="../assets/images/details-icon.svg"/></div>`)
 
   this.selectDiv = $(`#side-controls`).append(`<div id="select-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
-  <input id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
+  <input title="Zoom Grid" id="select-button" width="25" height="25" type="image" value="Off" src="../assets/images/grid_icon.svg"/></div>`)
   
   this.backDiv = $(`#side-controls`).append(`<div id="back-button-div" class="control-button mt-1 p-1"  style="height:35px;z-index:1000;">
-  <input id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon_disabled.svg"/></div>`)
+  <input title="Previous View" id="back-button" width="25" height="25" type="image" value="Off" src="../assets/images/back_icon_disabled.svg"/></div>`)
 
   $('#reset-button').on('click', resetZoom)
   $('#select-button').on('click', startSelect)
